@@ -1,0 +1,14 @@
+{
+  "base_interaction_points": 3,
+  "friendship": {
+    "step_positive": 5,
+    "step_negative": 5,
+    "min": -100,
+    "max": 100
+  },
+  "interaction": {
+    "base_target": 7,
+    "min_target": 3,
+    "max_target": 11
+  }
+}

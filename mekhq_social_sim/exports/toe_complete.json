@@ -1,0 +1,91 @@
+{
+  "forces": [
+    {
+      "id": "0",
+      "name": "House Caelberg",
+      "formation_level": "Company",
+      "force_type": 0,
+      "force_commander_id": "89d14e19-709d-4ec7-bac8-719287b09355",
+      "parent_id": null,
+      "units": [],
+      "sub_forces": [
+        {
+          "id": "1",
+          "name": "Able Lance",
+          "formation_level": "Lance",
+          "force_type": 0,
+          "force_commander_id": "89d14e19-709d-4ec7-bac8-719287b09355",
+          "parent_id": "0",
+          "units": [
+            "8e30210b-665c-4c45-9ef6-717d0f707f03",
+            "007cbae2-6aec-4222-ba0c-c5c2beb43175",
+            "34bfabc0-4d83-48b2-bac0-0735bd09ff3b"
+          ],
+          "sub_forces": []
+        }
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "8e30210b-665c-4c45-9ef6-717d0f707f03",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Ostsol",
+        "model": "OTL-4D",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "8e30210b-665c-4c45-9ef6-717d0f707f03",
+        "quirks": "imp_sensors::low_profile",
+        "altitude": "0"
+      },
+      "forceId": "1",
+      "driverId": "89d14e19-709d-4ec7-bac8-719287b09355",
+      "gunnerId": "89d14e19-709d-4ec7-bac8-719287b09355",
+      "techId": "e3d5b445-bb99-424c-8ac5-f88f2a9cd59d",
+      "extras": {
+        "maintenanceMultiplier": "4"
+      }
+    },
+    {
+      "id": "007cbae2-6aec-4222-ba0c-c5c2beb43175",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Shadow Hawk",
+        "model": "SHD-2H",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "007cbae2-6aec-4222-ba0c-c5c2beb43175",
+        "quirks": "battle_fists_la::battle_fists_ra::imp_life_support::rugged_1::ubiquitous_is::ubiquitous_clan",
+        "altitude": "0"
+      },
+      "forceId": "1",
+      "driverId": "fba6453d-2f84-4506-91e3-61102fce51c5",
+      "gunnerId": "fba6453d-2f84-4506-91e3-61102fce51c5",
+      "techId": "1b1e23bc-6cfc-49e5-b2f1-5c1aae213c2c",
+      "extras": {
+        "maintenanceMultiplier": "4"
+      }
+    },
+    {
+      "id": "34bfabc0-4d83-48b2-bac0-0735bd09ff3b",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "UrbanMech",
+        "model": "UM-R60",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "34bfabc0-4d83-48b2-bac0-0735bd09ff3b",
+        "quirks": "ext_twist::low_profile::no_arms",
+        "altitude": "0"
+      },
+      "forceId": "1",
+      "driverId": "8adbabce-ed2f-4fd6-8f26-40e437e35388",
+      "gunnerId": "8adbabce-ed2f-4fd6-8f26-40e437e35388",
+      "techId": "e3d5b445-bb99-424c-8ac5-f88f2a9cd59d",
+      "extras": {
+        "maintenanceMultiplier": "4"
+      }
+    }
+  ]
+}

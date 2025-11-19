@@ -1,0 +1,16 @@
+{
+  "unit": {
+    "same_unit_bonus": 4,
+    "same_force_bonus": 2,
+    "different_force_type_penalty": -3
+  },
+  "profession": {
+    "same_profession_bonus": 3,
+    "different_profession_penalty": -2
+  },
+  "age": {
+    "child_adult_penalty": -8,
+    "teen_adult_penalty": -4,
+    "child_teen_penalty": -4
+  }
+}
