@@ -152,29 +152,6 @@ Computes a bonus/penalty based on similarity of character traits (configurable).
 
 ---
 
-## 🤖 Use With AI Tools (Claude, ChatGPT, o1, etc.)
-
-### ChatGPT (GPT‑5.1)
-Best for:
-- Adding new features  
-- Architecture & system design  
-- Debugging  
-- Optimization
-
-### Claude
-Best for:
-- Large-scale codebase analysis  
-- Refactoring proposals  
-- Technical documentation  
-- Patch generation (INCLUDING README updates)
-
-### Combined Workflow
-- Both models use the README as context  
-- README + project structure = maximum accuracy  
-- Perfect for complex features like the future calendar system
-
----
-
 ## 📜 License
 
 This project is licensed under the **MIT License**.
