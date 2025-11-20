@@ -1,9 +1,24 @@
 from __future__ import annotations
 
+import sys
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 from typing import Dict, Optional, List
+
+# Ensure src is on sys.path so the merk_calendar package is importable.
+repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
+src_path = repo_root.joinpath("src")
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+# Calendar package imports (embeddable widget)
+try:
+    from merk_calendar import EventManager
+    from merk_calendar.widget import CalendarWidget
+except Exception:
+    EventManager = None
+    CalendarWidget = None
 
 from models import Character
 from data_loading import load_campaign, apply_toe_structure
@@ -22,6 +37,12 @@ class MekSocialGUI:
         self.current_day: int = 1
         self.selected_character_id: Optional[str] = None
         self.selected_partner_index: Optional[int] = None
+
+        # If the calendar package is available, create a shared EventManager
+        if EventManager is not None:
+            self.calendar_event_manager = EventManager()
+        else:
+            self.calendar_event_manager = None
 
         self._build_widgets()
 
@@ -85,6 +106,19 @@ class MekSocialGUI:
             top_bar, text="Importiere TO&E (JSON)", command=self._import_toe
         )
         import_toe_btn.pack(side=tk.LEFT, padx=4)
+
+        # --- Calendar widget: place it top-right in the top_bar ----------------
+        if CalendarWidget is not None:
+            try:
+                calendar_container = ttk.Frame(top_bar)
+                calendar_container.pack(side="right", padx=8)
+                # Use the shared EventManager so calendar state can be accessed from other parts.
+                # self.calendar_event_manager was created in __init__
+                self.calendar_widget = CalendarWidget(calendar_container, event_manager=self.calendar_event_manager)
+                self.calendar_widget.pack(anchor="ne")
+            except Exception as exc:
+                print("Failed to create calendar widget:", exc)
+        # ----------------------------------------------------------------------
 
         # Character details
         details_frame = ttk.LabelFrame(right_frame, text="Charakter")
