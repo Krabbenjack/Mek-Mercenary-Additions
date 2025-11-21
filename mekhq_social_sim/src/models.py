@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional
 
 import config_loader as cfg
+from datetime import date
 
 
 @dataclass
@@ -23,6 +24,9 @@ class Character:
     friendship: Dict[str, int] = field(default_factory=dict)
     daily_interaction_points: int = 0
     unit: Optional[UnitAssignment] = None
+
+    # NEW: store birthday (optional). JSON uses yyyy-mm-dd.
+    birthday: Optional[date] = None
 
     def label(self) -> str:
         """Short label for GUI/logs."""
