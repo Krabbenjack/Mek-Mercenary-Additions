@@ -123,18 +123,6 @@ class MekSocialGUI:
         )
         import_toe_btn.pack(side=tk.LEFT, padx=4)
 
-        # --- Calendar widget: place it top-right in the top_bar ----------------
-        if CalendarWidget is not None:
-            try:
-                calendar_container = ttk.Frame(top_bar)
-                calendar_container.pack(side="right", padx=8)
-                # Use shared EventManager instance if available
-                self.calendar_widget = CalendarWidget(calendar_container, event_manager=self.event_manager)
-                self.calendar_widget.pack(anchor="ne")
-            except Exception as exc:
-                print("Failed to create calendar widget:", exc)
-        # ----------------------------------------------------------------------
-
         # Day events summary bar (under date label)
         self.day_events_frame = ttk.Frame(right_frame)
         self.day_events_frame.pack(fill=tk.X, padx=4, pady=(0, 4))
