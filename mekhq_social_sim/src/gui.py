@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 from typing import Dict, Optional, List
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
@@ -21,20 +21,23 @@ try:
         DetailedCalendarWindow,
         DatePickerDialog,
     )
-    from merk_calendar.widget import CalendarWidget
 except Exception:
     # If calendar package is missing the GUI still runs, calendar features are disabled.
     EventManager = None
     RecurrenceType = None
     DetailedCalendarWindow = None
     DatePickerDialog = None
-    CalendarWidget = None
 
 from models import Character
 from data_loading import load_campaign, apply_toe_structure
 from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
+
+def reset_daily_pools(characters: Dict[str, Character]) -> None:
+    """Reset daily interaction pools (simple example implementation)."""
+    for c in characters.values():
+        c.daily_interaction_points = 0
 
 
 class MekSocialGUI:
@@ -122,18 +125,6 @@ class MekSocialGUI:
             top_bar, text="Importiere TO&E (JSON)", command=self._import_toe
         )
         import_toe_btn.pack(side=tk.LEFT, padx=4)
-
-        # --- Calendar widget: place it top-right in the top_bar ----------------
-        if CalendarWidget is not None:
-            try:
-                calendar_container = ttk.Frame(top_bar)
-                calendar_container.pack(side="right", padx=8)
-                # Use shared EventManager instance if available
-                self.calendar_widget = CalendarWidget(calendar_container, event_manager=self.event_manager)
-                self.calendar_widget.pack(anchor="ne")
-            except Exception as exc:
-                print("Failed to create calendar widget:", exc)
-        # ----------------------------------------------------------------------
 
         # Day events summary bar (under date label)
         self.day_events_frame = ttk.Frame(right_frame)
@@ -238,6 +229,11 @@ class MekSocialGUI:
             self._update_date_display()
             self._update_day_events_bar()
             self._update_day_events_description()
+            # Recalculate ages whenever the GUI date changes
+            self._update_character_ages()
+            # Update details of selected character so displayed age is refreshed
+            if self.selected_character_id and self.selected_character_id in self.characters:
+                self._update_details(self.characters[self.selected_character_id])
 
     def _on_date_right_click(self, event):
         if DetailedCalendarWindow is None:
@@ -365,7 +361,7 @@ class MekSocialGUI:
         self.events_text.delete("1.0", tk.END)
 
     def _update_details(self, char: Optional[Character]) -> None:
-        self.details_text.delete("1.0", tk.END)
+        self.details_text.delete("1.0", "end")
         self.partner_list.delete(0, tk.END)
         self.selected_partner_index = None
         self.manual_roll_btn.config(state=tk.DISABLED)
@@ -373,10 +369,13 @@ class MekSocialGUI:
         if char is None:
             return
 
+        # make sure details show current birthday and recalculated age
+        birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
         lines = [
             f"Name: {char.name}",
             f"Rufname: {char.callsign or '-'}",
             f"Alter: {char.age} ({char.age_group})",
+            f"Geburtstag: {birthday_str}",
             f"Beruf: {char.profession or '-'}",
             f"Interaktionspunkte: {char.daily_interaction_points}",
         ]
@@ -415,7 +414,32 @@ class MekSocialGUI:
 
         self.details_text.insert(tk.END, "\n".join(lines))
 
-    # --- Event handlers ---------------------------------------------------
+    # ----------------- Age calculation helpers -----------------
+    def _calculate_age(self, birth_date: date, reference_date: date) -> int:
+        """Calculate full years between birth_date and reference_date."""
+        if birth_date is None:
+            return 0
+        age = reference_date.year - birth_date.year
+        try:
+            # If birthday hasn't happened yet this year, subtract one
+            if reference_date < birth_date.replace(year=reference_date.year):
+                age -= 1
+        except ValueError:
+            # handle Feb 29 on non-leap year by comparing month/day manually
+            if (reference_date.month, reference_date.day) < (birth_date.month, birth_date.day):
+                age -= 1
+        return age
+
+    def _update_character_ages(self) -> None:
+        """Recalculate ages for all loaded characters using the current GUI date."""
+        if not getattr(self, "characters", None):
+            return
+        for char in self.characters.values():
+            bdate = getattr(char, "birthday", None)
+            if bdate:
+                char.age = self._calculate_age(bdate, self.current_date)
+
+    # --- Event handlers (selection/partners/import/rolls) -----------------
 
     def _on_tree_select(self, event: object) -> None:
         sel = self.tree.selection()
@@ -442,7 +466,7 @@ class MekSocialGUI:
             return
 
         self.selected_partner_index = selection[0]
-        
+
         # Aktiviere Button nur wenn Charakter Punkte hat
         if self.selected_character_id:
             actor = self.characters.get(self.selected_character_id)
@@ -462,6 +486,8 @@ class MekSocialGUI:
         try:
             self.characters = load_campaign(path)
             reset_daily_pools(self.characters)
+            # Recalculate ages relative to the current GUI date
+            self._update_character_ages()
             self._populate_tree()
             self._log(f"Personal aus {Path(path).name} geladen ({len(self.characters)} Charaktere).")
             messagebox.showinfo("Erfolg", f"{len(self.characters)} Charaktere geladen!")
@@ -508,6 +534,9 @@ class MekSocialGUI:
         self._update_date_display()
         self._update_day_events_bar()
         self._update_day_events_description()
+
+        # Update ages when the day advances
+        self._update_character_ages()
 
         reset_daily_pools(self.characters)
         self._log(f"--- Tag {self.current_day} ---")
@@ -603,7 +632,7 @@ class MekSocialGUI:
         """Generiert einen Fluff-Text basierend auf dem Würfelergebnis"""
         actor_name = result.actor.callsign or result.actor.name
         partner_name = result.partner.callsign or result.partner.name
-        
+
         fluff_lines = [
             f"=== Tag {self.current_day} ===",
             f"Begegnung: {actor_name} und {partner_name}",
@@ -653,4 +682,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
