@@ -34,11 +34,6 @@ from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
 
-def reset_daily_pools(characters: Dict[str, Character]) -> None:
-    """Reset daily interaction pools (simple example implementation)."""
-    for c in characters.values():
-        c.daily_interaction_points = 0
-
 
 class MekSocialGUI:
     def __init__(self, master: tk.Tk) -> None:
@@ -64,7 +59,7 @@ class MekSocialGUI:
     # --- GUI construction -------------------------------------------------
 
     def _build_widgets(self) -> None:
-        # Notebook für Tabs
+        # Notebook fÃ¼r Tabs
         self.notebook = ttk.Notebook(self.master)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
@@ -113,7 +108,7 @@ class MekSocialGUI:
         self.date_label.bind("<Button-3>", self._on_date_right_click)
         self._update_date_display()
 
-        next_day_btn = ttk.Button(top_bar, text="Nächster Tag", command=self._next_day)
+        next_day_btn = ttk.Button(top_bar, text="NÃ¤chster Tag", command=self._next_day)
         next_day_btn.pack(side=tk.LEFT, padx=4)
 
         import_pers_btn = ttk.Button(
@@ -141,7 +136,7 @@ class MekSocialGUI:
         self.details_text.pack(fill=tk.X)
 
         # Potential partners & manual roll
-        partners_frame = ttk.LabelFrame(right_frame, text="Mögliche Partner")
+        partners_frame = ttk.LabelFrame(right_frame, text="MÃ¶gliche Partner")
         partners_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
         partner_inner = ttk.Frame(partners_frame)
@@ -161,7 +156,7 @@ class MekSocialGUI:
 
         self.manual_roll_btn = ttk.Button(
             button_frame,
-            text="Manueller Wurf mit ausgewähltem Partner",
+            text="Manueller Wurf mit ausgewÃ¤hltem Partner",
             command=self._trigger_manual_roll,
             state=tk.DISABLED
         )
@@ -169,7 +164,7 @@ class MekSocialGUI:
 
         random_roll_btn = ttk.Button(
             button_frame,
-            text="Zufälliger Partner-Wurf",
+            text="ZufÃ¤lliger Partner-Wurf",
             command=self._trigger_random_roll
         )
         random_roll_btn.pack(side=tk.LEFT, padx=2)
@@ -190,7 +185,7 @@ class MekSocialGUI:
         self._update_day_events_description()
 
     def _build_events_tab(self) -> None:
-        # Frame für Ereignisse
+        # Frame fÃ¼r Ereignisse
         events_frame = ttk.Frame(self.events_tab)
         events_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
@@ -198,7 +193,7 @@ class MekSocialGUI:
         label = ttk.Label(events_frame, text="Ereignisse & Fluff-Text", font=("Arial", 14, "bold"))
         label.pack(pady=5)
 
-        # Text-Widget für Ereignisse
+        # Text-Widget fÃ¼r Ereignisse
         text_frame = ttk.Frame(events_frame)
         text_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -209,8 +204,8 @@ class MekSocialGUI:
         events_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.events_text.configure(yscrollcommand=events_scroll.set)
 
-        # Button zum Löschen
-        clear_btn = ttk.Button(events_frame, text="Ereignisse löschen", command=self._clear_events)
+        # Button zum LÃ¶schen
+        clear_btn = ttk.Button(events_frame, text="Ereignisse lÃ¶schen", command=self._clear_events)
         clear_btn.pack(pady=5)
 
     # --- Helper methods ---------------------------------------------------
@@ -273,7 +268,7 @@ class MekSocialGUI:
 
     def _describe_event(self, event):
         t = event.title.lower()
-        if "simulator" in t or "übung" in t:
+        if "simulator" in t or "Ã¼bung" in t:
             return "The unit performs simulator training focusing on tactics and coordination."
         if "wartung" in t or "maintenance" in t:
             return "The mechs undergo scheduled maintenance and repairs."
@@ -354,7 +349,7 @@ class MekSocialGUI:
         self.events_text.see("end")
 
     def _add_event(self, text: str) -> None:
-        """Fügt einen Ereignis-Text zum Ereignis-Tab hinzu"""
+        """FÃ¼gt einen Ereignis-Text zum Ereignis-Tab hinzu"""
         self._log_simple(text)
 
     def _clear_events(self) -> None:
@@ -477,7 +472,7 @@ class MekSocialGUI:
 
     def _import_personnel(self) -> None:
         path = filedialog.askopenfilename(
-            title="Wähle personnel_complete.json",
+            title="WÃ¤hle personnel_complete.json",
             filetypes=[("JSON", "*.json"), ("Alle Dateien", "*.*")],
         )
         if not path:
@@ -505,7 +500,7 @@ class MekSocialGUI:
             return
 
         path = filedialog.askopenfilename(
-            title="Wähle toe_complete.json",
+            title="WÃ¤hle toe_complete.json",
             filetypes=[("JSON", "*.json"), ("Alle Dateien", "*.*")],
         )
         if not path:
@@ -540,7 +535,7 @@ class MekSocialGUI:
 
         reset_daily_pools(self.characters)
         self._log(f"--- Tag {self.current_day} ---")
-        self._log(f"Interaktionspunkte zurückgesetzt.")
+        self._log(f"Interaktionspunkte zurÃ¼ckgesetzt.")
 
         # Update details of the currently selected character
         if self.selected_character_id and self.selected_character_id in self.characters:
@@ -552,11 +547,11 @@ class MekSocialGUI:
             return
 
         if not self.selected_character_id:
-            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter auswählen.")
+            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter auswÃ¤hlen.")
             return
 
         if self.selected_partner_index is None:
-            messagebox.showinfo("Hinweis", "Bitte einen Partner aus der Liste auswählen.")
+            messagebox.showinfo("Hinweis", "Bitte einen Partner aus der Liste auswÃ¤hlen.")
             return
 
         actor = self.characters.get(self.selected_character_id)
@@ -570,16 +565,16 @@ class MekSocialGUI:
             )
             return
 
-        # Hole den ausgewählten Partner
+        # Hole den ausgewÃ¤hlten Partner
         if self.selected_partner_index >= len(self.potential_partners):
-            messagebox.showinfo("Fehler", "Ungültiger Partner-Index.")
+            messagebox.showinfo("Fehler", "UngÃ¼ltiger Partner-Index.")
             return
 
         partner = self.potential_partners[self.selected_partner_index]
 
         result = perform_manual_interaction(actor, partner)
         if result is None:
-            messagebox.showinfo("Fehler", "Interaktion konnte nicht durchgeführt werden.")
+            messagebox.showinfo("Fehler", "Interaktion konnte nicht durchgefÃ¼hrt werden.")
             return
 
         # Log the interaction
@@ -599,7 +594,7 @@ class MekSocialGUI:
             return
 
         if not self.selected_character_id:
-            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter im Baum auswählen.")
+            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter im Baum auswÃ¤hlen.")
             return
 
         actor = self.characters.get(self.selected_character_id)
@@ -629,7 +624,7 @@ class MekSocialGUI:
         self._update_details(actor)
 
     def _generate_fluff(self, result) -> str:
-        """Generiert einen Fluff-Text basierend auf dem Würfelergebnis"""
+        """Generiert einen Fluff-Text basierend auf dem WÃ¼rfelergebnis"""
         actor_name = result.actor.callsign or result.actor.name
         partner_name = result.partner.callsign or result.partner.name
 
@@ -643,32 +638,32 @@ class MekSocialGUI:
             # Positive Interaktion
             if result.roll >= 10:
                 fluff_lines.append(
-                    f"Ein außergewöhnlich gutes Gespräch entwickelt sich zwischen {actor_name} "
+                    f"Ein auÃŸergewÃ¶hnlich gutes GesprÃ¤ch entwickelt sich zwischen {actor_name} "
                     f"und {partner_name}. Die beiden finden gemeinsame Interessen und verstehen "
-                    f"sich auf Anhieb prächtig."
+                    f"sich auf Anhieb prÃ¤chtig."
                 )
             else:
                 fluff_lines.append(
                     f"{actor_name} und {partner_name} verbringen einige Zeit miteinander. "
-                    f"Die Unterhaltung verläuft angenehm und beide fühlen sich danach "
+                    f"Die Unterhaltung verlÃ¤uft angenehm und beide fÃ¼hlen sich danach "
                     f"ein wenig besser verbunden."
                 )
         else:
             # Negative Interaktion
             if result.roll <= 4:
                 fluff_lines.append(
-                    f"Die Begegnung zwischen {actor_name} und {partner_name} verläuft katastrophal. "
+                    f"Die Begegnung zwischen {actor_name} und {partner_name} verlÃ¤uft katastrophal. "
                     f"Ein hitziger Streit bricht aus, und beide gehen mit einem schlechten "
-                    f"Gefühl auseinander."
+                    f"GefÃ¼hl auseinander."
                 )
             else:
                 fluff_lines.append(
-                    f"{actor_name} und {partner_name} geraten aneinander. Die Atmosphäre "
-                    f"ist angespannt, und das Gespräch endet mit gegenseitiger Verstimmung."
+                    f"{actor_name} und {partner_name} geraten aneinander. Die AtmosphÃ¤re "
+                    f"ist angespannt, und das GesprÃ¤ch endet mit gegenseitiger Verstimmung."
                 )
 
         fluff_lines.append("")
-        fluff_lines.append(f"Würfelwurf: {result.roll} gegen Ziel {result.target}")
+        fluff_lines.append(f"WÃ¼rfelwurf: {result.roll} gegen Ziel {result.target}")
         fluff_lines.append(f"Beziehung: {result.new_friendship}")
 
         return "\n".join(fluff_lines)
@@ -679,6 +674,9 @@ def main() -> None:
     app = MekSocialGUI(root)
     root.mainloop()
 
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
