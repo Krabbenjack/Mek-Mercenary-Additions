@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 from typing import Dict, Optional, List
+from datetime import date, timedelta
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
@@ -12,12 +13,21 @@ src_path = repo_root.joinpath("src")
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
-# Calendar package imports (embeddable widget)
+# Calendar system imports (required by the full integration)
 try:
-    from merk_calendar import EventManager
+    from merk_calendar.calendar_system import (
+        EventManager,
+        RecurrenceType,
+        DetailedCalendarWindow,
+        DatePickerDialog,
+    )
     from merk_calendar.widget import CalendarWidget
 except Exception:
+    # If calendar package is missing the GUI still runs, calendar features are disabled.
     EventManager = None
+    RecurrenceType = None
+    DetailedCalendarWindow = None
+    DatePickerDialog = None
     CalendarWidget = None
 
 from models import Character
@@ -38,11 +48,13 @@ class MekSocialGUI:
         self.selected_character_id: Optional[str] = None
         self.selected_partner_index: Optional[int] = None
 
-        # If the calendar package is available, create a shared EventManager
-        if EventManager is not None:
-            self.calendar_event_manager = EventManager()
-        else:
-            self.calendar_event_manager = None
+        # Real-world date and event manager
+        self.current_date: date = date.today()
+        self.event_manager = EventManager() if EventManager is not None else None
+
+        # Log popup state
+        self.log_window = None
+        self.log_text = None
 
         self._build_widgets()
 
@@ -91,8 +103,12 @@ class MekSocialGUI:
         top_bar = ttk.Frame(right_frame)
         top_bar.pack(fill=tk.X, pady=4)
 
-        self.day_label = ttk.Label(top_bar, text="Tag: 1")
-        self.day_label.pack(side=tk.LEFT, padx=4)
+        # Replace day label with real date label
+        self.date_label = ttk.Label(top_bar, text="", padding=4, relief="groove")
+        self.date_label.pack(side=tk.LEFT, padx=4)
+        self.date_label.bind("<Button-1>", self._on_date_left_click)
+        self.date_label.bind("<Button-3>", self._on_date_right_click)
+        self._update_date_display()
 
         next_day_btn = ttk.Button(top_bar, text="Nächster Tag", command=self._next_day)
         next_day_btn.pack(side=tk.LEFT, padx=4)
@@ -112,13 +128,19 @@ class MekSocialGUI:
             try:
                 calendar_container = ttk.Frame(top_bar)
                 calendar_container.pack(side="right", padx=8)
-                # Use the shared EventManager so calendar state can be accessed from other parts.
-                # self.calendar_event_manager was created in __init__
-                self.calendar_widget = CalendarWidget(calendar_container, event_manager=self.calendar_event_manager)
+                # Use shared EventManager instance if available
+                self.calendar_widget = CalendarWidget(calendar_container, event_manager=self.event_manager)
                 self.calendar_widget.pack(anchor="ne")
             except Exception as exc:
                 print("Failed to create calendar widget:", exc)
         # ----------------------------------------------------------------------
+
+        # Day events summary bar (under date label)
+        self.day_events_frame = ttk.Frame(right_frame)
+        self.day_events_frame.pack(fill=tk.X, padx=4, pady=(0, 4))
+
+        self.day_events_label = ttk.Label(self.day_events_frame, text="No events for this day.")
+        self.day_events_label.pack(side=tk.LEFT)
 
         # Character details
         details_frame = ttk.LabelFrame(right_frame, text="Charakter")
@@ -138,9 +160,7 @@ class MekSocialGUI:
         self.partner_list.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
         self.partner_list.bind("<<ListboxSelect>>", self._on_partner_select)
 
-        partner_scroll = ttk.Scrollbar(
-            partner_inner, orient=tk.VERTICAL, command=self.partner_list.yview
-        )
+        partner_scroll = ttk.Scrollbar(partner_inner, orient=tk.VERTICAL, command=self.partner_list.yview)
         partner_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.partner_list.configure(yscrollcommand=partner_scroll.set)
 
@@ -149,30 +169,34 @@ class MekSocialGUI:
         button_frame.pack(fill=tk.X, padx=4, pady=4)
 
         self.manual_roll_btn = ttk.Button(
-            button_frame, 
-            text="Manueller Wurf mit ausgewähltem Partner", 
+            button_frame,
+            text="Manueller Wurf mit ausgewähltem Partner",
             command=self._trigger_manual_roll,
             state=tk.DISABLED
         )
         self.manual_roll_btn.pack(side=tk.LEFT, padx=2)
 
         random_roll_btn = ttk.Button(
-            button_frame, 
-            text="Zufälliger Partner-Wurf", 
+            button_frame,
+            text="Zufälliger Partner-Wurf",
             command=self._trigger_random_roll
         )
         random_roll_btn.pack(side=tk.LEFT, padx=2)
 
-        # Log
-        log_frame = ttk.LabelFrame(right_frame, text="Log")
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+        # Show Log button (log moved to popup)
+        show_log_btn = ttk.Button(button_frame, text="Show Log", command=self._show_log_window)
+        show_log_btn.pack(side=tk.RIGHT, padx=2)
 
-        self.log_text = tk.Text(log_frame, height=10, wrap="word")
-        self.log_text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        # Detailed event description area (replaces inline log)
+        events_frame = ttk.LabelFrame(right_frame, text="Events on current day")
+        events_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
-        log_scroll = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
-        log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.log_text.configure(yscrollcommand=log_scroll.set)
+        self.day_events_text = tk.Text(events_frame, wrap="word")
+        self.day_events_text.pack(fill=tk.BOTH, expand=True)
+
+        # Initialize event/UI views
+        self._update_day_events_bar()
+        self._update_day_events_description()
 
     def _build_events_tab(self) -> None:
         # Frame für Ereignisse
@@ -199,6 +223,102 @@ class MekSocialGUI:
         clear_btn.pack(pady=5)
 
     # --- Helper methods ---------------------------------------------------
+
+    def _update_date_display(self):
+        text = self.current_date.strftime("%A, %d.%m.%Y")
+        self.date_label.config(text=text)
+
+    def _on_date_left_click(self, event):
+        if DatePickerDialog is None:
+            return
+        picker = DatePickerDialog(self.master, self.current_date)
+        self.master.wait_window(picker.window)
+        if getattr(picker, "result", None):
+            self.current_date = picker.result
+            self._update_date_display()
+            self._update_day_events_bar()
+            self._update_day_events_description()
+
+    def _on_date_right_click(self, event):
+        if DetailedCalendarWindow is None:
+            return
+        DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
+
+    def _update_day_events_bar(self):
+        if self.event_manager is None:
+            self.day_events_label.config(text="Events disabled")
+            return
+        events = self.event_manager.get_events_for_date(self.current_date)
+        if not events:
+            text = "No events for this day."
+        else:
+            titles = ", ".join(e.title for e in events)
+            text = f"Events today: {titles}"
+        self.day_events_label.config(text=text)
+
+    def _update_day_events_description(self):
+        if self.event_manager is None:
+            self.day_events_text.delete("1.0", "end")
+            self.day_events_text.insert("end", "Events disabled")
+            return
+
+        self.day_events_text.delete("1.0", "end")
+        events = self.event_manager.get_events_for_date(self.current_date)
+
+        if not events:
+            self.day_events_text.insert("end", "No events for this day.")
+            return
+
+        for event in events:
+            self.day_events_text.insert("end", f"- {event.title} ({event.recurrence_type.value})\n")
+            desc = self._describe_event(event)
+            if desc:
+                self.day_events_text.insert("end", f"  {desc}\n\n")
+
+    def _describe_event(self, event):
+        t = event.title.lower()
+        if "simulator" in t or "übung" in t:
+            return "The unit performs simulator training focusing on tactics and coordination."
+        if "wartung" in t or "maintenance" in t:
+            return "The mechs undergo scheduled maintenance and repairs."
+        return ""
+
+    def _ensure_log_window(self):
+        if self.log_window and self.log_window.winfo_exists():
+            return
+        self.log_window = tk.Toplevel(self.master)
+        self.log_window.title("Log")
+        self.log_window.geometry("700x400")
+
+        frame = ttk.Frame(self.log_window)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        self.log_text = tk.Text(frame, wrap="word")
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+
+        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.log_text.configure(yscrollcommand=scrollbar.set)
+
+        def on_close():
+            self.log_window.destroy()
+            self.log_window = None
+            self.log_text = None
+
+        self.log_window.protocol("WM_DELETE_WINDOW", on_close)
+
+    def _show_log_window(self):
+        self._ensure_log_window()
+        if self.log_window:
+            self.log_window.deiconify()
+            self.log_window.lift()
+
+    def _log(self, text: str) -> None:
+        # Use popup log window
+        self._ensure_log_window()
+        if self.log_text:
+            self.log_text.insert("end", text + "\n")
+            self.log_text.see("end")
 
     def _clear_tree(self) -> None:
         self.tree.delete(*self.tree.get_children(self.root_node))
@@ -232,14 +352,14 @@ class MekSocialGUI:
         self.tree.item(self.root_node, open=True)
         self.tree.item(self.no_toe_node, open=True)
 
-    def _log(self, text: str) -> None:
-        self.log_text.insert(tk.END, text + "\n")
-        self.log_text.see(tk.END)
+    def _log_simple(self, text: str) -> None:
+        # Internal helper to append to the events tab text (keeps events tab behavior)
+        self.events_text.insert("end", text + "\n\n")
+        self.events_text.see("end")
 
     def _add_event(self, text: str) -> None:
         """Fügt einen Ereignis-Text zum Ereignis-Tab hinzu"""
-        self.events_text.insert(tk.END, text + "\n\n")
-        self.events_text.see(tk.END)
+        self._log_simple(text)
 
     def _clear_events(self) -> None:
         self.events_text.delete("1.0", tk.END)
@@ -345,6 +465,9 @@ class MekSocialGUI:
             self._populate_tree()
             self._log(f"Personal aus {Path(path).name} geladen ({len(self.characters)} Charaktere).")
             messagebox.showinfo("Erfolg", f"{len(self.characters)} Charaktere geladen!")
+            # Update details and day/event displays (if any)
+            self._update_day_events_bar()
+            self._update_day_events_description()
         except Exception as exc:
             messagebox.showerror("Fehler beim Laden", str(exc))
             import traceback
@@ -377,8 +500,15 @@ class MekSocialGUI:
             messagebox.showinfo("Hinweis", "Keine Charaktere geladen.")
             return
 
+        # campaign day counter remains
         self.current_day += 1
-        self.day_label.config(text=f"Tag: {self.current_day}")
+
+        # advance the real date, update displays
+        self.current_date += timedelta(days=1)
+        self._update_date_display()
+        self._update_day_events_bar()
+        self._update_day_events_description()
+
         reset_daily_pools(self.characters)
         self._log(f"--- Tag {self.current_day} ---")
         self._log(f"Interaktionspunkte zurückgesetzt.")
