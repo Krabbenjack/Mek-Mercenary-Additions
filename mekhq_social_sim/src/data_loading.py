@@ -2,8 +2,24 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Dict
+from datetime import datetime, date
 
 from models import Character, UnitAssignment
+
+
+def _parse_iso_date(date_str: str) -> date | None:
+    """Parse yyyy-mm-dd (ISO) date string to datetime.date, return None on failure."""
+    if not date_str:
+        return None
+    try:
+        # expected format in JSON: yyyy-mm-dd
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except Exception:
+        # fallback to generic ISO parse
+        try:
+            return datetime.fromisoformat(date_str).date()
+        except Exception:
+            return None
 
 
 def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
@@ -18,6 +34,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
           "callsign": "Bulldog"
         },
         "age": 32,
+        "birthday": "1990-05-12",
         "primary_role": "MechWarrior",
         "personality": {
           "aggression": "AGGRESSIVE",
@@ -46,13 +63,18 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             name = str(name_data) if name_data else "Unknown"
             callsign = None
 
+        # Age field from JSON (may be 0 or missing)
         age = int(entry.get("age") or 0)
         profession = entry.get("primary_role") or entry.get("profession")
-        
+
+        # Try parse birthday (JSON uses yyyy-mm-dd)
+        birth_str = entry.get("birthday") or entry.get("birthdate") or entry.get("dateOfBirth")
+        birthday = _parse_iso_date(birth_str) if birth_str else None
+
         # Personality traits extrahieren und in 0-100 Werte konvertieren
         traits = {}
         personality = entry.get("personality", {})
-        
+
         if isinstance(personality, dict):
             # Trait-Index-Werte (0-4 oder 0-5) in 0-100 skalieren
             trait_mappings = {
@@ -61,7 +83,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
                 "greedDescriptionIndex": ("greed", 2),  # 0-2 -> 0-100
                 "socialDescriptionIndex": ("gregariousness", 5),  # 0-5 -> 0-100
             }
-            
+
             for index_key, (trait_name, max_val) in trait_mappings.items():
                 index_val = personality.get(index_key)
                 if index_val is not None:
@@ -71,7 +93,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
                         traits[trait_name] = scaled_value
                     except (ValueError, TypeError, ZeroDivisionError):
                         pass
-        
+
         # Fallback: Wenn alte "traits" Struktur vorhanden
         if not traits and "traits" in entry:
             old_traits = entry.get("traits", {})
@@ -85,6 +107,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             age=age,
             profession=profession,
             traits=traits,
+            birthday=birthday,
         )
         characters[cid] = char
 
@@ -124,32 +147,32 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
 
     # Erstelle Mapping: Force-ID -> Force-Info
     force_map = {}
-    
+
     def _flatten_forces(force_list, parent_name=None, parent_type=None):
         for force in force_list:
             fid = str(force.get("id"))
             fname = force.get("name", "Unknown Force")
             ftype_num = force.get("force_type", 0)
-            
+
             # Force-Type als String
             force_type_names = {
                 0: "Combat",
-                1: "Support", 
+                1: "Support",
                 2: "Transport",
                 3: "Civilian"
             }
             ftype = force_type_names.get(ftype_num, "Unknown")
-            
+
             force_map[fid] = {
                 "name": fname,
                 "type": ftype
             }
-            
+
             # Rekursiv Sub-Forces verarbeiten
             sub_forces = force.get("sub_forces", [])
             if sub_forces:
                 _flatten_forces(sub_forces, fname, ftype)
-    
+
     _flatten_forces(forces)
 
     # Erstelle Mapping: Unit-ID -> Force-Info
@@ -164,14 +187,14 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
     person_to_unit = {}
     for unit in units:
         uid = str(unit.get("id"))
-        
+
         # Verschiedene Crew-Positionen
         crew_ids = []
         for key in ["driverId", "gunnerId", "commanderId", "navigatorId", "techId"]:
             cid = unit.get(key)
             if cid:
                 crew_ids.append(str(cid))
-        
+
         for cid in crew_ids:
             person_to_unit[cid] = uid
 
