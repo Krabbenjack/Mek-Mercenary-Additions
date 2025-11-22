@@ -6,158 +6,106 @@ This module provides:
 - Main calendar window with date display
 - Date picker (left-click on date display)
 - Detailed calendar view (right-click on date display)
-- Event creation with recurrence options (DAILY, WEEKLY, MONTHLY, YEARLY, ONCE)
+- Event creation with recurrence options (DAILY, MONTHLY, YEARLY, ONCE)
 - Event storage and retrieval with recurrence calculation
+- Integration with events package for persistence
 
 Run: python src/calendar_system.py
 """
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
-from enum import Enum
 from typing import List
 import calendar as calendar_module
+
+# Try to import from events package, fall back to legacy if not available
+try:
+    import sys
+    from pathlib import Path
+    repo_root = Path(__file__).resolve().parents[2]
+    src_path = repo_root / "src"
+    if str(src_path) not in sys.path:
+        sys.path.insert(0, str(src_path))
+    
+    from events import EventManager, Event, EventType, RecurrenceType
+    from events.dialogs import EventCreationDialog as NewEventCreationDialog, EventEditDialog, ManageEventsDialog
+    EVENTS_PACKAGE_AVAILABLE = True
+except ImportError:
+    EVENTS_PACKAGE_AVAILABLE = False
+    from enum import Enum
+    
+    # Legacy fallback definitions
+    class RecurrenceType(Enum):
+        """Enum for event recurrence types."""
+        ONCE = "once"
+        DAILY = "daily"
+        WEEKLY = "weekly"
+        MONTHLY = "monthly"
+        YEARLY = "yearly"
+
+    class Event:
+        """Legacy event class for backward compatibility."""
+        _counter = 0
+
+        def __init__(self, title: str, start_date, recurrence_type: RecurrenceType):
+            Event._counter += 1
+            self.id = Event._counter
+            self.title = title
+            self.start_date = start_date
+            self.recurrence_type = recurrence_type
+
+        def __repr__(self):
+            return f"Event(id={self.id}, title='{self.title}', date={self.start_date}, recurrence={self.recurrence_type.value})"
+
+    class EventManager:
+        """Legacy EventManager for backward compatibility."""
+        def __init__(self):
+            self.events: List[Event] = []
+
+        def add_event(self, title: str, start_date, recurrence_type: RecurrenceType) -> Event:
+            event = Event(title, start_date, recurrence_type)
+            self.events.append(event)
+            return event
+
+        def remove_event(self, event_id: int) -> bool:
+            for i, event in enumerate(self.events):
+                if event.id == event_id:
+                    self.events.pop(i)
+                    return True
+            return False
+
+        def get_events_for_date(self, target_date) -> List[Event]:
+            active_events = []
+            for event in self.events:
+                if self._event_occurs_on_date(event, target_date):
+                    active_events.append(event)
+            return active_events
+
+        def _event_occurs_on_date(self, event: Event, target_date) -> bool:
+            if target_date < event.start_date:
+                return False
+            r = event.recurrence_type
+            if r == RecurrenceType.ONCE:
+                return target_date == event.start_date
+            if r == RecurrenceType.DAILY:
+                return True
+            if r == RecurrenceType.WEEKLY:
+                return (target_date - event.start_date).days % 7 == 0
+            if r == RecurrenceType.MONTHLY:
+                return target_date.day == event.start_date.day and target_date >= event.start_date
+            if r == RecurrenceType.YEARLY:
+                return (target_date.month == event.start_date.month and
+                        target_date.day == event.start_date.day and
+                        target_date >= event.start_date)
+            return False
+
+        def get_all_events(self) -> List[Event]:
+            return self.events.copy()
 
 
 # ============================================================================
 # BUSINESS LOGIC - DATA MODEL & EVENT HANDLING
 # ============================================================================
-
-class RecurrenceType(Enum):
-    """Enum for event recurrence types."""
-    ONCE = "once"
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-
-
-class Event:
-    """
-    Represents a single event/appointment.
-
-    Attributes:
-        id: Unique identifier (incrementing counter)
-        title: Event name/description
-        start_date: datetime.date object
-        recurrence_type: RecurrenceType enum
-    """
-
-    _counter = 0
-
-    def __init__(self, title: str, start_date, recurrence_type: RecurrenceType):
-        Event._counter += 1
-        self.id = Event._counter
-        self.title = title
-        self.start_date = start_date
-        self.recurrence_type = recurrence_type
-
-    def __repr__(self):
-        return f"Event(id={self.id}, title='{self.title}', date={self.start_date}, recurrence={self.recurrence_type.value})"
-
-
-class EventManager:
-    """
-    Business logic for managing events.
-    Handles storage, retrieval, and recurrence calculation.
-    """
-
-    def __init__(self):
-        """Initialize empty event storage (in-memory)."""
-        self.events: List[Event] = []
-
-    def add_event(self, title: str, start_date, recurrence_type: RecurrenceType) -> Event:
-        """
-        Add a new event to storage.
-
-        Args:
-            title: Event description
-            start_date: datetime.date object
-            recurrence_type: RecurrenceType enum value
-
-        Returns:
-            The created Event object
-        """
-        event = Event(title, start_date, recurrence_type)
-        self.events.append(event)
-        return event
-
-    def remove_event(self, event_id: int) -> bool:
-        """Remove an event by ID."""
-        for i, event in enumerate(self.events):
-            if event.id == event_id:
-                self.events.pop(i)
-                return True
-        return False
-
-    def get_events_for_date(self, target_date) -> List[Event]:
-        """
-        Get all events active on a specific date (including recurring ones).
-
-        Args:
-            target_date: datetime.date object
-
-        Returns:
-            List of Event objects that occur on target_date
-        """
-        active_events = []
-        for event in self.events:
-            if self._event_occurs_on_date(event, target_date):
-                active_events.append(event)
-        return active_events
-
-    def _event_occurs_on_date(self, event: Event, target_date) -> bool:
-        """
-        Check if a specific event occurs on the target date based on recurrence rules.
-
-        Recurrence logic:
-        - ONCE: only on start_date
-        - DAILY: every day on/after start_date
-        - WEEKLY: same weekday every 7 days from start_date
-        - MONTHLY: same day-of-month if day exists (simple check: day matches)
-        - YEARLY: same month and day every year on/after start_date
-
-        Note: This is intentionally simple and can be extended (e.g. RRULE support).
-        """
-        if target_date < event.start_date:
-            return False
-
-        r = event.recurrence_type
-        if r == RecurrenceType.ONCE:
-            return target_date == event.start_date
-        if r == RecurrenceType.DAILY:
-            return True
-        if r == RecurrenceType.WEEKLY:
-            return (target_date - event.start_date).days % 7 == 0
-        if r == RecurrenceType.MONTHLY:
-            # Occurs if day-of-month matches. Does not attempt to shift for months without the day.
-            return target_date.day == event.start_date.day and target_date >= event.start_date
-        if r == RecurrenceType.YEARLY:
-            return (target_date.month == event.start_date.month and
-                    target_date.day == event.start_date.day and
-                    target_date >= event.start_date)
-        return False
-
-    def get_all_events(self) -> List[Event]:
-        """Return all stored events (shallow copy)."""
-        return self.events.copy()
-
-    def save_events(self, filepath: str) -> None:
-        """
-        STUB: Save events to persistent storage (file/database).
-
-        Where to implement persistence:
-        - JSON serialization
-        - SQLite database
-        - CSV export
-        """
-        # TODO: Implement file/database persistence
-        print(f"[SAVE] Would save {len(self.events)} events to {filepath}")
-
-    def load_events(self, filepath: str) -> None:
-        """STUB: Load events from persistent storage."""
-        # TODO: Implement file/database loading
-        print(f"[LOAD] Would load events from {filepath}")
 
 
 # ============================================================================
@@ -216,7 +164,7 @@ class DatePickerDialog:
 
 
 class EventCreationDialog:
-    """Dialog for creating a new event with recurrence selection."""
+    """Legacy dialog for creating a new event with recurrence selection (for backward compatibility)."""
 
     def __init__(self, parent, selected_date):
         self.result = None  # (title, recurrence_type)
@@ -251,6 +199,9 @@ class EventCreationDialog:
         tk.Button(button_frame, text="Create", command=self._on_create, width=10).pack(side=tk.LEFT, padx=5)
         tk.Button(button_frame, text="Cancel", command=self.window.destroy, width=10).pack(side=tk.LEFT, padx=5)
 
+        self.window.transient(parent)
+        self.window.focus()
+
     def _on_create(self):
         title = self.title_entry.get().strip()
         if not title:
@@ -265,16 +216,22 @@ class EventCreationDialog:
 class DetailedCalendarWindow:
     """
     Detailed calendar view with month navigation and event display.
+    Features right-click context menu on day buttons for Add Event and Manage Events.
     """
 
-    def __init__(self, parent, event_manager: EventManager, current_date=None):
+    def __init__(self, parent, event_manager, current_date=None):
         self.event_manager = event_manager
         self.current_date = current_date or datetime.now().date()
         self.selected_date = self.current_date
+        self.parent = parent
 
         self.window = tk.Toplevel(parent)
         self.window.title("Calendar View")
         self.window.geometry("700x600")
+
+        # Register refresh callback with event manager if supported
+        if EVENTS_PACKAGE_AVAILABLE and hasattr(self.event_manager, 'add_refresh_callback'):
+            self.event_manager.add_refresh_callback(self._refresh_calendar)
 
         self._create_navigation()
         self._create_calendar_grid()
@@ -300,11 +257,14 @@ class DetailedCalendarWindow:
                      bg="lightgray", padx=5, pady=5).grid(row=0, column=col, sticky="nsew")
 
         self.day_buttons = {}
+        self.day_dates = {}  # Map (row, col) to date object
         for row in range(1, 7):
             for col in range(7):
                 btn = tk.Button(self.calendar_frame, text="", font=("Arial", 10),
                                 width=8, height=3, command=lambda r=row, c=col: self._on_day_click(r, c))
                 btn.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+                # Add right-click binding for context menu
+                btn.bind("<Button-3>", lambda e, r=row, c=col: self._on_day_right_click(e, r, c))
                 self.day_buttons[(row, col)] = btn
 
         for i in range(7):
@@ -349,8 +309,10 @@ class DetailedCalendarWindow:
 
         cal = calendar_module.monthcalendar(year, month)
 
+        # Clear all buttons and date mapping
         for (row, col), btn in self.day_buttons.items():
             btn.config(text="", bg="white", fg="black", state=tk.NORMAL)
+            self.day_dates[(row, col)] = None
 
         for week_num, week in enumerate(cal):
             for day_num, day in enumerate(week):
@@ -360,6 +322,7 @@ class DetailedCalendarWindow:
                 col = day_num
                 btn = self.day_buttons[(row, col)]
                 date_obj = datetime(year, month, day).date()
+                self.day_dates[(row, col)] = date_obj  # Store date mapping
                 events = self.event_manager.get_events_for_date(date_obj)
                 display_text = str(day)
                 if events:
@@ -369,15 +332,84 @@ class DetailedCalendarWindow:
         self._update_events_display()
 
     def _on_day_click(self, row, col):
-        btn = self.day_buttons[(row, col)]
-        day_text = btn.cget("text").split('\n')[0]
-        if day_text:
-            try:
-                day = int(day_text)
-                self.selected_date = datetime(self.current_date.year, self.current_date.month, day).date()
-                self._update_events_display()
-            except ValueError:
-                pass
+        date_obj = self.day_dates.get((row, col))
+        if date_obj:
+            self.selected_date = date_obj
+            self._update_events_display()
+
+    def _on_day_right_click(self, event, row, col):
+        """Handle right-click on day button to show context menu."""
+        date_obj = self.day_dates.get((row, col))
+        if not date_obj:
+            return
+        
+        self.selected_date = date_obj
+        
+        # Create context menu
+        menu = tk.Menu(self.window, tearoff=0)
+        menu.add_command(label="Add Event", command=lambda: self._context_add_event(date_obj))
+        menu.add_command(label="Manage Events", command=lambda: self._context_manage_events(date_obj))
+        
+        # Display menu at mouse position
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def _context_add_event(self, date_obj):
+        """Handle 'Add Event' from context menu."""
+        if EVENTS_PACKAGE_AVAILABLE:
+            dialog = NewEventCreationDialog(self.window, date_obj)
+            self.window.wait_window(dialog.window)
+            if dialog.result:
+                event_type, recurrence_type = dialog.result
+                self.event_manager.add_event(event_type, date_obj, recurrence_type)
+                self._refresh_calendar()
+        else:
+            # Legacy fallback
+            dialog = EventCreationDialog(self.window, date_obj)
+            self.window.wait_window(dialog.window)
+            if dialog.result:
+                title, recurrence_type = dialog.result
+                self.event_manager.add_event(title, date_obj, recurrence_type)
+                self._refresh_calendar()
+
+    def _context_manage_events(self, date_obj):
+        """Handle 'Manage Events' from context menu."""
+        events = self.event_manager.get_events_for_date(date_obj)
+        
+        if EVENTS_PACKAGE_AVAILABLE:
+            ManageEventsDialog(
+                self.window,
+                date_obj,
+                events,
+                on_edit=self._edit_event,
+                on_delete=self._delete_event
+            )
+        else:
+            # Simple fallback message
+            if not events:
+                messagebox.showinfo("No Events", f"No events on {date_obj.strftime('%d.%m.%Y')}")
+            else:
+                event_list = "\n".join([f"- {e.title} ({e.recurrence_type.value})" for e in events])
+                messagebox.showinfo("Events", f"Events on {date_obj.strftime('%d.%m.%Y')}:\n\n{event_list}")
+
+    def _edit_event(self, event):
+        """Handle event edit request from ManageEventsDialog."""
+        if not EVENTS_PACKAGE_AVAILABLE:
+            return
+        
+        dialog = EventEditDialog(self.window, event)
+        self.window.wait_window(dialog.window)
+        if dialog.result:
+            event_type, start_date, recurrence_type = dialog.result
+            self.event_manager.update_event(event.id, event_type, start_date, recurrence_type)
+            self._refresh_calendar()
+
+    def _delete_event(self, event):
+        """Handle event delete request from ManageEventsDialog."""
+        self.event_manager.remove_event(event.id)
+        self._refresh_calendar()
 
     def _update_events_display(self):
         self.events_listbox.delete(0, tk.END)
@@ -386,12 +418,21 @@ class DetailedCalendarWindow:
             self.events_listbox.insert(tk.END, f"{event.title} ({event.recurrence_type.value})")
 
     def _on_add_event(self):
-        dialog = EventCreationDialog(self.window, self.selected_date)
-        self.window.wait_window(dialog.window)
-        if dialog.result:
-            title, recurrence_type = dialog.result
-            self.event_manager.add_event(title, self.selected_date, recurrence_type)
-            self._refresh_calendar()
+        if EVENTS_PACKAGE_AVAILABLE:
+            dialog = NewEventCreationDialog(self.window, self.selected_date)
+            self.window.wait_window(dialog.window)
+            if dialog.result:
+                event_type, recurrence_type = dialog.result
+                self.event_manager.add_event(event_type, self.selected_date, recurrence_type)
+                self._refresh_calendar()
+        else:
+            # Legacy fallback
+            dialog = EventCreationDialog(self.window, self.selected_date)
+            self.window.wait_window(dialog.window)
+            if dialog.result:
+                title, recurrence_type = dialog.result
+                self.event_manager.add_event(title, self.selected_date, recurrence_type)
+                self._refresh_calendar()
 
     def _on_remove_event(self):
         selection = self.events_listbox.curselection()
