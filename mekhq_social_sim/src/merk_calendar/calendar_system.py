@@ -22,10 +22,12 @@ import calendar as calendar_module
 try:
     import sys
     from pathlib import Path
-    repo_root = Path(__file__).resolve().parents[2]
-    src_path = repo_root / "src"
-    if str(src_path) not in sys.path:
-        sys.path.insert(0, str(src_path))
+    
+    # Add src directory to path if not already present (for standalone execution)
+    current_file = Path(__file__).resolve()
+    src_dir = current_file.parent.parent
+    if src_dir.name == "src" and str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
     
     from events import EventManager, Event, EventType, RecurrenceType
     from events.dialogs import EventCreationDialog as NewEventCreationDialog, EventEditDialog, ManageEventsDialog
@@ -36,10 +38,9 @@ except ImportError:
     
     # Legacy fallback definitions
     class RecurrenceType(Enum):
-        """Enum for event recurrence types."""
+        """Enum for event recurrence types (matching new system restrictions)."""
         ONCE = "once"
         DAILY = "daily"
-        WEEKLY = "weekly"
         MONTHLY = "monthly"
         YEARLY = "yearly"
 
@@ -89,8 +90,6 @@ except ImportError:
                 return target_date == event.start_date
             if r == RecurrenceType.DAILY:
                 return True
-            if r == RecurrenceType.WEEKLY:
-                return (target_date - event.start_date).days % 7 == 0
             if r == RecurrenceType.MONTHLY:
                 return target_date.day == event.start_date.day and target_date >= event.start_date
             if r == RecurrenceType.YEARLY:

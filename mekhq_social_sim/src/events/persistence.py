@@ -96,8 +96,17 @@ def load_events(filepath: Path) -> List[Event]:
         
         events = [Event.from_dict(event_data) for event_data in data.get("events", [])]
         return events
-    except (json.JSONDecodeError, KeyError, ValueError) as e:
-        print(f"[ERROR] Failed to load events from {filepath}: {e}")
+    except json.JSONDecodeError as e:
+        import sys
+        print(f"[ERROR] Invalid JSON in {filepath}: {e}", file=sys.stderr)
+        return []
+    except (KeyError, ValueError) as e:
+        import sys
+        print(f"[ERROR] Invalid event data in {filepath}: {e}", file=sys.stderr)
+        return []
+    except (OSError, IOError) as e:
+        import sys
+        print(f"[ERROR] Failed to read {filepath}: {e}", file=sys.stderr)
         return []
 
 
@@ -124,6 +133,11 @@ def save_events(events: List[Event], filepath: Path) -> bool:
             json.dump(data, f, indent=2, ensure_ascii=False)
         
         return True
-    except Exception as e:
-        print(f"[ERROR] Failed to save events to {filepath}: {e}")
+    except (OSError, IOError) as e:
+        import sys
+        print(f"[ERROR] Failed to save events to {filepath}: {e}", file=sys.stderr)
+        return False
+    except (TypeError, ValueError) as e:
+        import sys
+        print(f"[ERROR] Failed to serialize event data: {e}", file=sys.stderr)
         return False

@@ -55,7 +55,9 @@ class EventManager:
             try:
                 callback()
             except Exception as e:
-                print(f"[ERROR] Refresh callback failed: {e}")
+                # Log callback errors but continue processing other callbacks
+                import sys
+                print(f"[WARNING] Refresh callback failed: {e}", file=sys.stderr)
 
     def add_event(self, event_type: EventType, start_date: date, recurrence_type: RecurrenceType) -> Event:
         """
@@ -198,6 +200,7 @@ class EventManager:
             self.events = load_events(self.storage_path)
             self._trigger_refresh()
             return True
-        except Exception as e:
-            print(f"[ERROR] Failed to load events: {e}")
+        except (OSError, IOError) as e:
+            import sys
+            print(f"[ERROR] Failed to load events from {self.storage_path}: {e}", file=sys.stderr)
             return False
