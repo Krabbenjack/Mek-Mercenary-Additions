@@ -542,6 +542,7 @@ def main():
         app.event_manager.add_event(EventType.EQUIPMENT_MAINTENANCE, today + timedelta(days=15), RecurrenceType.YEARLY)
     else:
         # Legacy system with free-text titles
+        # Note: Changed from WEEKLY to MONTHLY for Team Meeting since WEEKLY is no longer supported
         app.event_manager.add_event("Team Meeting", today, RecurrenceType.MONTHLY)
         app.event_manager.add_event("Dentist Appointment", today + timedelta(days=5), RecurrenceType.ONCE)
         # birthday example (replace year if necessary)

@@ -4,10 +4,10 @@ Event Manager - business logic for managing events with persistence.
 Handles event storage, retrieval, recurrence calculation, and provides
 refresh hooks for UI integration.
 """
-import sys
 from datetime import date
 from pathlib import Path
 from typing import List, Callable, Optional
+import sys
 
 from .persistence import Event, EventType, RecurrenceType, load_events, save_events
 

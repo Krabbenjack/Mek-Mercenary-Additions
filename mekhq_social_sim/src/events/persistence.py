@@ -4,11 +4,11 @@ Event persistence layer - JSON storage for events.
 Handles loading and saving events to/from JSON files.
 """
 import json
-import sys
 from datetime import date, datetime
 from pathlib import Path
 from typing import List, Dict, Any
 from enum import Enum
+import sys
 
 
 class RecurrenceType(Enum):
