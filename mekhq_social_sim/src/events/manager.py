@@ -4,6 +4,7 @@ Event Manager - business logic for managing events with persistence.
 Handles event storage, retrieval, recurrence calculation, and provides
 refresh hooks for UI integration.
 """
+import sys
 from datetime import date
 from pathlib import Path
 from typing import List, Callable, Optional
@@ -56,7 +57,6 @@ class EventManager:
                 callback()
             except Exception as e:
                 # Log callback errors but continue processing other callbacks
-                import sys
                 print(f"[WARNING] Refresh callback failed: {e}", file=sys.stderr)
 
     def add_event(self, event_type: EventType, start_date: date, recurrence_type: RecurrenceType) -> Event:
@@ -201,6 +201,5 @@ class EventManager:
             self._trigger_refresh()
             return True
         except (OSError, IOError) as e:
-            import sys
             print(f"[ERROR] Failed to load events from {self.storage_path}: {e}", file=sys.stderr)
             return False

@@ -4,6 +4,7 @@ Event persistence layer - JSON storage for events.
 Handles loading and saving events to/from JSON files.
 """
 import json
+import sys
 from datetime import date, datetime
 from pathlib import Path
 from typing import List, Dict, Any
@@ -97,15 +98,12 @@ def load_events(filepath: Path) -> List[Event]:
         events = [Event.from_dict(event_data) for event_data in data.get("events", [])]
         return events
     except json.JSONDecodeError as e:
-        import sys
         print(f"[ERROR] Invalid JSON in {filepath}: {e}", file=sys.stderr)
         return []
     except (KeyError, ValueError) as e:
-        import sys
         print(f"[ERROR] Invalid event data in {filepath}: {e}", file=sys.stderr)
         return []
     except (OSError, IOError) as e:
-        import sys
         print(f"[ERROR] Failed to read {filepath}: {e}", file=sys.stderr)
         return []
 
@@ -134,10 +132,8 @@ def save_events(events: List[Event], filepath: Path) -> bool:
         
         return True
     except (OSError, IOError) as e:
-        import sys
         print(f"[ERROR] Failed to save events to {filepath}: {e}", file=sys.stderr)
         return False
     except (TypeError, ValueError) as e:
-        import sys
         print(f"[ERROR] Failed to serialize event data: {e}", file=sys.stderr)
         return False

@@ -534,14 +534,22 @@ def main():
 
     # sample events for demonstration
     today = datetime.now().date()
-    app.event_manager.add_event("Team Meeting", today, RecurrenceType.WEEKLY)
-    app.event_manager.add_event("Dentist Appointment", today + timedelta(days=5), RecurrenceType.ONCE)
-    # birthday example (replace year if necessary)
-    try:
-        birthday = today.replace(month=12, day=25)
-    except ValueError:
-        birthday = today
-    app.event_manager.add_event("Birthday Reminder", birthday, RecurrenceType.YEARLY)
+    
+    if EVENTS_PACKAGE_AVAILABLE:
+        # Use new event system with predefined types
+        app.event_manager.add_event(EventType.FIELD_TRAINING, today, RecurrenceType.MONTHLY)
+        app.event_manager.add_event(EventType.SIMULATOR_TRAINING, today + timedelta(days=5), RecurrenceType.ONCE)
+        app.event_manager.add_event(EventType.EQUIPMENT_MAINTENANCE, today + timedelta(days=15), RecurrenceType.YEARLY)
+    else:
+        # Legacy system with free-text titles
+        app.event_manager.add_event("Team Meeting", today, RecurrenceType.MONTHLY)
+        app.event_manager.add_event("Dentist Appointment", today + timedelta(days=5), RecurrenceType.ONCE)
+        # birthday example (replace year if necessary)
+        try:
+            birthday = today.replace(month=12, day=25)
+        except ValueError:
+            birthday = today
+        app.event_manager.add_event("Birthday Reminder", birthday, RecurrenceType.YEARLY)
 
     root.mainloop()
 
