@@ -32,6 +32,14 @@ The project includes a configurable interaction engine, a graphical user interfa
 - Button to trigger random interactions  
 - Log window  
 - Day progression & interaction point reset
+- Calendar integration with date picker and detailed month view
+- Event management system with:
+  - Right-click context menu on calendar days
+  - Event creation with predefined types (Field Training, Simulator Training, Equipment Maintenance)
+  - Event recurrence patterns (Once, Daily, Monthly, Yearly)
+  - Event editing and deletion
+  - Persistent storage (JSON)
+  - Automatic event count display on calendar
 
 ### ✔ MekHQ Import
 - `mekhq_personnel_exporter.py`  
@@ -51,15 +59,27 @@ The project includes a configurable interaction engine, a graphical user interfa
 │   ├── modifiers_config.json
 │   └── traits_config.json
 │
-├── data_loading.py
-├── models.py
-├── interaction_pool.py
-├── roll_engine.py
-├── social_modifiers.py
-├── personality_synergy.py
-├── config_loader.py
-├── gui.py
-├── mekhq_personnel_exporter.py
+├── src/
+│   ├── events/                  # Event system package
+│   │   ├── __init__.py
+│   │   ├── persistence.py       # JSON save/load for events
+│   │   ├── manager.py           # EventManager with refresh hooks
+│   │   └── dialogs.py           # GUI dialogs for event management
+│   │
+│   ├── merk_calendar/           # Calendar system package
+│   │   ├── __init__.py
+│   │   ├── calendar_system.py   # Core calendar implementation
+│   │   └── widget.py            # Embeddable calendar widget
+│   │
+│   ├── data_loading.py
+│   ├── models.py
+│   ├── interaction_pool.py
+│   ├── roll_engine.py
+│   ├── social_modifiers.py
+│   ├── personality_synergy.py
+│   ├── config_loader.py
+│   ├── gui.py
+│   └── mekhq_personnel_exporter.py
 │
 ├── README.md
 └── requirements.txt  (optional)
@@ -94,6 +114,38 @@ python gui.py
 
 ---
 
+## 📅 Using the Event System
+
+The event system allows you to schedule and track unit activities with recurrence patterns.
+
+### Adding Events
+
+1. **From the Main GUI**: Click on the date display (top bar) with right-click to open the calendar view
+2. **In the Calendar View**: Right-click on any day to see the context menu:
+   - **Add Event**: Create a new event for that day
+   - **Manage Events**: View, edit, or delete existing events
+
+### Event Types
+
+Three predefined event types are available:
+- **Field Training (Infantry)**: Ground troop training exercises
+- **Simulator Training (MekWarrior)**: BattleMech simulation sessions
+- **Equipment Maintenance (Tech)**: Regular maintenance schedules
+
+### Recurrence Patterns
+
+Events can repeat automatically:
+- **Once**: Event occurs only on the selected date
+- **Daily**: Event repeats every day from the start date
+- **Monthly**: Event repeats on the same day of each month
+- **Yearly**: Event repeats on the same date each year
+
+### Event Storage
+
+Events are automatically saved to `~/.mekhq_social_sim/events.json` and persist between sessions.
+
+---
+
 ## 📦 Importing MekHQ Campaign Data
 
 1. Export your `.cpnx` file from MekHQ  
@@ -125,23 +177,36 @@ Computes a bonus/penalty based on similarity of character traits (configurable).
 ### **🔹 Interaction Pool (`interaction_pool.py`)**
 - Each character receives daily interaction points  
 - Reset via “Next Day” button in GUI
+### **🔹 Event System (`src/events/`)**
+- **EventManager**: Centralized event management with JSON persistence
+- **Event Types**: Predefined activities (Field Training, Simulator Training, Equipment Maintenance)
+- **Recurrence**: Flexible patterns (Once, Daily, Monthly, Yearly)
+- **Persistence**: Automatic save/load to JSON
+- **Refresh Hooks**: UI components can register callbacks for automatic updates
+
 
 ---
 
 ## 🗺 Roadmap (Planned Features)
 
-### 🔥 1. Calendar System (in progress)
-- Birthdays for characters  
-- Automatic aging system  
-- GUI date display  
-- Age modifiers updated dynamically
+### ✅ 1. Calendar System (COMPLETED)
+- ✓ Birthdays for characters  
+- ✓ Automatic aging system  
+- ✓ GUI date display  
+- ✓ Age modifiers updated dynamically
+- ✓ Event system with persistence (JSON storage)
+- ✓ Predefined event types (Field Training, Simulator Training, Equipment Maintenance)
+- ✓ Event recurrence (Once, Daily, Monthly, Yearly)
+- ✓ Right-click context menu on calendar days
+- ✓ Event creation, editing, and deletion through GUI dialogs
+- ✓ Automatic event count display on calendar days
 
 ### 🔥 2. Weekly Schedules
 - Monday–Sunday routines  
 - Tasks: Training, Maintenance, Free time, Missions  
 - Influences interaction frequency
 
-### 🔥 3. Event System
+### 🔥 3. Event System Extensions
 - Random events  
 - Special interactions  
 - Conflict triggers, loyalty swings, drama events
