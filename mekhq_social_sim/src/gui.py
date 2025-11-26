@@ -4,8 +4,17 @@ import sys
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from datetime import date, timedelta, datetime
+
+# Optional PIL import for portrait loading; fallback to text labels if not available.
+try:
+    from PIL import Image, ImageTk
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    Image = None
+    ImageTk = None
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
@@ -134,6 +143,11 @@ class MekSocialGUI:
 
         self.details_text = tk.Text(details_frame, height=8, wrap="word")
         self.details_text.pack(fill=tk.X)
+
+        # ─────────────────────────────────────────────────────────────────────
+        # NEW: Relation hint frame for Top Friend / Top Rival teaser.
+        # ─────────────────────────────────────────────────────────────────────
+        self._create_relation_hint_frame(details_frame)
 
         # Potential partners & manual roll
         partners_frame = ttk.LabelFrame(right_frame, text="MÃ¶gliche Partner")
@@ -361,6 +375,9 @@ class MekSocialGUI:
         self.selected_partner_index = None
         self.manual_roll_btn.config(state=tk.DISABLED)
 
+        # Update the relation hints (Top Friend / Top Rival teaser)
+        self._update_relation_hints(char)
+
         if char is None:
             return
 
@@ -433,6 +450,201 @@ class MekSocialGUI:
             bdate = getattr(char, "birthday", None)
             if bdate:
                 char.age = self._calculate_age(bdate, self.current_date)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # NEW: Relation hint helpers (Top Friend / Top Rival teaser)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _create_relation_hint_frame(self, parent: ttk.Frame) -> None:
+        """Create the relation hint frame inside the character details area.
+
+        This frame displays the character's top friend and top rival, with
+        optional portrait images loaded via PIL if available.
+        """
+        self.relation_hint_frame = ttk.Frame(parent)
+        self.relation_hint_frame.pack(fill=tk.X, pady=(4, 2))
+
+        # Top Friend sub-frame
+        friend_frame = ttk.Frame(self.relation_hint_frame)
+        friend_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+
+        self.top_friend_label = ttk.Label(
+            friend_frame, text="Top Friend: -", anchor="w"
+        )
+        self.top_friend_label.pack(side=tk.LEFT)
+
+        # Placeholder for portrait (only used if PIL is available and portrait exists)
+        self._friend_portrait_label: Optional[ttk.Label] = None
+        self._friend_photo_ref = None  # keep reference to prevent garbage collection
+
+        # Top Rival sub-frame
+        rival_frame = ttk.Frame(self.relation_hint_frame)
+        rival_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+
+        self.top_rival_label = ttk.Label(
+            rival_frame, text="Top Rival: -", anchor="w"
+        )
+        self.top_rival_label.pack(side=tk.LEFT)
+
+        # Placeholder for portrait (only used if PIL is available and portrait exists)
+        self._rival_portrait_label: Optional[ttk.Label] = None
+        self._rival_photo_ref = None
+
+    def _get_top_friend(self, char: Character) -> Optional[Tuple[Character, int]]:
+        """Return the character's top friend (highest positive friendship) or None.
+
+        Returns:
+            A tuple of (friend_character, friendship_value) or None if no positive
+            friendship exists.
+        """
+        if not char.friendship:
+            return None
+
+        best_friend_id: Optional[str] = None
+        best_value: int = 0
+
+        for other_id, value in char.friendship.items():
+            if value > best_value:
+                best_value = value
+                best_friend_id = other_id
+
+        if best_friend_id is None or best_value <= 0:
+            return None
+
+        friend = self.characters.get(best_friend_id)
+        if friend is None:
+            return None
+
+        return (friend, best_value)
+
+    def _get_top_rival(self, char: Character) -> Optional[Tuple[Character, int]]:
+        """Return the character's top rival (lowest/most negative friendship) or None.
+
+        Returns:
+            A tuple of (rival_character, friendship_value) or None if no negative
+            rivalry exists.
+        """
+        if not char.friendship:
+            return None
+
+        worst_rival_id: Optional[str] = None
+        worst_value: int = 0
+
+        for other_id, value in char.friendship.items():
+            if value < worst_value:
+                worst_value = value
+                worst_rival_id = other_id
+
+        if worst_rival_id is None or worst_value >= 0:
+            return None
+
+        rival = self.characters.get(worst_rival_id)
+        if rival is None:
+            return None
+
+        return (rival, worst_value)
+
+    def _load_portrait_image(self, portrait_path: Optional[Path], size: int = 24) -> Optional[object]:
+        """Attempt to load a portrait image and return a PhotoImage for tkinter.
+
+        Uses PIL if available. Returns None on any error or if PIL is unavailable.
+        """
+        if not PIL_AVAILABLE or portrait_path is None:
+            return None
+
+        try:
+            if not portrait_path.is_file():
+                return None
+
+            img = Image.open(portrait_path)
+            img = img.resize((size, size), Image.Resampling.LANCZOS)
+            return ImageTk.PhotoImage(img)
+        except Exception:
+            # Defensively handle any errors (missing file, invalid format, etc.)
+            return None
+
+    def _get_portrait_path(self, char: Character) -> Optional[Path]:
+        """Get the portrait path for a character if configured in JSON.
+
+        Looks for a 'portrait' attribute on the character, which should be a
+        relative path from the images directory. Returns None if no portrait
+        is configured or the file does not exist.
+        """
+        # Check if character has a portrait attribute (may be added via JSON)
+        portrait_rel = getattr(char, "portrait", None)
+        if not portrait_rel:
+            return None
+
+        # Resolve path relative to the images directory
+        repo_root = Path(__file__).resolve().parents[1]
+        images_dir = repo_root / "images"
+        portrait_path = images_dir / portrait_rel
+
+        if portrait_path.is_file():
+            return portrait_path
+
+        return None
+
+    def _update_relation_hints(self, char: Optional[Character]) -> None:
+        """Update the Top Friend / Top Rival teaser labels.
+
+        Clears the teaser if no character is selected or if no relationships exist.
+        Optionally displays portrait images if PIL is available and portraits are
+        configured.
+        """
+        # Clear previous portrait references
+        self._friend_photo_ref = None
+        self._rival_photo_ref = None
+
+        # Remove old portrait labels if present
+        if self._friend_portrait_label is not None:
+            self._friend_portrait_label.destroy()
+            self._friend_portrait_label = None
+        if self._rival_portrait_label is not None:
+            self._rival_portrait_label.destroy()
+            self._rival_portrait_label = None
+
+        if char is None:
+            self.top_friend_label.config(text="Top Friend: -")
+            self.top_rival_label.config(text="Top Rival: -")
+            return
+
+        # Update Top Friend
+        top_friend_result = self._get_top_friend(char)
+        if top_friend_result:
+            friend, fval = top_friend_result
+            self.top_friend_label.config(text=f"Top Friend: {friend.label()} (+{fval})")
+
+            # Try to load portrait if available
+            portrait_path = self._get_portrait_path(friend)
+            photo = self._load_portrait_image(portrait_path)
+            if photo:
+                self._friend_photo_ref = photo
+                self._friend_portrait_label = ttk.Label(
+                    self.relation_hint_frame, image=photo
+                )
+                # Pack after the text label in the same parent
+                self._friend_portrait_label.pack(side=tk.LEFT, padx=2)
+        else:
+            self.top_friend_label.config(text="Top Friend: -")
+
+        # Update Top Rival
+        top_rival_result = self._get_top_rival(char)
+        if top_rival_result:
+            rival, rval = top_rival_result
+            self.top_rival_label.config(text=f"Top Rival: {rival.label()} ({rval})")
+
+            # Try to load portrait if available
+            portrait_path = self._get_portrait_path(rival)
+            photo = self._load_portrait_image(portrait_path)
+            if photo:
+                self._rival_photo_ref = photo
+                self._rival_portrait_label = ttk.Label(
+                    self.relation_hint_frame, image=photo
+                )
+                self._rival_portrait_label.pack(side=tk.LEFT, padx=2)
+        else:
+            self.top_rival_label.config(text="Top Rival: -")
 
     # --- Event handlers (selection/partners/import/rolls) -----------------
 
