@@ -88,6 +88,48 @@ When modifying config/data files (JSON):
 - **Social Modifiers**: Combine TO&E hierarchy, professions, age groups, and personality traits
 - **Trait Synergy**: Bonus/penalty based on similarity of character traits
 
+### MekHQ Data Export/Import Functions
+
+The project provides comprehensive functionality for extracting data from MekHQ campaign files (.cpnx) and importing them into the GUI.
+
+#### Export Functions (`mekhq_personnel_exporter.py`)
+
+| Function | Description |
+|----------|-------------|
+| `load_cpnx(path)` | Loads a MekHQ campaign file (.cpnx or .cpnx.gz), returns XML root element |
+| `parse_personnel(root)` | Extracts all personnel data (name, skills, attributes, personality traits, awards, injuries, relationships) |
+| `parse_forces(root)` | Extracts TO&E force hierarchy with sub-forces and unit references |
+| `parse_units(root)` | Extracts all units with entity data, crew IDs (driverId, gunnerId, etc.), and force assignments |
+| `export_personnel_to_json(data, path)` | Exports personnel data to `personnel_complete.json` |
+| `export_toe_to_json(forces, units, path)` | Exports TO&E structure to `toe_complete.json` |
+
+**Personality Trait Enums**: The exporter converts MekHQ trait indices to human-readable names:
+- `AGGRESSION_TRAITS`: NONE, TIMID, ASSERTIVE, AGGRESSIVE, BLOODTHIRSTY
+- `AMBITION_TRAITS`: NONE, ASPIRING, COMPETITIVE, AMBITIOUS, DRIVEN
+- `GREED_TRAITS`: NONE, GREEDY, AVARICIOUS
+- `SOCIAL_TRAITS`: NONE, RECLUSIVE, RESERVED, SOCIABLE, GREGARIOUS, VERBOSE
+
+#### Import Functions (`data_loading.py`)
+
+| Function | Description |
+|----------|-------------|
+| `load_personnel(path)` | Loads `personnel_complete.json` and converts entries to `Character` objects with scaled personality traits (0-100) |
+| `apply_toe_structure(path, characters)` | Applies TO&E from `toe_complete.json` to existing `Character` objects, assigning `UnitAssignment` |
+| `load_campaign(personnel_path, toe_path)` | Convenience function that loads personnel and optionally applies TO&E |
+
+#### GUI Import Handlers (`gui.py`)
+
+| Method | Description |
+|--------|-------------|
+| `_import_personnel()` | Opens file dialog to select `personnel_complete.json`, loads characters, resets interaction pools, updates tree view |
+| `_import_toe()` | Opens file dialog to select `toe_complete.json`, applies TO&E structure to loaded characters, refreshes tree view |
+
+**Data Flow**:
+1. User exports `.cpnx` from MekHQ
+2. `mekhq_personnel_exporter.py` parses XML and generates `personnel_complete.json` + `toe_complete.json`
+3. GUI loads personnel via `_import_personnel()` → `load_campaign()` → `load_personnel()`
+4. GUI applies TO&E via `_import_toe()` → `apply_toe_structure()`
+
 ## Testing & Validation
 
 - After code or config changes, verify that the GUI loads correctly
