@@ -733,14 +733,15 @@ class MekSocialGUI:
 
     def _build_overview_tab(self, parent: ttk.Frame, char: Character) -> None:
         """Build the Overview tab content for the character detail window."""
-        # Create a text widget for the overview
-        text = tk.Text(parent, wrap="word", height=15, width=60)
-        text.pack(fill=tk.BOTH, expand=True)
-
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        # Add scrollbar first for proper layout
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        text.configure(yscrollcommand=scrollbar.set)
+
+        # Create a text widget for the overview
+        text = tk.Text(parent, wrap="word", height=15, width=60,
+                       yscrollcommand=scrollbar.set)
+        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        scrollbar.config(command=text.yview)
 
         # Build the overview content
         birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
@@ -767,14 +768,15 @@ class MekSocialGUI:
 
     def _build_relations_tab(self, parent: ttk.Frame, char: Character) -> None:
         """Build the Relationships tab content for the character detail window."""
-        # Create a text widget for relationships
-        text = tk.Text(parent, wrap="word", height=15, width=60)
-        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        # Add scrollbar first for proper layout
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        text.configure(yscrollcommand=scrollbar.set)
+
+        # Create a text widget for relationships
+        text = tk.Text(parent, wrap="word", height=15, width=60,
+                       yscrollcommand=scrollbar.set)
+        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        scrollbar.config(command=text.yview)
 
         lines = []
 
@@ -816,14 +818,15 @@ class MekSocialGUI:
 
     def _build_traits_tab(self, parent: ttk.Frame, char: Character) -> None:
         """Build the Traits tab content for the character detail window."""
-        # Create a text widget for traits
-        text = tk.Text(parent, wrap="word", height=15, width=60)
-        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        # Add scrollbar first for proper layout
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        text.configure(yscrollcommand=scrollbar.set)
+
+        # Create a text widget for traits
+        text = tk.Text(parent, wrap="word", height=15, width=60,
+                       yscrollcommand=scrollbar.set)
+        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        scrollbar.config(command=text.yview)
 
         lines = ["Personality Traits:", ""]
 
