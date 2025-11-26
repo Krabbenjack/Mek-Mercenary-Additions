@@ -95,6 +95,8 @@ class MekSocialGUI:
         self.tree.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        # Right-click binding for character detail window
+        self.tree.bind("<Button-3>", self._on_tree_right_click)
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -646,6 +648,197 @@ class MekSocialGUI:
                 self._rival_portrait_label.pack(side=tk.LEFT, padx=2)
         else:
             self.top_rival_label.config(text="Top Rival: -")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # NEW: Right-click character detail window (Toplevel with notebook tabs)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _on_tree_right_click(self, event: object) -> None:
+        """Handle right-click on TreeView to open a character detail window.
+
+        Does not change the selection behavior; only opens a detail popup for
+        the item under the cursor.
+        """
+        # Identify the item under the cursor
+        item_id = self.tree.identify_row(event.y)
+        if not item_id:
+            return
+
+        # Check if this item corresponds to a character
+        char = self.characters.get(item_id)
+        if char is None:
+            return
+
+        # Open the detail window for this character
+        self._open_character_detail_window(char)
+
+    def _open_character_detail_window(self, char: Character) -> None:
+        """Open a Toplevel window with detailed character information.
+
+        The window contains a notebook with tabs for different information
+        categories, including portrait display if available.
+        """
+        # Create the Toplevel window
+        detail_window = tk.Toplevel(self.master)
+        detail_window.title(f"Character Details: {char.label()}")
+        detail_window.geometry("600x500")
+        detail_window.transient(self.master)
+
+        # Main container frame
+        main_frame = ttk.Frame(detail_window, padding=10)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Header with portrait (if available) and basic info
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Try to load and display portrait
+        portrait_path = self._get_portrait_path(char)
+        portrait_photo = self._load_portrait_image(portrait_path, size=64)
+        if portrait_photo:
+            # Keep reference to prevent garbage collection
+            detail_window._portrait_photo_ref = portrait_photo
+            portrait_label = ttk.Label(header_frame, image=portrait_photo)
+            portrait_label.pack(side=tk.LEFT, padx=(0, 10))
+
+        # Basic info header
+        header_text = f"{char.name}"
+        if char.callsign:
+            header_text += f' "{char.callsign}"'
+        header_label = ttk.Label(header_frame, text=header_text, font=("Arial", 14, "bold"))
+        header_label.pack(side=tk.LEFT, anchor="w")
+
+        # Notebook for tabs
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill=tk.BOTH, expand=True)
+
+        # Tab 1: Overview
+        overview_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(overview_tab, text="Overview")
+        self._build_overview_tab(overview_tab, char)
+
+        # Tab 2: Relationships
+        relations_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(relations_tab, text="Relationships")
+        self._build_relations_tab(relations_tab, char)
+
+        # Tab 3: Traits
+        traits_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(traits_tab, text="Traits")
+        self._build_traits_tab(traits_tab, char)
+
+        # Close button at the bottom
+        close_btn = ttk.Button(main_frame, text="Close", command=detail_window.destroy)
+        close_btn.pack(pady=(10, 0))
+
+    def _build_overview_tab(self, parent: ttk.Frame, char: Character) -> None:
+        """Build the Overview tab content for the character detail window."""
+        # Create a text widget for the overview
+        text = tk.Text(parent, wrap="word", height=15, width=60)
+        text.pack(fill=tk.BOTH, expand=True)
+
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        text.configure(yscrollcommand=scrollbar.set)
+
+        # Build the overview content
+        birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
+        lines = [
+            f"Name: {char.name}",
+            f"Callsign: {char.callsign or '-'}",
+            f"Age: {char.age} ({char.age_group})",
+            f"Birthday: {birthday_str}",
+            f"Profession: {char.profession or '-'}",
+            f"Interaction Points: {char.daily_interaction_points}",
+            "",
+        ]
+
+        if char.unit:
+            lines.append("Unit Assignment:")
+            lines.append(f"  Unit: {char.unit.unit_name}")
+            lines.append(f"  Force: {char.unit.force_name}")
+            lines.append(f"  Type: {char.unit.force_type}")
+        else:
+            lines.append("Unit: (no TO&E assignment)")
+
+        text.insert(tk.END, "\n".join(lines))
+        text.config(state=tk.DISABLED)
+
+    def _build_relations_tab(self, parent: ttk.Frame, char: Character) -> None:
+        """Build the Relationships tab content for the character detail window."""
+        # Create a text widget for relationships
+        text = tk.Text(parent, wrap="word", height=15, width=60)
+        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        text.configure(yscrollcommand=scrollbar.set)
+
+        lines = []
+
+        # Top Friend / Top Rival summary
+        top_friend_result = self._get_top_friend(char)
+        if top_friend_result:
+            friend, fval = top_friend_result
+            lines.append(f"★ Top Friend: {friend.label()} (+{fval})")
+        else:
+            lines.append("★ Top Friend: -")
+
+        top_rival_result = self._get_top_rival(char)
+        if top_rival_result:
+            rival, rval = top_rival_result
+            lines.append(f"✗ Top Rival: {rival.label()} ({rval})")
+        else:
+            lines.append("✗ Top Rival: -")
+
+        lines.append("")
+        lines.append("─" * 40)
+        lines.append("All Relationships:")
+        lines.append("")
+
+        if char.friendship:
+            # Sort by friendship value (highest first)
+            sorted_relations = sorted(
+                char.friendship.items(), key=lambda x: -x[1]
+            )
+            for pid, fval in sorted_relations:
+                partner = self.characters.get(pid)
+                if partner:
+                    sign = "+" if fval > 0 else ""
+                    lines.append(f"  {partner.label()}: {sign}{fval}")
+        else:
+            lines.append("  (no relationships)")
+
+        text.insert(tk.END, "\n".join(lines))
+        text.config(state=tk.DISABLED)
+
+    def _build_traits_tab(self, parent: ttk.Frame, char: Character) -> None:
+        """Build the Traits tab content for the character detail window."""
+        # Create a text widget for traits
+        text = tk.Text(parent, wrap="word", height=15, width=60)
+        text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        text.configure(yscrollcommand=scrollbar.set)
+
+        lines = ["Personality Traits:", ""]
+
+        if char.traits:
+            for trait_name, trait_value in sorted(char.traits.items()):
+                # Create a visual bar representation (0-100 scale)
+                bar_length = 20
+                filled = int((trait_value / 100) * bar_length)
+                bar = "█" * filled + "░" * (bar_length - filled)
+                lines.append(f"  {trait_name.capitalize()}: [{bar}] {trait_value}")
+        else:
+            lines.append("  (no traits defined)")
+
+        text.insert(tk.END, "\n".join(lines))
+        text.config(state=tk.DISABLED)
 
     # --- Event handlers (selection/partners/import/rolls) -----------------
 
