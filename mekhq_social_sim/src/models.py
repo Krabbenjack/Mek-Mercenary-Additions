@@ -14,6 +14,13 @@ class UnitAssignment:
 
 
 @dataclass
+class PortraitInfo:
+    """Portrait information from MekHQ JSON export."""
+    category: Optional[str] = None
+    filename: Optional[str] = None
+
+
+@dataclass
 class Character:
     id: str
     name: str
@@ -27,6 +34,12 @@ class Character:
 
     # NEW: store birthday (optional). JSON uses yyyy-mm-dd.
     birthday: Optional[date] = None
+
+    # Portrait info from JSON
+    portrait: Optional[PortraitInfo] = None
+
+    # Rank from JSON
+    rank: Optional[str] = None
 
     def label(self) -> str:
         """Short label for GUI/logs."""

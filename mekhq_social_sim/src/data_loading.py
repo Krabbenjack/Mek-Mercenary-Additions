@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict
 from datetime import datetime, date
 
-from models import Character, UnitAssignment
+from models import Character, UnitAssignment, PortraitInfo
 
 
 def _parse_iso_date(date_str: str) -> date | None:
@@ -100,6 +100,18 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             if isinstance(old_traits, dict):
                 traits = {k: int(v) for k, v in old_traits.items() if v is not None}
 
+        # Portrait info from JSON
+        portrait_data = entry.get("portrait", {})
+        portrait = None
+        if isinstance(portrait_data, dict) and (portrait_data.get("category") or portrait_data.get("filename")):
+            portrait = PortraitInfo(
+                category=portrait_data.get("category"),
+                filename=portrait_data.get("filename")
+            )
+
+        # Rank from JSON
+        rank = entry.get("rank")
+
         char = Character(
             id=cid,
             name=name,
@@ -108,6 +120,8 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             profession=profession,
             traits=traits,
             birthday=birthday,
+            portrait=portrait,
+            rank=rank,
         )
         characters[cid] = char
 
