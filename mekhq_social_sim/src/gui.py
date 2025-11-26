@@ -544,7 +544,7 @@ class MekSocialGUI:
 
         return (rival, worst_value)
 
-    def _load_portrait_image(self, portrait_path: Optional[Path], size: int = 24) -> Optional[object]:
+    def _load_portrait_image(self, portrait_path: Optional[Path], size: int = 24) -> Optional["ImageTk.PhotoImage"]:
         """Attempt to load a portrait image and return a PhotoImage for tkinter.
 
         Uses PIL if available. Returns None on any error or if PIL is unavailable.
@@ -576,8 +576,9 @@ class MekSocialGUI:
             return None
 
         # Resolve path relative to the images directory
-        repo_root = Path(__file__).resolve().parents[1]
-        images_dir = repo_root / "images"
+        # parents[1] resolves to mekhq_social_sim (the package root containing images/)
+        package_root = Path(__file__).resolve().parents[1]
+        images_dir = package_root / "images"
         portrait_path = images_dir / portrait_rel
 
         if portrait_path.is_file():
