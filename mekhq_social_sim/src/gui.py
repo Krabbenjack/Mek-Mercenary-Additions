@@ -82,14 +82,31 @@ class MekSocialGUI:
         left_frame = ttk.Frame(main_pane)
         main_pane.add(left_frame, weight=1)
 
-        self.tree = ttk.Treeview(left_frame, columns=("type",), show="tree")
-        self.tree.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        # Create a container frame for the treeview with both scrollbars
+        tree_container = ttk.Frame(left_frame)
+        tree_container.pack(fill=tk.BOTH, expand=True)
+
+        self.tree = ttk.Treeview(tree_container, columns=("type",), show="tree")
+
+        # Configure the tree column (#0) to have adequate width and stretch
+        self.tree.column("#0", minwidth=200, width=300, stretch=True)
 
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
 
-        scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.tree.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        # Add vertical scrollbar
+        v_scrollbar = ttk.Scrollbar(tree_container, orient=tk.VERTICAL, command=self.tree.yview)
+        # Add horizontal scrollbar for long text entries
+        h_scrollbar = ttk.Scrollbar(tree_container, orient=tk.HORIZONTAL, command=self.tree.xview)
+
+        self.tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+
+        # Use grid layout for proper scrollbar placement
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        v_scrollbar.grid(row=0, column=1, sticky="ns")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
+
+        tree_container.grid_rowconfigure(0, weight=1)
+        tree_container.grid_columnconfigure(0, weight=1)
 
         self.root_node = self.tree.insert("", "end", text="Personal", open=True)
         self.no_toe_node = self.tree.insert(self.root_node, "end", text="Ohne TO&E", open=True)
