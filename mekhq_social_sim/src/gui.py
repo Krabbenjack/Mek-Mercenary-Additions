@@ -15,18 +15,25 @@ if str(src_path) not in sys.path:
 
 # Calendar system imports (required by the full integration)
 try:
-    from merk_calendar.calendar_system import (
-        EventManager,
-        RecurrenceType,
-        DetailedCalendarWindow,
-        DatePickerDialog,
-    )
+    from events import EventManager, RecurrenceType
+    from merk_calendar.calendar_system import DetailedCalendarWindow, DatePickerDialog
+    EVENTS_PACKAGE_AVAILABLE = True
 except Exception:
-    # If calendar package is missing the GUI still runs, calendar features are disabled.
-    EventManager = None
-    RecurrenceType = None
-    DetailedCalendarWindow = None
-    DatePickerDialog = None
+    try:
+        from merk_calendar.calendar_system import (
+            EventManager,
+            RecurrenceType,
+            DetailedCalendarWindow,
+            DatePickerDialog,
+        )
+        EVENTS_PACKAGE_AVAILABLE = False
+    except Exception:
+        # If calendar package is missing the GUI still runs, calendar features are disabled.
+        EventManager = None
+        RecurrenceType = None
+        DetailedCalendarWindow = None
+        DatePickerDialog = None
+        EVENTS_PACKAGE_AVAILABLE = False
 
 from models import Character
 from data_loading import load_campaign, apply_toe_structure
