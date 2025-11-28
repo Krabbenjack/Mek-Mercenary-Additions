@@ -15,24 +15,299 @@ if str(src_path) not in sys.path:
 
 # Calendar system imports (required by the full integration)
 try:
-    from merk_calendar.calendar_system import (
-        EventManager,
-        RecurrenceType,
-        DetailedCalendarWindow,
-        DatePickerDialog,
-    )
+    from events import EventManager, RecurrenceType
+    from merk_calendar.calendar_system import DetailedCalendarWindow, DatePickerDialog
+    EVENTS_PACKAGE_AVAILABLE = True
 except Exception:
-    # If calendar package is missing the GUI still runs, calendar features are disabled.
-    EventManager = None
-    RecurrenceType = None
-    DetailedCalendarWindow = None
-    DatePickerDialog = None
+    try:
+        from merk_calendar.calendar_system import (
+            EventManager,
+            RecurrenceType,
+            DetailedCalendarWindow,
+            DatePickerDialog,
+        )
+        EVENTS_PACKAGE_AVAILABLE = False
+    except Exception:
+        # If calendar package is missing the GUI still runs, calendar features are disabled.
+        EventManager = None
+        RecurrenceType = None
+        DetailedCalendarWindow = None
+        DatePickerDialog = None
+        EVENTS_PACKAGE_AVAILABLE = False
 
 from models import Character
 from data_loading import load_campaign, apply_toe_structure
 from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
+
+# Try to import PIL for image handling
+try:
+    from PIL import Image, ImageTk
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+
+class CharacterDetailDialog:
+    """
+    Character Detail Window - shows comprehensive info about a character.
+    Opened by right-clicking on a character in the tree view.
+    """
+
+    # Base path for portrait images
+    PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
+
+    def __init__(self, parent: tk.Tk, character: Character, current_date: date) -> None:
+        self.parent = parent
+        self.character = character
+        self.current_date = current_date
+        self.portrait_image = None  # Keep reference to prevent garbage collection
+        self.custom_portrait_path: Optional[Path] = None
+
+        # Create dialog window
+        self.window = tk.Toplevel(parent)
+        self.window.title(f"Character Details: {character.label()}")
+        self.window.geometry("800x600")
+        self.window.transient(parent)
+        self.window.grab_set()
+
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        """Build the main UI layout."""
+        main_frame = ttk.Frame(self.window, padding=10)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create horizontal paned window for left/right split
+        paned = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
+        paned.pack(fill=tk.BOTH, expand=True)
+
+        # Left panel: basic info + portrait
+        left_frame = ttk.Frame(paned, padding=5)
+        paned.add(left_frame, weight=1)
+
+        # Right panel: notebook with tabs
+        right_frame = ttk.Frame(paned, padding=5)
+        paned.add(right_frame, weight=2)
+
+        self._build_left_panel(left_frame)
+        self._build_right_panel(right_frame)
+
+    def _build_left_panel(self, parent: ttk.Frame) -> None:
+        """Build the left panel with basic info and portrait."""
+        # Portrait section
+        portrait_frame = ttk.LabelFrame(parent, text="Portrait", padding=5)
+        portrait_frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Portrait display area
+        self.portrait_label = ttk.Label(portrait_frame, text="No portrait", anchor="center")
+        self.portrait_label.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        # Try to load the portrait automatically
+        self._load_portrait()
+
+        # Override portrait button
+        override_btn = ttk.Button(
+            portrait_frame,
+            text="Select Portrait...",
+            command=self._select_portrait
+        )
+        override_btn.pack(pady=5)
+
+        # Basic info section
+        info_frame = ttk.LabelFrame(parent, text="Basic Information", padding=5)
+        info_frame.pack(fill=tk.BOTH, expand=True)
+
+        char = self.character
+
+        # Create info labels
+        info_data = [
+            ("Rank:", char.rank or "-"),
+            ("Name:", char.name),
+            ("Callsign:", char.callsign or "-"),
+            ("Age:", f"{char.age} ({char.age_group})"),
+            ("Birthday:", char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"),
+            ("Profession:", char.profession or "-"),
+        ]
+
+        # Unit / Force affiliation
+        if char.unit:
+            info_data.append(("Unit:", char.unit.unit_name))
+            info_data.append(("Force:", f"{char.unit.force_name} ({char.unit.force_type})"))
+        else:
+            info_data.append(("Unit:", "(no TO&E assignment)"))
+
+        for i, (label_text, value_text) in enumerate(info_data):
+            label = ttk.Label(info_frame, text=label_text, font=("Arial", 10, "bold"))
+            label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
+            value = ttk.Label(info_frame, text=value_text, font=("Arial", 10))
+            value.grid(row=i, column=1, sticky="w", padx=5, pady=2)
+
+    def _build_right_panel(self, parent: ttk.Frame) -> None:
+        """Build the right panel with tabbed notebook."""
+        notebook = ttk.Notebook(parent)
+        notebook.pack(fill=tk.BOTH, expand=True)
+
+        # Tab 1: Personality / Traits
+        traits_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(traits_tab, text="Personality")
+        self._build_traits_tab(traits_tab)
+
+        # Tab 2: Relationships
+        relationships_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(relationships_tab, text="Relationships")
+        self._build_relationships_tab(relationships_tab)
+
+        # Tab 3: Stats
+        stats_tab = ttk.Frame(notebook, padding=10)
+        notebook.add(stats_tab, text="Stats")
+        self._build_stats_tab(stats_tab)
+
+    def _build_traits_tab(self, parent: ttk.Frame) -> None:
+        """Build the Personality/Traits tab."""
+        char = self.character
+
+        if not char.traits:
+            label = ttk.Label(parent, text="No personality traits available.")
+            label.pack(pady=20)
+            return
+
+        # Create a frame for traits with a scrollable canvas
+        canvas_frame = ttk.Frame(parent)
+        canvas_frame.pack(fill=tk.BOTH, expand=True)
+
+        for i, (trait_name, trait_value) in enumerate(sorted(char.traits.items())):
+            row_frame = ttk.Frame(canvas_frame)
+            row_frame.pack(fill=tk.X, pady=2)
+
+            label = ttk.Label(row_frame, text=f"{trait_name.capitalize()}:", width=15, anchor="w")
+            label.pack(side=tk.LEFT, padx=5)
+
+            # Progress bar to visualize trait value (0-100)
+            progress = ttk.Progressbar(row_frame, length=150, mode="determinate", maximum=100)
+            progress["value"] = trait_value
+            progress.pack(side=tk.LEFT, padx=5)
+
+            value_label = ttk.Label(row_frame, text=f"{trait_value}", width=5)
+            value_label.pack(side=tk.LEFT, padx=5)
+
+    def _build_relationships_tab(self, parent: ttk.Frame) -> None:
+        """Build the Relationships tab."""
+        char = self.character
+
+        if not char.friendship:
+            label = ttk.Label(parent, text="No relationships established yet.")
+            label.pack(pady=20)
+            return
+
+        # Create treeview for relationships
+        columns = ("Name", "Relationship")
+        tree = ttk.Treeview(parent, columns=columns, show="headings", height=15)
+        tree.heading("Name", text="Name")
+        tree.heading("Relationship", text="Relationship Value")
+        tree.column("Name", width=200)
+        tree.column("Relationship", width=120, anchor="center")
+
+        # Add scrollbar
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Sort by relationship value (highest first)
+        sorted_relationships = sorted(char.friendship.items(), key=lambda x: -x[1])
+
+        for partner_id, value in sorted_relationships:
+            # Note: We don't have access to the partner's name here
+            # This would require passing the characters dict
+            tree.insert("", tk.END, values=(f"ID: {partner_id[:8]}...", value))
+
+    def _build_stats_tab(self, parent: ttk.Frame) -> None:
+        """Build the Stats tab."""
+        char = self.character
+
+        stats_data = [
+            ("Daily Interaction Points:", str(char.daily_interaction_points)),
+            ("Total Relationships:", str(len(char.friendship))),
+        ]
+
+        # Calculate average relationship
+        if char.friendship:
+            avg_rel = sum(char.friendship.values()) / len(char.friendship)
+            stats_data.append(("Average Relationship:", f"{avg_rel:.1f}"))
+
+            # Find best and worst relationships
+            best = max(char.friendship.values())
+            worst = min(char.friendship.values())
+            stats_data.append(("Best Relationship:", str(best)))
+            stats_data.append(("Worst Relationship:", str(worst)))
+
+        for i, (label_text, value_text) in enumerate(stats_data):
+            label = ttk.Label(parent, text=label_text, font=("Arial", 10, "bold"))
+            label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
+            value = ttk.Label(parent, text=value_text, font=("Arial", 10))
+            value.grid(row=i, column=1, sticky="w", padx=10, pady=5)
+
+    def _load_portrait(self) -> None:
+        """Attempt to automatically load the character's portrait."""
+        if not PIL_AVAILABLE:
+            self.portrait_label.config(text="PIL not available\nfor image loading")
+            return
+
+        char = self.character
+        if not char.portrait or not char.portrait.filename:
+            self.portrait_label.config(text="No portrait\ndata available")
+            return
+
+        # Build the full path
+        category = char.portrait.category or ""
+        filename = char.portrait.filename
+
+        # Try loading from the expected path
+        portrait_path = self.PORTRAIT_BASE_PATH / category / filename
+
+        if not portrait_path.exists():
+            # Try without category
+            portrait_path = self.PORTRAIT_BASE_PATH / filename
+
+        if not portrait_path.exists():
+            # Format path clearly with separator
+            full_path = f"{category}/{filename}" if category else filename
+            self.portrait_label.config(text=f"Portrait not found:\n{full_path}")
+            return
+
+        self._display_portrait(portrait_path)
+
+    def _display_portrait(self, path: Path) -> None:
+        """Display a portrait image from the given path."""
+        if not PIL_AVAILABLE:
+            return
+
+        try:
+            img = Image.open(path)
+            # Resize to fit (max 150x200)
+            img.thumbnail((150, 200), Image.Resampling.LANCZOS)
+            self.portrait_image = ImageTk.PhotoImage(img)
+            self.portrait_label.config(image=self.portrait_image, text="")
+        except Exception as e:
+            self.portrait_label.config(text=f"Error loading image:\n{str(e)[:30]}")
+
+    def _select_portrait(self) -> None:
+        """Open file dialog to select a custom portrait."""
+        filetypes = [
+            ("Image files", "*.png *.jpg *.jpeg *.gif *.bmp"),
+            ("All files", "*.*")
+        ]
+        path = filedialog.askopenfilename(
+            parent=self.window,
+            title="Select Portrait Image",
+            filetypes=filetypes
+        )
+        if path:
+            self.custom_portrait_path = Path(path)
+            self._display_portrait(self.custom_portrait_path)
 
 
 class MekSocialGUI:
@@ -86,6 +361,7 @@ class MekSocialGUI:
         self.tree.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        self.tree.bind("<Button-3>", self._on_tree_right_click)  # Right-click handler
 
         scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -453,6 +729,27 @@ class MekSocialGUI:
         self.selected_character_id = cid
         self._update_details(char)
 
+    def _on_tree_right_click(self, event: object) -> None:
+        """Handle right-click on tree view to open character detail window."""
+        # Identify the item at the click position
+        item_id = self.tree.identify_row(event.y)
+        if not item_id:
+            return
+
+        # Check if this is a character node (not a force/unit grouping)
+        char = self.characters.get(item_id)
+        if char is None:
+            # This is a grouping node, ignore
+            return
+
+        # Select the item
+        self.tree.selection_set(item_id)
+        self.selected_character_id = item_id
+        self._update_details(char)
+
+        # Open the character detail dialog
+        CharacterDetailDialog(self.master, char, self.current_date)
+
     def _on_partner_select(self, event: object) -> None:
         selection = self.partner_list.curselection()
         if not selection:
@@ -674,9 +971,6 @@ def main() -> None:
     app = MekSocialGUI(root)
     root.mainloop()
 
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
