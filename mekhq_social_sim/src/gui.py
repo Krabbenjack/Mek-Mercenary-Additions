@@ -49,14 +49,67 @@ except ImportError:
     PIL_AVAILABLE = False
 
 
+# Shared portrait base path used by all portrait handling code
+PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
+
+
+class PortraitHelper:
+    """Shared helper class for loading and displaying character portraits."""
+
+    @staticmethod
+    def resolve_portrait_path(character: Character) -> Optional[Path]:
+        """Resolve the portrait path for a character.
+
+        Returns the Path to the portrait file if found, None otherwise.
+        """
+        if not character.portrait or not character.portrait.filename:
+            return None
+
+        category = character.portrait.category or ""
+        filename = character.portrait.filename
+
+        # Try loading from the expected path with category
+        portrait_path = PORTRAIT_BASE_PATH / category / filename
+        if portrait_path.exists():
+            return portrait_path
+
+        # Try without category
+        portrait_path = PORTRAIT_BASE_PATH / filename
+        if portrait_path.exists():
+            return portrait_path
+
+        return None
+
+    @staticmethod
+    def load_portrait_image(path: Path, max_size: tuple) -> Optional[object]:
+        """Load and resize a portrait image.
+
+        Args:
+            path: Path to the image file
+            max_size: Tuple (width, height) for maximum dimensions
+
+        Returns:
+            ImageTk.PhotoImage if successful, None on error
+        """
+        if not PIL_AVAILABLE:
+            return None
+
+        try:
+            img = Image.open(path)
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            return ImageTk.PhotoImage(img)
+        except Exception:
+            return None
+
+
 class CharacterDetailDialog:
     """
     Character Detail Window - shows comprehensive info about a character.
     Opened by right-clicking on a character in the tree view.
     """
 
-    # Base path for portrait images
-    PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
+    # Portrait size for detail dialog (smaller than main view)
+    PORTRAIT_SIZE = (150, 200)
 
     def __init__(self, parent: tk.Tk, character: Character, current_date: date) -> None:
         self.parent = parent
@@ -257,42 +310,28 @@ class CharacterDetailDialog:
             return
 
         char = self.character
-        if not char.portrait or not char.portrait.filename:
-            self.portrait_label.config(text="No portrait\ndata available")
-            return
+        portrait_path = PortraitHelper.resolve_portrait_path(char)
 
-        # Build the full path
-        category = char.portrait.category or ""
-        filename = char.portrait.filename
-
-        # Try loading from the expected path
-        portrait_path = self.PORTRAIT_BASE_PATH / category / filename
-
-        if not portrait_path.exists():
-            # Try without category
-            portrait_path = self.PORTRAIT_BASE_PATH / filename
-
-        if not portrait_path.exists():
-            # Format path clearly with separator
-            full_path = f"{category}/{filename}" if category else filename
-            self.portrait_label.config(text=f"Portrait not found:\n{full_path}")
+        if portrait_path is None:
+            if not char.portrait or not char.portrait.filename:
+                self.portrait_label.config(text="No portrait\ndata available")
+            else:
+                category = char.portrait.category or ""
+                filename = char.portrait.filename
+                full_path = f"{category}/{filename}" if category else filename
+                self.portrait_label.config(text=f"Portrait not found:\n{full_path}")
             return
 
         self._display_portrait(portrait_path)
 
     def _display_portrait(self, path: Path) -> None:
         """Display a portrait image from the given path."""
-        if not PIL_AVAILABLE:
-            return
-
-        try:
-            img = Image.open(path)
-            # Resize to fit (max 150x200)
-            img.thumbnail((150, 200), Image.Resampling.LANCZOS)
-            self.portrait_image = ImageTk.PhotoImage(img)
+        photo_image = PortraitHelper.load_portrait_image(path, self.PORTRAIT_SIZE)
+        if photo_image:
+            self.portrait_image = photo_image
             self.portrait_label.config(image=self.portrait_image, text="")
-        except Exception as e:
-            self.portrait_label.config(text=f"Error loading image:\n{str(e)[:30]}")
+        else:
+            self.portrait_label.config(text="Error loading\nimage")
 
     def _select_portrait(self) -> None:
         """Open file dialog to select a custom portrait."""
@@ -648,9 +687,7 @@ class MekSocialGUI:
         self.events_text.delete("1.0", tk.END)
 
     # ----------------- Portrait handling for main "Charakter" frame -----------------
-    # Same base path as CharacterDetailDialog
-    PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
-    PORTRAIT_SIZE = (250, 250)  # Same size as in detail dialog
+    PORTRAIT_SIZE = (250, 250)  # Size for main view portrait
 
     def _clear_portrait(self) -> None:
         """Clear the portrait display in the main Charakter frame."""
@@ -663,26 +700,16 @@ class MekSocialGUI:
             self.portrait_label.config(text="PIL not available")
             return
 
-        if not char.portrait or not char.portrait.filename:
-            self.portrait_label.config(text="No portrait\navailable", image="")
-            self.main_portrait_image = None
-            return
+        portrait_path = PortraitHelper.resolve_portrait_path(char)
 
-        # Build the full path
-        category = char.portrait.category or ""
-        filename = char.portrait.filename
-
-        # Try loading from the expected path
-        portrait_path = self.PORTRAIT_BASE_PATH / category / filename
-
-        if not portrait_path.exists():
-            # Try without category
-            portrait_path = self.PORTRAIT_BASE_PATH / filename
-
-        if not portrait_path.exists():
-            # Portrait not found - show placeholder text
-            full_path = f"{category}/{filename}" if category else filename
-            self.portrait_label.config(text=f"Portrait not found:\n{full_path[:30]}", image="")
+        if portrait_path is None:
+            if not char.portrait or not char.portrait.filename:
+                self.portrait_label.config(text="No portrait\navailable", image="")
+            else:
+                category = char.portrait.category or ""
+                filename = char.portrait.filename
+                full_path = f"{category}/{filename}" if category else filename
+                self.portrait_label.config(text=f"Portrait not found:\n{full_path[:30]}", image="")
             self.main_portrait_image = None
             return
 
@@ -690,17 +717,12 @@ class MekSocialGUI:
 
     def _display_portrait(self, path: Path) -> None:
         """Display a portrait image from the given path."""
-        if not PIL_AVAILABLE:
-            return
-
-        try:
-            img = Image.open(path)
-            # Resize to fit the portrait area (250x250)
-            img.thumbnail(self.PORTRAIT_SIZE, Image.Resampling.LANCZOS)
-            self.main_portrait_image = ImageTk.PhotoImage(img)
+        photo_image = PortraitHelper.load_portrait_image(path, self.PORTRAIT_SIZE)
+        if photo_image:
+            self.main_portrait_image = photo_image
             self.portrait_label.config(image=self.main_portrait_image, text="")
-        except Exception as e:
-            self.portrait_label.config(text=f"Error loading:\n{str(e)[:25]}", image="")
+        else:
+            self.portrait_label.config(text="Error loading\nimage", image="")
             self.main_portrait_image = None
 
     def _update_details(self, char: Optional[Character]) -> None:
