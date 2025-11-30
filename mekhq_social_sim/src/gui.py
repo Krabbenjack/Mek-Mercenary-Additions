@@ -408,8 +408,24 @@ class MekSocialGUI:
         details_frame = ttk.LabelFrame(right_frame, text="Charakter")
         details_frame.pack(fill=tk.X, padx=4, pady=4)
 
-        self.details_text = tk.Text(details_frame, height=8, wrap="word")
-        self.details_text.pack(fill=tk.X)
+        # Two-column layout: text on left, portrait on right
+        details_inner = ttk.Frame(details_frame)
+        details_inner.pack(fill=tk.BOTH, expand=True)
+
+        # Left column: text details
+        self.details_text = tk.Text(details_inner, height=8, wrap="word")
+        self.details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Right column: portrait area (250x250 to match detail dialog size)
+        self.portrait_frame = ttk.Frame(details_inner, width=250, height=250)
+        self.portrait_frame.pack(side=tk.RIGHT, padx=5, pady=5)
+        self.portrait_frame.pack_propagate(False)  # Fixed size
+
+        self.portrait_label = ttk.Label(self.portrait_frame, anchor="center")
+        self.portrait_label.pack(fill=tk.BOTH, expand=True)
+
+        # Keep reference to portrait image to prevent garbage collection
+        self.main_portrait_image = None
 
         # Potential partners & manual roll
         partners_frame = ttk.LabelFrame(right_frame, text="MÃ¶gliche Partner")
@@ -631,6 +647,62 @@ class MekSocialGUI:
     def _clear_events(self) -> None:
         self.events_text.delete("1.0", tk.END)
 
+    # ----------------- Portrait handling for main "Charakter" frame -----------------
+    # Same base path as CharacterDetailDialog
+    PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
+    PORTRAIT_SIZE = (250, 250)  # Same size as in detail dialog
+
+    def _clear_portrait(self) -> None:
+        """Clear the portrait display in the main Charakter frame."""
+        self.main_portrait_image = None
+        self.portrait_label.config(image="", text="")
+
+    def _update_portrait(self, char: Character) -> None:
+        """Load and display the character's portrait in the main Charakter frame."""
+        if not PIL_AVAILABLE:
+            self.portrait_label.config(text="PIL not available")
+            return
+
+        if not char.portrait or not char.portrait.filename:
+            self.portrait_label.config(text="No portrait\navailable", image="")
+            self.main_portrait_image = None
+            return
+
+        # Build the full path
+        category = char.portrait.category or ""
+        filename = char.portrait.filename
+
+        # Try loading from the expected path
+        portrait_path = self.PORTRAIT_BASE_PATH / category / filename
+
+        if not portrait_path.exists():
+            # Try without category
+            portrait_path = self.PORTRAIT_BASE_PATH / filename
+
+        if not portrait_path.exists():
+            # Portrait not found - show placeholder text
+            full_path = f"{category}/{filename}" if category else filename
+            self.portrait_label.config(text=f"Portrait not found:\n{full_path[:30]}", image="")
+            self.main_portrait_image = None
+            return
+
+        self._display_portrait(portrait_path)
+
+    def _display_portrait(self, path: Path) -> None:
+        """Display a portrait image from the given path."""
+        if not PIL_AVAILABLE:
+            return
+
+        try:
+            img = Image.open(path)
+            # Resize to fit the portrait area (250x250)
+            img.thumbnail(self.PORTRAIT_SIZE, Image.Resampling.LANCZOS)
+            self.main_portrait_image = ImageTk.PhotoImage(img)
+            self.portrait_label.config(image=self.main_portrait_image, text="")
+        except Exception as e:
+            self.portrait_label.config(text=f"Error loading:\n{str(e)[:25]}", image="")
+            self.main_portrait_image = None
+
     def _update_details(self, char: Optional[Character]) -> None:
         self.details_text.delete("1.0", "end")
         self.partner_list.delete(0, tk.END)
@@ -638,7 +710,12 @@ class MekSocialGUI:
         self.manual_roll_btn.config(state=tk.DISABLED)
 
         if char is None:
+            # Clear portrait
+            self._clear_portrait()
             return
+
+        # Update portrait
+        self._update_portrait(char)
 
         # make sure details show current birthday and recalculated age
         birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
