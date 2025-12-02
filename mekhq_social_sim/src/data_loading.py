@@ -27,6 +27,9 @@ FORCE_TYPE_NAMES = {
     4: "Salvage",
 }
 
+# Valid crew roles (MekHQ 5.10)
+VALID_CREW_ROLES = {"driver", "gunner", "commander", "navigator", "tech", "crew"}
+
 
 def _parse_iso_date(date_str: str) -> date | None:
     """Parse yyyy-mm-dd (ISO) date string to datetime.date, return None on failure."""
@@ -248,6 +251,9 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
 
         for crew_key, role_name in crew_role_map.items():
             person_ids = crew.get(crew_key, [])
+            # Handle both list and single string value for robustness
+            if isinstance(person_ids, str):
+                person_ids = [person_ids]
             if isinstance(person_ids, list):
                 for person_id in person_ids:
                     if person_id:
@@ -258,6 +264,8 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
 
         # Vessel crew (multiple people, same role)
         vessel_crew_ids = crew.get("vesselCrewIds", [])
+        if isinstance(vessel_crew_ids, str):
+            vessel_crew_ids = [vessel_crew_ids]
         for person_id in vessel_crew_ids:
             if person_id:
                 person_to_unit[str(person_id)] = {

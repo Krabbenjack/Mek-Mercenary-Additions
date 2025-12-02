@@ -19,6 +19,7 @@ from data_loading import (
     apply_toe_structure,
     load_campaign,
     FORCE_TYPE_NAMES,
+    VALID_CREW_ROLES,
 )
 from models import Character, UnitAssignment
 
@@ -216,9 +217,8 @@ class TestApplyTOEStructure(unittest.TestCase):
 
         self.assertGreater(len(with_crew_role), 0)
         # Crew role should be valid
-        valid_roles = {"driver", "gunner", "commander", "navigator", "tech", "crew"}
         for char in with_crew_role:
-            self.assertIn(char.unit.crew_role, valid_roles)
+            self.assertIn(char.unit.crew_role, VALID_CREW_ROLES)
 
 
 @unittest.skipUnless(SAMPLE_CAMPAIGN.exists(), "Sample campaign file not found")
@@ -344,7 +344,7 @@ class TestSecurityBranchImport(unittest.TestCase):
         for char in security_chars:
             self.assertIsNotNone(char.unit.crew_role,
                                 f"Security character {char.name} has no crew role")
-            self.assertIn(char.unit.crew_role, ["driver", "gunner", "commander", "navigator", "tech", "crew"])
+            self.assertIn(char.unit.crew_role, VALID_CREW_ROLES)
 
 
 if __name__ == "__main__":
