@@ -8,9 +8,13 @@ from datetime import date
 
 @dataclass
 class UnitAssignment:
+    """TO&E assignment information for a character (MekHQ 5.10)."""
     force_name: str
     unit_name: str
-    force_type: str  # e.g. "Combat", "Support", "Convoy", "Security"
+    force_type: str  # e.g. "Combat", "Support", "Transport", "Security", "Salvage"
+    formation_level: Optional[str] = None  # e.g. "Company", "Lance", "Team"
+    preferred_role: Optional[str] = None   # e.g. "FRONTLINE" (new in 5.10)
+    crew_role: Optional[str] = None        # e.g. "driver", "gunner", "tech", "crew"
 
 
 @dataclass

@@ -184,10 +184,17 @@ class CharacterDetailDialog:
             ("Profession:", char.profession or "-"),
         ]
 
-        # Unit / Force affiliation
+        # TO&E assignment (MekHQ 5.10)
         if char.unit:
             info_data.append(("Unit:", char.unit.unit_name))
-            info_data.append(("Force:", f"{char.unit.force_name} ({char.unit.force_type})"))
+            info_data.append(("Force:", char.unit.force_name))
+            info_data.append(("Force Type:", char.unit.force_type))
+            if char.unit.formation_level:
+                info_data.append(("Formation:", char.unit.formation_level))
+            if char.unit.preferred_role:
+                info_data.append(("Role:", char.unit.preferred_role))
+            if char.unit.crew_role:
+                info_data.append(("Crew Role:", char.unit.crew_role))
         else:
             info_data.append(("Unit:", "(no TO&E assignment)"))
 
@@ -739,34 +746,47 @@ class MekSocialGUI:
         # Update portrait
         self._update_portrait(char)
 
-        # make sure details show current birthday and recalculated age
+        # Make sure details show current birthday and recalculated age
         birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
         lines = [
             f"Name: {char.name}",
-            f"Rufname: {char.callsign or '-'}",
-            f"Alter: {char.age} ({char.age_group})",
-            f"Geburtstag: {birthday_str}",
-            f"Beruf: {char.profession or '-'}",
-            f"Interaktionspunkte: {char.daily_interaction_points}",
+            f"Callsign: {char.callsign or '-'}",
+            f"Age: {char.age} ({char.age_group})",
+            f"Birthday: {birthday_str}",
+            f"Profession: {char.profession or '-'}",
+            f"Interaction Points: {char.daily_interaction_points}",
         ]
+
+        # TO&E information (MekHQ 5.10)
         if char.unit:
-            lines.append(
-                f"Einheit: {char.unit.unit_name} / {char.unit.force_name} ({char.unit.force_type})"
-            )
+            lines.append("")
+            lines.append("--- TO&E Assignment ---")
+            lines.append(f"Unit: {char.unit.unit_name}")
+            lines.append(f"Force: {char.unit.force_name}")
+            lines.append(f"Force Type: {char.unit.force_type}")
+            if char.unit.formation_level:
+                lines.append(f"Formation Level: {char.unit.formation_level}")
+            if char.unit.preferred_role:
+                lines.append(f"Preferred Role: {char.unit.preferred_role}")
+            if char.unit.crew_role:
+                lines.append(f"Crew Role: {char.unit.crew_role}")
         else:
-            lines.append("Einheit: (keine TO&E-Zuordnung)")
+            lines.append("")
+            lines.append("Unit: (no TO&E assignment)")
 
         if char.traits:
-            lines.append("Traits:")
+            lines.append("")
+            lines.append("--- Personality Traits ---")
             for k, v in sorted(char.traits.items()):
-                lines.append(f"  - {k}: {v}")
+                lines.append(f"  {k}: {v}")
 
         if char.friendship:
-            lines.append("Beziehungen:")
+            lines.append("")
+            lines.append("--- Relationships ---")
             for pid, fval in sorted(char.friendship.items(), key=lambda x: -x[1])[:10]:
                 partner = self.characters.get(pid)
                 if partner:
-                    lines.append(f"  - {partner.label()}: {fval}")
+                    lines.append(f"  {partner.label()}: {fval}")
 
         # Show potential partners (sorted by modifier)
         self.potential_partners = []
