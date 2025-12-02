@@ -612,27 +612,33 @@ def parse_units(root: ET.Element) -> List[Dict[str, Any]]:
                 data["forceId"] = force_id
 
             # Crew roles from mothballInfo
+            # NOTE: Infantry/vehicle units can have MULTIPLE driverIds, gunnerIds, etc.
             crew: Dict[str, Any] = {}
 
-            driver_id = mothball_info.findtext("driverId")
-            if driver_id:
-                crew["driverId"] = driver_id
+            # Collect all driver IDs (infantry can have many)
+            driver_ids = [d.text for d in mothball_info.findall("driverId") if d.text]
+            if driver_ids:
+                crew["driverIds"] = driver_ids
 
-            gunner_id = mothball_info.findtext("gunnerId")
-            if gunner_id:
-                crew["gunnerId"] = gunner_id
+            # Collect all gunner IDs
+            gunner_ids = [g.text for g in mothball_info.findall("gunnerId") if g.text]
+            if gunner_ids:
+                crew["gunnerIds"] = gunner_ids
 
-            commander_id = mothball_info.findtext("commanderId")
-            if commander_id:
-                crew["commanderId"] = commander_id
+            # Collect all commander IDs
+            commander_ids = [c.text for c in mothball_info.findall("commanderId") if c.text]
+            if commander_ids:
+                crew["commanderIds"] = commander_ids
 
-            navigator_id = mothball_info.findtext("navigatorId")
-            if navigator_id:
-                crew["navigatorId"] = navigator_id
+            # Collect all navigator IDs
+            navigator_ids = [n.text for n in mothball_info.findall("navigatorId") if n.text]
+            if navigator_ids:
+                crew["navigatorIds"] = navigator_ids
 
-            tech_id = mothball_info.findtext("techId")
-            if tech_id:
-                crew["techId"] = tech_id
+            # Collect all tech IDs
+            tech_ids = [t.text for t in mothball_info.findall("techId") if t.text]
+            if tech_ids:
+                crew["techIds"] = tech_ids
 
             # Vessel crew (multiple IDs possible)
             vessel_crew_ids = []

@@ -237,21 +237,24 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
         crew = unit.get("crew", {})
 
         # Map crew roles (MekHQ 5.10 uses mothballInfo)
+        # NOTE: Infantry/vehicle units can have MULTIPLE crew per role
         crew_role_map = {
-            "driverId": "driver",
-            "gunnerId": "gunner",
-            "commanderId": "commander",
-            "navigatorId": "navigator",
-            "techId": "tech",
+            "driverIds": "driver",
+            "gunnerIds": "gunner",
+            "commanderIds": "commander",
+            "navigatorIds": "navigator",
+            "techIds": "tech",
         }
 
         for crew_key, role_name in crew_role_map.items():
-            person_id = crew.get(crew_key)
-            if person_id:
-                person_to_unit[str(person_id)] = {
-                    "unit_id": uid,
-                    "role": role_name,
-                }
+            person_ids = crew.get(crew_key, [])
+            if isinstance(person_ids, list):
+                for person_id in person_ids:
+                    if person_id:
+                        person_to_unit[str(person_id)] = {
+                            "unit_id": uid,
+                            "role": role_name,
+                        }
 
         # Vessel crew (multiple people, same role)
         vessel_crew_ids = crew.get("vesselCrewIds", [])

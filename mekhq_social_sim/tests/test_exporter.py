@@ -228,8 +228,8 @@ class TestUnitsParsing(unittest.TestCase):
         # Check crew structure
         unit = units_with_crew[0]
         crew = unit["crew"]
-        # Should have at least one crew role
-        crew_keys = {"driverId", "gunnerId", "commanderId", "navigatorId", "techId", "vesselCrewIds"}
+        # Should have at least one crew role (plural keys for multiple crew)
+        crew_keys = {"driverIds", "gunnerIds", "commanderIds", "navigatorIds", "techIds", "vesselCrewIds"}
         self.assertTrue(any(k in crew for k in crew_keys))
 
     def test_units_have_maintenance_multiplier(self):
@@ -304,6 +304,79 @@ class TestJSONExport(unittest.TestCase):
 
             total_assigned = count_units_in_forces(data["forces"])
             self.assertGreater(total_assigned, 0, "No units assigned to forces")
+
+
+@unittest.skipUnless(SAMPLE_CAMPAIGN.exists(), "Sample campaign file not found")
+class TestInputFileIntegrity(unittest.TestCase):
+    """Test that the exporter does not modify input files."""
+
+    def test_cpnx_file_not_modified(self):
+        """Test that exporting does not modify the input .cpnx file."""
+        import hashlib
+
+        # Compute hash before
+        with open(SAMPLE_CAMPAIGN, 'rb') as f:
+            hash_before = hashlib.md5(f.read()).hexdigest()
+
+        # Run full export
+        root = load_cpnx(str(SAMPLE_CAMPAIGN))
+        personnel = parse_personnel(root)
+        forces = parse_forces(root)
+        units = parse_units(root)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            export_personnel_to_json(personnel, os.path.join(tmpdir, "personnel.json"))
+            export_toe_to_json(forces, units, os.path.join(tmpdir, "toe.json"))
+
+        # Compute hash after
+        with open(SAMPLE_CAMPAIGN, 'rb') as f:
+            hash_after = hashlib.md5(f.read()).hexdigest()
+
+        self.assertEqual(hash_before, hash_after, "Input .cpnx file was modified!")
+
+
+@unittest.skipUnless(SAMPLE_CAMPAIGN.exists(), "Sample campaign file not found")
+class TestSecurityBranchMapping(unittest.TestCase):
+    """Test that Security branch units and personnel are correctly mapped."""
+
+    def test_security_force_exists(self):
+        """Test that Security force (type=3) exists in parsed forces."""
+        root = load_cpnx(str(SAMPLE_CAMPAIGN))
+        forces = parse_forces(root)
+
+        # Flatten all forces
+        all_forces = []
+        def flatten(f_list):
+            for f in f_list:
+                all_forces.append(f)
+                flatten(f.get("sub_forces", []))
+        flatten(forces)
+
+        security_forces = [f for f in all_forces if f.get("force_type") == 3]
+        self.assertGreater(len(security_forces), 0, "No Security force found")
+
+    def test_infantry_unit_has_multiple_crew(self):
+        """Test that infantry units (Foot Platoon) have multiple crew members."""
+        root = load_cpnx(str(SAMPLE_CAMPAIGN))
+        units = parse_units(root)
+
+        # Find Foot Platoon (Security unit)
+        foot_platoon = None
+        for u in units:
+            entity = u.get("entity", {})
+            if "Foot Platoon" in entity.get("chassis", ""):
+                foot_platoon = u
+                break
+
+        self.assertIsNotNone(foot_platoon, "Foot Platoon not found")
+
+        crew = foot_platoon.get("crew", {})
+        driver_ids = crew.get("driverIds", [])
+        gunner_ids = crew.get("gunnerIds", [])
+
+        # Foot Platoon should have many drivers (infantry)
+        self.assertGreater(len(driver_ids), 10, "Infantry unit should have many drivers")
+        self.assertGreater(len(gunner_ids), 10, "Infantry unit should have many gunners")
 
 
 if __name__ == "__main__":

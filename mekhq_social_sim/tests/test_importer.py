@@ -300,5 +300,52 @@ class TestLoadCampaignConvenience(unittest.TestCase):
         self.assertGreater(len(assigned), 0)
 
 
+@unittest.skipUnless(SAMPLE_CAMPAIGN.exists(), "Sample campaign file not found")
+class TestSecurityBranchImport(unittest.TestCase):
+    """Test that Security branch personnel are correctly imported."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Create test JSON files from sample campaign."""
+        cls.tmpdir = tempfile.TemporaryDirectory()
+        cls.personnel_path = os.path.join(cls.tmpdir.name, "personnel_complete.json")
+        cls.toe_path = os.path.join(cls.tmpdir.name, "toe_complete.json")
+
+        root = load_cpnx(str(SAMPLE_CAMPAIGN))
+        personnel = parse_personnel(root)
+        forces = parse_forces(root)
+        units = parse_units(root)
+
+        export_personnel_to_json(personnel, cls.personnel_path)
+        export_toe_to_json(forces, units, cls.toe_path)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmpdir.cleanup()
+
+    def test_security_characters_assigned(self):
+        """Test that characters are assigned to Security force."""
+        characters = load_campaign(self.personnel_path, self.toe_path)
+
+        security_chars = [c for c in characters.values()
+                         if c.unit and c.unit.force_type == "Security"]
+
+        # Infantry platoon should have many characters
+        self.assertGreater(len(security_chars), 20,
+                          f"Expected >20 Security characters, got {len(security_chars)}")
+
+    def test_security_characters_have_crew_roles(self):
+        """Test that Security characters have proper crew roles."""
+        characters = load_campaign(self.personnel_path, self.toe_path)
+
+        security_chars = [c for c in characters.values()
+                         if c.unit and c.unit.force_type == "Security"]
+
+        for char in security_chars:
+            self.assertIsNotNone(char.unit.crew_role,
+                                f"Security character {char.name} has no crew role")
+            self.assertIn(char.unit.crew_role, ["driver", "gunner", "commander", "navigator", "tech", "crew"])
+
+
 if __name__ == "__main__":
     unittest.main()
