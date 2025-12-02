@@ -57,7 +57,7 @@ AMBITION_TRAITS = [
     "DRIVEN"          # 5
 ]
 
-# MekHQ 5.10 uses indices 0-5 for greed
+# MekHQ 5.10 uses indices 0-6 for greed
 GREED_TRAITS = [
     "NONE",           # 0
     "GENEROUS",       # 1
@@ -65,10 +65,10 @@ GREED_TRAITS = [
     "PROFITABLE",     # 3
     "FRAUDULENT",     # 4
     "MERCENARY",      # 5
-    "LUSTFUL"         # 6 (extended)
+    "LUSTFUL"         # 6
 ]
 
-# MekHQ 5.10 uses indices 0-5 for social
+# MekHQ 5.10 uses indices 0-6 for social
 SOCIAL_TRAITS = [
     "NONE",           # 0
     "AUTHENTIC",      # 1
@@ -76,7 +76,7 @@ SOCIAL_TRAITS = [
     "RESERVED",       # 3
     "CONDESCENDING",  # 4
     "FRIENDLY",       # 5
-    "ENCOURAGING"     # 6 (extended)
+    "ENCOURAGING"     # 6
 ]
 
 # Personality Quirks - Extended list for MekHQ 5.10
