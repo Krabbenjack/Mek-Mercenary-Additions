@@ -383,7 +383,9 @@ def parse_logs(person: ET.Element) -> Dict[str, List[Dict[str, str]]]:
             })
 
     # Assignment Log
-    assign_log = person.find("assignmentLog") or person.find("missionLog")
+    assign_log = person.find("assignmentLog")
+    if assign_log is None:
+        assign_log = person.find("missionLog")
     if assign_log is not None:
         for entry in assign_log.findall("logEntry"):
             logs["assignments"].append({
