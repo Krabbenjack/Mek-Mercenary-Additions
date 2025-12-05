@@ -48,6 +48,18 @@ The project includes a configurable interaction engine, a graphical user interfa
   - Traits  
   - TO&E  
 
+### ✔ Star Wars Map Editor
+- PyQt5-based galaxy map editor
+- Three editing modes:
+  - **Template Mode**: Align background map images
+  - **Systems Mode**: Place and edit star systems
+  - **Routes Mode**: Create curved routes between systems
+- Features:
+  - Spline-based routes with snap-to-system endpoints
+  - Draggable control points for route bending
+  - Grid overlay with zoom and pan navigation
+  - Project save/load (.swmproj format)
+
 ---
 
 ## 📁 Project Structure
@@ -86,6 +98,71 @@ The project includes a configurable interaction engine, a graphical user interfa
 ```
 
 > Tip: You can move the Python files into a `src/` directory later if you prefer.
+
+---
+
+## 🌟 Star Wars Map Editor
+
+A separate PyQt5-based application for creating Star Wars galaxy maps.
+
+### Directory Structure
+
+```
+star_wars_map_editor/
+├── __init__.py
+├── gui.py                    # Main GUI application
+└── core/
+    ├── __init__.py
+    ├── systems.py            # SystemData and SystemItem classes
+    ├── routes.py             # RouteData, RouteItem, RouteHandleItem classes
+    ├── templates.py          # TemplateData and TemplateItem classes
+    ├── project_model.py      # MapProject class
+    └── project_io.py         # Project save/load functions
+```
+
+### Running the Map Editor
+
+```bash
+cd star_wars_map_editor
+python gui.py
+```
+
+### Editor Modes
+
+#### Template Mode
+- Load background images (PNG, JPG, etc.) to use as reference maps
+- Drag to position templates
+- Adjust opacity and scale using workspace controls
+- Lock templates to prevent accidental movement
+
+#### Systems Mode
+- Click on the canvas to place new star systems
+- Drag systems to reposition them
+- Rename or delete systems using workspace buttons
+- Systems are displayed as colored circles with labels
+
+#### Routes Mode
+- **Creating Routes:**
+  1. Click on a start system (snaps to nearest system)
+  2. Click on an end system to complete the route
+  3. A default control point is added at the midpoint
+- **Editing Routes:**
+  - Click a route to select it
+  - Drag the blue control handles to bend the route
+  - The route uses smooth Catmull-Rom spline interpolation
+- **Deleting Routes:**
+  - Select a route and use the "Delete Route" button
+
+### Navigation
+- **Zoom**: Mouse wheel (zooms under cursor)
+- **Pan**: Middle mouse button drag, or WASD/Arrow keys
+- **Reset View**: View menu → Reset View (or Home key)
+
+### File Format
+Projects are saved as `.swmproj` files (JSON format) containing:
+- Systems with positions, names, and colors
+- Routes with start/end system references and control points
+- Templates with file paths and transform data
 
 ---
 
