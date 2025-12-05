@@ -5,17 +5,26 @@ Contains functions for saving and loading project files (.swmproj).
 """
 
 import json
+import logging
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 from .project_model import MapProject
 
+
+# Set up logging for this module
+logger = logging.getLogger(__name__)
 
 # Project file extension
 PROJECT_EXTENSION = ".swmproj"
 
 
-def save_project(project: MapProject, file_path: str) -> bool:
+class ProjectIOError(Exception):
+    """Exception raised for project I/O errors."""
+    pass
+
+
+def save_project(project: MapProject, file_path: str) -> Tuple[bool, str]:
     """
     Save a project to a .swmproj file.
     
@@ -24,7 +33,8 @@ def save_project(project: MapProject, file_path: str) -> bool:
         file_path: Path to save to. Will add .swmproj extension if missing.
         
     Returns:
-        True if save succeeded, False otherwise.
+        Tuple of (success: bool, error_message: str). 
+        error_message is empty on success.
     """
     # Ensure proper extension
     if not file_path.endswith(PROJECT_EXTENSION):
@@ -41,14 +51,19 @@ def save_project(project: MapProject, file_path: str) -> bool:
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         
-        return True
+        return True, ""
         
-    except (OSError, IOError, TypeError, ValueError) as e:
-        print(f"Error saving project: {e}")
-        return False
+    except (OSError, IOError) as e:
+        error_msg = f"Failed to write file: {e}"
+        logger.error(error_msg)
+        return False, error_msg
+    except (TypeError, ValueError) as e:
+        error_msg = f"Failed to serialize project data: {e}"
+        logger.error(error_msg)
+        return False, error_msg
 
 
-def load_project(file_path: str) -> Optional[MapProject]:
+def load_project(file_path: str) -> Tuple[Optional[MapProject], str]:
     """
     Load a project from a .swmproj file.
     
@@ -56,22 +71,33 @@ def load_project(file_path: str) -> Optional[MapProject]:
         file_path: Path to the project file.
         
     Returns:
-        The loaded MapProject, or None if loading failed.
+        Tuple of (project: MapProject or None, error_message: str).
+        error_message is empty on success.
     """
     if not os.path.exists(file_path):
-        print(f"Project file not found: {file_path}")
-        return None
+        error_msg = f"Project file not found: {file_path}"
+        logger.error(error_msg)
+        return None, error_msg
     
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
         project = MapProject.from_dict(data)
-        return project
+        return project, ""
         
-    except (OSError, IOError, json.JSONDecodeError, KeyError, TypeError) as e:
-        print(f"Error loading project: {e}")
-        return None
+    except (OSError, IOError) as e:
+        error_msg = f"Failed to read file: {e}"
+        logger.error(error_msg)
+        return None, error_msg
+    except json.JSONDecodeError as e:
+        error_msg = f"Invalid JSON format: {e}"
+        logger.error(error_msg)
+        return None, error_msg
+    except (KeyError, TypeError) as e:
+        error_msg = f"Invalid project format: {e}"
+        logger.error(error_msg)
+        return None, error_msg
 
 
 def get_project_file_filter() -> str:

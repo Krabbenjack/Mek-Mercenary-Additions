@@ -15,6 +15,10 @@ from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QPainterPath, QPen, QColor, QBrush
 
 
+# Catmull-Rom to cubic Bezier conversion factor (1/6 for smooth interpolation)
+CATMULL_ROM_TENSION = 6.0
+
+
 @dataclass
 class RouteData:
     """
@@ -257,12 +261,12 @@ class RouteItem(QGraphicsPathItem):
             
             # Catmull-Rom to cubic Bezier conversion
             cp1 = QPointF(
-                p1.x() + (p2.x() - p0.x()) / 6,
-                p1.y() + (p2.y() - p0.y()) / 6
+                p1.x() + (p2.x() - p0.x()) / CATMULL_ROM_TENSION,
+                p1.y() + (p2.y() - p0.y()) / CATMULL_ROM_TENSION
             )
             cp2 = QPointF(
-                p2.x() - (p3.x() - p1.x()) / 6,
-                p2.y() - (p3.y() - p1.y()) / 6
+                p2.x() - (p3.x() - p1.x()) / CATMULL_ROM_TENSION,
+                p2.y() - (p3.y() - p1.y()) / CATMULL_ROM_TENSION
             )
             
             path.cubicTo(cp1, cp2, p2)

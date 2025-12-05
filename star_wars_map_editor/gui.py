@@ -27,11 +27,14 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QPointF, QRectF, QTimer
 from PyQt5.QtGui import (
     QColor, QPen, QBrush, QPainter, QKeySequence, QWheelEvent,
-    QMouseEvent, QKeyEvent, QTransform
+    QMouseEvent, QKeyEvent, QTransform, QCloseEvent
 )
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add parent directory to path for imports when running as script
+# This allows 'python gui.py' to work from the star_wars_map_editor directory
+_parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
 
 from core.project_model import MapProject
 from core.project_io import save_project, load_project, get_project_file_filter
@@ -928,7 +931,7 @@ class MapEditorWindow(QMainWindow):
         )
         
         if file_path:
-            project = load_project(file_path)
+            project, error_msg = load_project(file_path)
             if project:
                 self._project = project
                 self._scene.set_project(project)
@@ -936,16 +939,17 @@ class MapEditorWindow(QMainWindow):
                 self._modified = False
                 self.setWindowTitle(f"Star Wars Map Editor - {os.path.basename(file_path)}")
             else:
-                QMessageBox.warning(self, "Error", "Failed to load project.")
+                QMessageBox.warning(self, "Error", error_msg or "Failed to load project.")
     
     def _save_project(self) -> bool:
         """Save the current project."""
         if self._current_file:
-            if save_project(self._project, self._current_file):
+            success, error_msg = save_project(self._project, self._current_file)
+            if success:
                 self._modified = False
                 return True
             else:
-                QMessageBox.warning(self, "Error", "Failed to save project.")
+                QMessageBox.warning(self, "Error", error_msg or "Failed to save project.")
                 return False
         else:
             return self._save_project_as()
@@ -958,13 +962,15 @@ class MapEditorWindow(QMainWindow):
         )
         
         if file_path:
-            if save_project(self._project, file_path):
+            success, error_msg = save_project(self._project, file_path)
+            if success:
                 self._current_file = file_path
                 self._modified = False
                 self.setWindowTitle(f"Star Wars Map Editor - {os.path.basename(file_path)}")
                 return True
             else:
-                QMessageBox.warning(self, "Error", "Failed to save project.")
+                QMessageBox.warning(self, "Error", error_msg or "Failed to save project.")
+        return False
         return False
     
     def _export_map_data(self) -> None:
@@ -1112,7 +1118,7 @@ class MapEditorWindow(QMainWindow):
     
     # ---------- Close handling ----------
     
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Handle window close."""
         if self._modified:
             reply = QMessageBox.question(
