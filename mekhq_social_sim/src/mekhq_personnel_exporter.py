@@ -1,57 +1,85 @@
 # mekhq_personnel_exporter.py
 """
-Vollständiger MekHQ Personnel + TO&E Exporter
-Extrahiert ALLE Personaldaten und die TO&E-Struktur (Forces & Units)
-aus .cpnx/.cpnx.gz Dateien und exportiert sie als JSON.
+MekHQ 5.10 Personnel + TO&E Exporter
 
-- personnel_complete.json  → Personen + Traits etc.
-- toe_complete.json        → Forces-Baum + Units (Chassis, Crew, forceId ...)
+Extracts personnel data and TO&E structure from MekHQ 5.10 campaign files
+(.cpnx/.cpnx.gz) and exports them as JSON.
+
+Supports ONLY MekHQ 5.10 schema - no backward compatibility with older versions.
+
+Output files:
+- personnel_complete.json  → Personnel data with traits
+- toe_complete.json        → Forces hierarchy + Units with crew roles from mothballInfo
+
+Key MekHQ 5.10 changes:
+- TO&E info (forceID, crew roles) is stored exclusively in <mothballInfo>
+- Forces include preferredRole field
+- Personality trait indices can go up to 5 for social traits
 """
 
 import os
 import gzip
 import json
 import xml.etree.ElementTree as ET
-from tkinter import Tk, filedialog
 from typing import Optional, Dict, Any, List
 
+# Optional tkinter import (only needed for GUI file dialog)
+try:
+    from tkinter import Tk, filedialog
+    TKINTER_AVAILABLE = True
+except ImportError:
+    TKINTER_AVAILABLE = False
+    Tk = None
+    filedialog = None
+
 
 # ============================================================
-# PERSONALITY TRAIT ENUMS (MekHQ Standard)
+# PERSONALITY TRAIT ENUMS (MekHQ 5.10)
 # ============================================================
 
+# MekHQ 5.10 uses indices 0-4 for aggression
 AGGRESSION_TRAITS = [
     "NONE",           # 0
     "TIMID",          # 1
     "ASSERTIVE",      # 2
     "AGGRESSIVE",     # 3
-    "BLOODTHIRSTY"    # 4
+    "BLOODTHIRSTY",   # 4
+    "DETERMINED"      # 5 (new in 5.10)
 ]
 
+# MekHQ 5.10 uses indices 0-5 for ambition
 AMBITION_TRAITS = [
     "NONE",           # 0
     "ASPIRING",       # 1
-    "COMPETITIVE",    # 2
-    "AMBITIOUS",      # 3
-    "DRIVEN"          # 4
+    "GOAL_ORIENTED",  # 2 (renamed in 5.10)
+    "COMPETITIVE",    # 3
+    "AMBITIOUS",      # 4
+    "DRIVEN"          # 5
 ]
 
+# MekHQ 5.10 uses indices 0-6 for greed
 GREED_TRAITS = [
     "NONE",           # 0
-    "GREEDY",         # 1
-    "AVARICIOUS"      # 2
+    "GENEROUS",       # 1
+    "HOARDING",       # 2
+    "PROFITABLE",     # 3
+    "FRAUDULENT",     # 4
+    "MERCENARY",      # 5
+    "LUSTFUL"         # 6
 ]
 
+# MekHQ 5.10 uses indices 0-6 for social
 SOCIAL_TRAITS = [
     "NONE",           # 0
-    "RECLUSIVE",      # 1
-    "RESERVED",       # 2
-    "SOCIABLE",       # 3
-    "GREGARIOUS",     # 4
-    "VERBOSE"         # 5
+    "AUTHENTIC",      # 1
+    "DISINGENUOUS",   # 2
+    "RESERVED",       # 3
+    "CONDESCENDING",  # 4
+    "FRIENDLY",       # 5
+    "ENCOURAGING"     # 6
 ]
 
-# Personality Quirks - Erweiterte Liste basierend auf MekHQ
+# Personality Quirks - Extended list for MekHQ 5.10
 PERSONALITY_QUIRK_TRAITS = [
     "NONE",           # 0
     "HONEST",         # 1
@@ -68,7 +96,8 @@ PERSONALITY_QUIRK_TRAITS = [
 
 def get_trait_name(trait_list: List[str], index: Optional[int]) -> Optional[str]:
     """
-    Konvertiert einen Trait-Index zu seinem Enum-Namen
+    Convert a trait index to its enum name.
+    Returns UNKNOWN_<index> if index is out of range for the trait list.
     """
     if index is None:
         return None
@@ -77,6 +106,8 @@ def get_trait_name(trait_list: List[str], index: Optional[int]) -> Optional[str]
         idx = int(index)
         if 0 <= idx < len(trait_list):
             return trait_list[idx]
+        # Return UNKNOWN_<index> for out-of-range indices
+        return f"UNKNOWN_{idx}"
     except (ValueError, TypeError):
         pass
 
@@ -88,11 +119,11 @@ def get_trait_name(trait_list: List[str], index: Optional[int]) -> Optional[str]
 # ============================================================
 
 def load_cpnx(path: str) -> ET.Element:
-    """Lädt eine MekHQ-Kampagnendatei (.cpnx oder .cpnx.gz)"""
+    """Load a MekHQ campaign file (.cpnx or .cpnx.gz)"""
     if not os.path.isfile(path):
-        raise FileNotFoundError(f"Datei nicht gefunden: {path}")
+        raise FileNotFoundError(f"File not found: {path}")
 
-    # GZIP oder normales XML?
+    # GZIP or regular XML?
     if path.endswith(".gz"):
         with gzip.open(path, "rb") as f:
             raw_data = f.read()
@@ -103,17 +134,17 @@ def load_cpnx(path: str) -> ET.Element:
     try:
         root = ET.fromstring(raw_data)
     except ET.ParseError as e:
-        raise ValueError(f"Keine valide MekHQ-XML-Struktur: {e}")
+        raise ValueError(f"Not a valid MekHQ XML structure: {e}")
 
     return root
 
 
 # ============================================================
-# PARSER HILFSFUNKTIONEN
+# PARSER HELPER FUNCTIONS
 # ============================================================
 
 def safe_int(value: Any) -> Optional[int]:
-    """Sichere Integer-Konvertierung"""
+    """Safe integer conversion"""
     if value is None:
         return None
     try:
@@ -123,7 +154,7 @@ def safe_int(value: Any) -> Optional[int]:
 
 
 def safe_float(value: Any) -> Optional[float]:
-    """Sichere Float-Konvertierung"""
+    """Safe float conversion"""
     if value is None:
         return None
     try:
@@ -133,7 +164,7 @@ def safe_float(value: Any) -> Optional[float]:
 
 
 def safe_bool(value: Any) -> Optional[bool]:
-    """Sichere Boolean-Konvertierung"""
+    """Safe boolean conversion"""
     if value is None:
         return None
     if isinstance(value, bool):
@@ -144,7 +175,7 @@ def safe_bool(value: Any) -> Optional[bool]:
 
 
 def get_text(elem: ET.Element, *tags: str) -> Optional[str]:
-    """Sucht Text in mehreren möglichen Tag-Namen"""
+    """Search for text in multiple possible tag names"""
     for tag in tags:
         val = elem.findtext(tag)
         if val:
@@ -157,7 +188,7 @@ def get_text(elem: ET.Element, *tags: str) -> Optional[str]:
 # ============================================================
 
 def parse_name(person: ET.Element) -> Dict[str, Optional[str]]:
-    """Extrahiert Namen in allen möglichen Formaten"""
+    """Extract names in all possible formats"""
     name_data = {
         "given": None,
         "surname": None,
@@ -165,23 +196,23 @@ def parse_name(person: ET.Element) -> Dict[str, Optional[str]]:
         "full_name": None
     }
 
-    # Direkte Tags (v2 Format)
+    # Direct tags (MekHQ 5.10 format)
     name_data["given"] = get_text(person, "givenName", "firstName")
     name_data["surname"] = get_text(person, "surname", "lastName", "familyName")
     name_data["callsign"] = get_text(person, "callsign", "nickname")
 
-    # <name>-Block (v1 Format)
+    # <name> block (legacy format)
     name_elem = person.find("name")
     if name_elem is not None:
         if not name_data["given"]:
             name_data["given"] = get_text(name_elem, "firstName", "given", "givenName")
         if not name_data["surname"]:
             name_data["surname"] = get_text(name_elem, "lastName", "surname", "family")
-        # Falls <name> direkt Text enthält
+        # If <name> contains direct text
         if name_elem.text and not (name_data["given"] or name_data["surname"]):
             name_data["full_name"] = name_elem.text
 
-    # Vollständigen Namen zusammensetzen
+    # Build full name
     if not name_data["full_name"]:
         parts = [name_data["given"], name_data["surname"]]
         name_data["full_name"] = " ".join(p for p in parts if p) or None
@@ -190,10 +221,10 @@ def parse_name(person: ET.Element) -> Dict[str, Optional[str]]:
 
 
 def parse_attributes(person: ET.Element) -> Dict[str, int]:
-    """Extrahiert Attribute (klassisch + AToW)"""
+    """Extract attributes (classic + AToW)"""
     attributes = {}
 
-    # Klassische Attribute
+    # Classic attributes
     attr_elem = person.find("attributes") or person.find("attributesMap")
     if attr_elem is not None:
         for attr in attr_elem.findall("attribute"):
@@ -202,7 +233,7 @@ def parse_attributes(person: ET.Element) -> Dict[str, int]:
             if name and value:
                 attributes[name] = safe_int(value)
 
-    # AToW Attribute (A Time of War)
+    # AToW Attributes (A Time of War)
     atow_elem = person.find("atowAttributes")
     if atow_elem is not None:
         for child in atow_elem:
@@ -210,7 +241,7 @@ def parse_attributes(person: ET.Element) -> Dict[str, int]:
             if val is not None:
                 attributes[f"atow_{child.tag}"] = val
 
-    # Direkte Attribute-Tags (manchmal einzeln)
+    # Direct attribute tags (sometimes single)
     for attr_name in ["STR", "BOD", "RFL", "DEX", "INT", "WIL", "CHA", "EDG"]:
         val = person.findtext(attr_name)
         if val and attr_name not in attributes:
@@ -220,17 +251,17 @@ def parse_attributes(person: ET.Element) -> Dict[str, int]:
 
 
 def parse_skills(person: ET.Element) -> Dict[str, int]:
-    """Extrahiert Skills in allen Formaten"""
+    """Extract skills in all formats"""
     skills = {}
 
-    # Format 1: Direkte <skill>-Tags
+    # Format 1: Direct <skill> tags
     for skill in person.findall("skill"):
         s_type = get_text(skill, "type", "name", "skillType")
         s_level = get_text(skill, "level", "value")
         if s_type and s_level:
             skills[s_type] = safe_int(s_level)
 
-    # Format 2: <skills>-Container
+    # Format 2: <skills> container
     skills_elem = person.find("skills") or person.find("skillMap")
     if skills_elem is not None:
         for skill in skills_elem.findall("skill"):
@@ -239,7 +270,7 @@ def parse_skills(person: ET.Element) -> Dict[str, int]:
             if s_type and s_level:
                 skills[s_type] = safe_int(s_level)
 
-        # Format 3: <entry>-Tags (Map-Struktur)
+        # Format 3: <entry> tags (Map structure)
         for entry in skills_elem.findall("entry"):
             key = entry.get("key") or get_text(entry, "name", "key")
             value = entry.get("value") or get_text(entry, "level", "value")
@@ -250,7 +281,7 @@ def parse_skills(person: ET.Element) -> Dict[str, int]:
 
 
 def parse_abilities(person: ET.Element) -> Dict[str, str]:
-    """Extrahiert Special Abilities (SPAs)"""
+    """Extract Special Abilities (SPAs)"""
     abilities = {}
 
     abilities_elem = person.find("abilities") or person.find("specialAbilities")
@@ -266,25 +297,26 @@ def parse_abilities(person: ET.Element) -> Dict[str, str]:
 
 def parse_personality(person: ET.Element) -> Dict[str, Any]:
     """
-    Extrahiert Persönlichkeitsmerkmale inkl. Enum-Namen
+    Extract personality traits including enum names.
+    Handles MekHQ 5.10 extended trait indices (up to 5-6 for some traits).
     """
     personality: Dict[str, Any] = {}
 
-    # --- TRAIT-INDIZES AUSLESEN ---
+    # --- READ TRAIT INDICES ---
     aggression_idx = safe_int(person.findtext("aggressionDescriptionIndex"))
     ambition_idx = safe_int(person.findtext("ambitionDescriptionIndex"))
     greed_idx = safe_int(person.findtext("greedDescriptionIndex"))
     social_idx = safe_int(person.findtext("socialDescriptionIndex"))
     quirk_idx = safe_int(person.findtext("personalityQuirkDescriptionIndex"))
 
-    # --- ENUM-NAMEN AUS INDIZES GENERIEREN ---
+    # --- GENERATE ENUM NAMES FROM INDICES ---
     personality["aggression"] = get_trait_name(AGGRESSION_TRAITS, aggression_idx)
     personality["ambition"] = get_trait_name(AMBITION_TRAITS, ambition_idx)
     personality["greed"] = get_trait_name(GREED_TRAITS, greed_idx)
     personality["social"] = get_trait_name(SOCIAL_TRAITS, social_idx)
     personality["personalityQuirk"] = get_trait_name(PERSONALITY_QUIRK_TRAITS, quirk_idx)
 
-    # --- INDIZES SELBST AUCH SPEICHERN ---
+    # --- ALSO STORE INDICES THEMSELVES ---
     if aggression_idx is not None:
         personality["aggressionDescriptionIndex"] = aggression_idx
     if ambition_idx is not None:
@@ -296,7 +328,7 @@ def parse_personality(person: ET.Element) -> Dict[str, Any]:
     if quirk_idx is not None:
         personality["personalityQuirkDescriptionIndex"] = quirk_idx
 
-    # --- ZUSÄTZLICHE PERSÖNLICHKEITS-DATEN ---
+    # --- ADDITIONAL PERSONALITY DATA ---
     description = person.findtext("personalityDescription")
     if description:
         personality["description"] = description
@@ -305,16 +337,7 @@ def parse_personality(person: ET.Element) -> Dict[str, Any]:
     if interview_notes:
         personality["interview_notes"] = interview_notes
 
-    # Legacy-Felder (alte MekHQ-Versionen)
-    legacy_aggression = person.findtext("aggression")
-    if legacy_aggression:
-        personality["aggression_legacy"] = safe_int(legacy_aggression)
-
-    legacy_greed = person.findtext("greed")
-    if legacy_greed:
-        personality["greed_legacy"] = safe_int(legacy_greed)
-
-    # Traits (alternative Struktur - falls vorhanden)
+    # Traits (alternative structure - if present)
     traits_elem = person.find("personality") or person.find("personalityTraits") or person.find("traits")
     if traits_elem is not None:
         traits: Dict[str, Any] = {}
@@ -330,7 +353,7 @@ def parse_personality(person: ET.Element) -> Dict[str, Any]:
 
 
 def parse_awards(person: ET.Element) -> List[Dict[str, str]]:
-    """Extrahiert Auszeichnungen"""
+    """Extract awards"""
     awards: List[Dict[str, str]] = []
 
     awards_elem = person.find("awards")
@@ -346,7 +369,7 @@ def parse_awards(person: ET.Element) -> List[Dict[str, str]]:
 
 
 def parse_logs(person: ET.Element) -> Dict[str, List[Dict[str, str]]]:
-    """Extrahiert Personnel- und Assignment-Logs"""
+    """Extract personnel and assignment logs"""
     logs = {"personnel": [], "assignments": []}
 
     # Personnel Log
@@ -360,7 +383,9 @@ def parse_logs(person: ET.Element) -> Dict[str, List[Dict[str, str]]]:
             })
 
     # Assignment Log
-    assign_log = person.find("assignmentLog") or person.find("missionLog")
+    assign_log = person.find("assignmentLog")
+    if assign_log is None:
+        assign_log = person.find("missionLog")
     if assign_log is not None:
         for entry in assign_log.findall("logEntry"):
             logs["assignments"].append({
@@ -373,7 +398,7 @@ def parse_logs(person: ET.Element) -> Dict[str, List[Dict[str, str]]]:
 
 
 def parse_injuries(person: ET.Element) -> List[Dict[str, Any]]:
-    """Extrahiert Verletzungen"""
+    """Extract injuries"""
     injuries: List[Dict[str, Any]] = []
 
     injuries_elem = person.find("injuries")
@@ -391,7 +416,7 @@ def parse_injuries(person: ET.Element) -> List[Dict[str, Any]]:
 
 
 def parse_portrait(person: ET.Element) -> Dict[str, str]:
-    """Extrahiert Portrait-Informationen"""
+    """Extract portrait information"""
     portrait: Dict[str, str] = {}
 
     portrait_elem = person.find("portrait")
@@ -403,7 +428,7 @@ def parse_portrait(person: ET.Element) -> Dict[str, str]:
 
 
 def parse_relationships(person: ET.Element) -> Dict[str, Any]:
-    """Extrahiert Beziehungen (Familie, Partner)"""
+    """Extract relationships (family, partner)"""
     relationships: Dict[str, Any] = {
         "partner": None,
         "children": [],
@@ -411,6 +436,25 @@ def parse_relationships(person: ET.Element) -> Dict[str, Any]:
         "siblings": []
     }
 
+    # MekHQ 5.10: Relationships in <genealogy>
+    genealogy = person.find("genealogy")
+    if genealogy is not None:
+        family = genealogy.find("family")
+        if family is not None:
+            for rel in family.findall("relationship"):
+                rel_type = rel.findtext("type")
+                person_id = rel.findtext("personId")
+                if rel_type and person_id:
+                    if rel_type == "SPOUSE" or rel_type == "PARTNER":
+                        relationships["partner"] = person_id
+                    elif rel_type == "CHILD":
+                        relationships["children"].append(person_id)
+                    elif rel_type == "PARENT":
+                        relationships["parents"].append(person_id)
+                    elif rel_type == "SIBLING":
+                        relationships["siblings"].append(person_id)
+
+    # Legacy format: <relationships> block
     rel_elem = person.find("relationships")
     if rel_elem is not None:
         # Partner
@@ -418,15 +462,15 @@ def parse_relationships(person: ET.Element) -> Dict[str, Any]:
         if partner is not None:
             relationships["partner"] = partner.get("id")
 
-        # Kinder
+        # Children
         for child in rel_elem.findall(".//child"):
             relationships["children"].append(child.get("id"))
 
-        # Eltern
+        # Parents
         for parent in rel_elem.findall(".//parent"):
             relationships["parents"].append(parent.get("id"))
 
-        # Geschwister
+        # Siblings
         for sibling in rel_elem.findall(".//sibling"):
             relationships["siblings"].append(sibling.get("id"))
 
@@ -435,57 +479,58 @@ def parse_relationships(person: ET.Element) -> Dict[str, Any]:
 
 def parse_personnel(root: ET.Element) -> List[Dict[str, Any]]:
     """
-    Hauptfunktion: Extrahiert ALLE Personaldaten aus einer MekHQ-Kampagne
+    Main function: Extract ALL personnel data from a MekHQ campaign (5.10 schema).
+
+    Note: MekHQ 5.10 does NOT store forceId/unitId directly on personnel.
+    Unit/force assignment must be resolved via units.mothballInfo crew roles.
     """
     personnel_elem = root.find("personnel")
     if personnel_elem is None:
-        print("⚠️  Warnung: Kein <personnel>-Abschnitt gefunden.")
+        print("⚠️  Warning: No <personnel> section found.")
         return []
 
     personnel: List[Dict[str, Any]] = []
 
     for person in personnel_elem.findall("person"):
-        # Basis-Daten
+        # Basic data
         person_data: Dict[str, Any] = {
             "id": person.get("id"),
             "type": person.get("type"),
             "name": parse_name(person),
 
-            # Rollen & Status
+            # Roles & Status
             "primary_role": get_text(person, "primaryRole", "role"),
             "secondary_role": get_text(person, "secondaryRole"),
             "rank": person.findtext("rank"),
             "status": person.findtext("status"),
 
-            # Einheit & Organisation
-            "unit_id": person.findtext("unitId"),
-            "force_id": person.findtext("forceId"),
+            # Faction
             "faction": person.findtext("faction"),
             "origin_faction": person.findtext("originFaction"),
 
-            # Erfahrung
+            # Experience
             "xp": safe_int(person.findtext("xp")),
             "total_xp": safe_int(get_text(person, "totalXPEarnings", "totalXP")),
             "kills": safe_int(person.findtext("kills")),
 
-            # Persönliche Daten
+            # Personal Data
             "gender": person.findtext("gender"),
             "birthday": person.findtext("birthday"),
             "age": safe_int(person.findtext("age")),
             "date_of_death": person.findtext("dateOfDeath"),
 
-            # Finanzen & Loyalität
+            # Finances & Loyalty
             "salary": safe_int(person.findtext("salary")),
             "total_earnings": safe_int(person.findtext("totalEarnings")),
             "loyalty": safe_int(person.findtext("loyalty")),
 
-            # Wichtige Daten
+            # Important Dates
             "recruitment_date": person.findtext("recruitment"),
             "joined_campaign": person.findtext("joinedCampaign"),
             "last_rank_change": person.findtext("lastRankChangeDate"),
             "retirement_date": person.findtext("retirementDate"),
 
-            # Komplexe Daten
+            # Complex Data
             "attributes": parse_attributes(person),
             "skills": parse_skills(person),
             "abilities": parse_abilities(person),
@@ -517,15 +562,23 @@ def parse_personnel(root: ET.Element) -> List[Dict[str, Any]]:
 
 def parse_units(root: ET.Element) -> List[Dict[str, Any]]:
     """
-    Extrahiert alle Units aus <units>:
-    - id, campaign_type
-    - entity-Attribute (Chassis, Modell, Typ etc.)
-    - Crew-IDs (driverId, gunnerId, commanderId, navigatorId, techId)
-    - forceId (Zuordnung zu Force)
+    Extract all units from <units> section (MekHQ 5.10 schema).
+
+    In 5.10, TO&E assignment and crew roles are ONLY in <mothballInfo>.
+    Entity attributes include chassis, model, type, commander, externalId, altitude.
+
+    Returns list of unit dictionaries containing:
+    - id: Unit UUID
+    - campaign_type: Unit type from XML attribute
+    - entity: Full entity metadata (chassis, model, type, commander, externalId, altitude)
+    - maintenanceMultiplier: Maintenance cost multiplier
+    - forceId: Force assignment (from mothballInfo.forceID)
+    - crew: Dictionary of crew roles (driver, gunner, commander, navigator, tech, vesselCrew)
+    - extras: Any additional leaf tags
     """
     units_root = root.find("units")
     if units_root is None:
-        print("⚠️  Warnung: Kein <units>-Abschnitt gefunden.")
+        print("⚠️  Warning: No <units> section found.")
         return []
 
     units_data: List[Dict[str, Any]] = []
@@ -539,48 +592,90 @@ def parse_units(root: ET.Element) -> List[Dict[str, Any]]:
             "campaign_type": u_type,
         }
 
-        # entity-Block: enthält Chassis/Modell/Typ etc. als Attribute
+        # Entity block: contains chassis, model, type, etc. as attributes
         entity = unit.find("entity")
         if entity is not None:
-            data["entity"] = dict(entity.attrib)
+            entity_data = dict(entity.attrib)
+            data["entity"] = entity_data
 
-        # bekannte einfache Tags
-        def _get(tag: str) -> Optional[str]:
-            elem = unit.find(tag)
-            return elem.text if elem is not None else None
+        # Maintenance multiplier (direct tag)
+        maint_mult = unit.findtext("maintenanceMultiplier")
+        if maint_mult is not None:
+            data["maintenanceMultiplier"] = safe_int(maint_mult)
 
-        for tag in [
-            "forceId",
-            "driverId",
-            "gunnerId",
-            "commanderId",
-            "navigatorId",
-            "techId",
-            "site",
-            "transportId",
-        ]:
-            val = _get(tag)
-            if val is not None:
-                key = tag[0].lower() + tag[1:]  # forceId -> forceId (gleicher Name, nur erstes klein)
-                data[key] = val
+        # MekHQ 5.10: All TO&E info is in <mothballInfo>
+        mothball_info = unit.find("mothballInfo")
+        if mothball_info is not None:
+            # Force assignment
+            force_id = mothball_info.findtext("forceID")
+            if force_id is not None:
+                data["forceId"] = force_id
 
-        # alle anderen einfachen Leaf-Tags als "extras"
+            # Crew roles from mothballInfo
+            # NOTE: Infantry/vehicle units can have MULTIPLE driverIds, gunnerIds, etc.
+            crew: Dict[str, Any] = {}
+
+            # Collect all driver IDs (infantry can have many)
+            driver_ids = [d.text for d in mothball_info.findall("driverId") if d.text]
+            if driver_ids:
+                crew["driverIds"] = driver_ids
+
+            # Collect all gunner IDs
+            gunner_ids = [g.text for g in mothball_info.findall("gunnerId") if g.text]
+            if gunner_ids:
+                crew["gunnerIds"] = gunner_ids
+
+            # Collect all commander IDs
+            commander_ids = [c.text for c in mothball_info.findall("commanderId") if c.text]
+            if commander_ids:
+                crew["commanderIds"] = commander_ids
+
+            # Collect all navigator IDs
+            navigator_ids = [n.text for n in mothball_info.findall("navigatorId") if n.text]
+            if navigator_ids:
+                crew["navigatorIds"] = navigator_ids
+
+            # Collect all tech IDs
+            tech_ids = [t.text for t in mothball_info.findall("techId") if t.text]
+            if tech_ids:
+                crew["techIds"] = tech_ids
+
+            # Vessel crew (multiple IDs possible)
+            vessel_crew_ids = []
+            for vc in mothball_info.findall("vesselCrewId"):
+                if vc.text:
+                    vessel_crew_ids.append(vc.text)
+            if vessel_crew_ids:
+                crew["vesselCrewIds"] = vessel_crew_ids
+
+            if crew:
+                data["crew"] = crew
+
+        # Extract any other leaf tags as extras (excluding already processed)
+        processed_tags = {
+            "entity", "maintenanceMultiplier", "mothballInfo",
+            "mothballed", "site", "transportId"
+        }
         extras: Dict[str, Any] = {}
         for child in unit:
-            if child.tag in {
-                "entity",
-                "forceId",
-                "driverId",
-                "gunnerId",
-                "commanderId",
-                "navigatorId",
-                "techId",
-                "site",
-                "transportId",
-            }:
+            if child.tag in processed_tags:
                 continue
             if len(list(child)) == 0 and child.text and child.text.strip():
                 extras[child.tag] = child.text.strip()
+
+        # Include site and transportId if present
+        site = unit.findtext("site")
+        if site:
+            data["site"] = site
+
+        transport_id = unit.findtext("transportId")
+        if transport_id:
+            data["transportId"] = transport_id
+
+        # Store mothballed status
+        mothballed = unit.findtext("mothballed")
+        if mothballed:
+            data["mothballed"] = safe_bool(mothballed)
 
         if extras:
             data["extras"] = extras
@@ -592,23 +687,36 @@ def parse_units(root: ET.Element) -> List[Dict[str, Any]]:
 
 def parse_forces(root: ET.Element) -> List[Dict[str, Any]]:
     """
-    Extrahiert die komplette Forces/TO&E-Hierarchie:
+    Extract the complete Forces/TO&E hierarchy (MekHQ 5.10 schema).
 
-    Rückgabe ist eine Liste von Wurzel-Forces, jede mit:
+    MekHQ 5.10 forces include:
+    - id, name
+    - formationLevel (e.g., "Company", "Lance", "Team")
+    - forceType (integer: 0=Combat, 1=Support, 2=Transport, 3=Security, 4=Salvage)
+    - forceCommanderID (UUID of commander person)
+    - preferredRole (new in 5.10: e.g., "FRONTLINE")
+    - subForces (recursive)
+
+    NOTE: In 5.10, units are NOT listed under forces - they reference forces
+    via mothballInfo.forceID. The units list is populated during export by
+    matching units to forces.
+
+    Returns list of root forces, each with:
     {
       "id": "0",
-      "name": "Raven's Storm",
-      "formation_level": "Regiment/..."
+      "name": "Helix Tactical Unit",
+      "formation_level": "Company",
       "force_type": 0,
-      "force_commander_id": "uuid der Person",
-      "parent_id": None oder ID,
-      "units": [ "unit-uuid", ... ],
-      "sub_forces": [ ... gleicher Aufbau ... ]
+      "force_commander_id": "uuid",
+      "preferred_role": "FRONTLINE",
+      "parent_id": None or ID,
+      "units": [],  # Will be populated during export
+      "sub_forces": [...]
     }
     """
     forces_root = root.find("forces")
     if forces_root is None:
-        print("⚠️  Warnung: Kein <forces>-Abschnitt gefunden.")
+        print("⚠️  Warning: No <forces> section found.")
         return []
 
     def _parse_force(elem: ET.Element, parent_id: Optional[str] = None) -> Dict[str, Any]:
@@ -619,20 +727,13 @@ def parse_forces(root: ET.Element) -> List[Dict[str, Any]]:
             "formation_level": elem.findtext("formationLevel"),
             "force_type": safe_int(elem.findtext("forceType")),
             "force_commander_id": elem.findtext("forceCommanderID"),
+            "preferred_role": elem.findtext("preferredRole"),  # New in 5.10
             "parent_id": parent_id,
-            "units": [],
+            "units": [],  # Will be populated from unit.mothballInfo.forceID
             "sub_forces": [],
         }
 
-        # Unit-Referenzen in dieser Force
-        units_elem = elem.find("units")
-        if units_elem is not None:
-            for uref in units_elem.findall("unit"):
-                uid = uref.get("id") or (uref.text.strip() if uref.text else None)
-                if uid:
-                    data["units"].append(uid)
-
-        # Unter-Forces
+        # Sub-forces (recursive)
         sub_elem = elem.find("subForces")
         if sub_elem is not None:
             for sf in sub_elem.findall("force"):
@@ -648,7 +749,7 @@ def parse_forces(root: ET.Element) -> List[Dict[str, Any]]:
 
 
 def count_forces_recursive(forces: List[Dict[str, Any]]) -> int:
-    """Hilfsfunktion: zählt alle Forces inkl. Unter-Forces"""
+    """Helper function: count all forces including sub-forces"""
     total = 0
     for f in forces:
         total += 1
@@ -664,7 +765,7 @@ def export_personnel_to_json(
     personnel_data: List[Dict[str, Any]],
     output_path: str = "exports/personnel_complete.json",
 ) -> str:
-    """Exportiert Personaldaten als JSON"""
+    """Export personnel data as JSON"""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     with open(output_path, "w", encoding="utf-8") as f:
@@ -679,15 +780,36 @@ def export_toe_to_json(
     output_path: str = "exports/toe_complete.json",
 ) -> str:
     """
-    Exportiert die TO&E-Struktur (Forces + Units) als JSON.
+    Export the TO&E structure (Forces + Units) as JSON.
 
-    Struktur:
+    MekHQ 5.10: Units are assigned to forces via mothballInfo.forceID.
+    This function populates the force.units lists from unit forceId values.
+
+    Structure:
     {
       "forces": [...],
       "units":  [...]
     }
     """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Build force ID mapping for quick lookup
+    force_id_map: Dict[str, Dict[str, Any]] = {}
+
+    def _map_forces(force_list: List[Dict[str, Any]]) -> None:
+        for force in force_list:
+            fid = str(force.get("id", ""))
+            if fid:
+                force_id_map[fid] = force
+            _map_forces(force.get("sub_forces", []))
+
+    _map_forces(forces_data)
+
+    # Populate force units lists from unit forceId (from mothballInfo)
+    for unit in units_data:
+        force_id = str(unit.get("forceId", ""))
+        if force_id and force_id in force_id_map:
+            force_id_map[force_id]["units"].append(unit.get("id"))
 
     payload = {
         "forces": forces_data,
@@ -701,14 +823,14 @@ def export_toe_to_json(
 
 
 def print_summary(personnel_data: List[Dict[str, Any]]):
-    """Gibt eine Zusammenfassung für das Personal aus"""
+    """Print a summary of exported personnel data"""
     print(f"\n{'='*60}")
     print(f"📊 PERSONNEL EXPORT SUMMARY")
     print(f"{'='*60}")
     print(f"Total Personnel: {len(personnel_data)}")
 
     if personnel_data:
-        # Zähle Personen mit verschiedenen Daten
+        # Count people with various data
         with_skills = sum(1 for p in personnel_data if p.get("skills"))
         with_attributes = sum(1 for p in personnel_data if p.get("attributes"))
         with_abilities = sum(1 for p in personnel_data if p.get("abilities"))
@@ -721,7 +843,7 @@ def print_summary(personnel_data: List[Dict[str, Any]]):
         print(f"✓ With Personality:  {with_personality}")
         print(f"✓ Commanders:        {commanders}")
 
-        # Personality Traits Statistik
+        # Personality Traits Statistics
         trait_counts = {
             "aggression": 0,
             "ambition": 0,
@@ -743,7 +865,7 @@ def print_summary(personnel_data: List[Dict[str, Any]]):
         print(f"   Social:      {trait_counts['social']}")
         print(f"   Quirk:       {trait_counts['personalityQuirk']}")
 
-        # Beispiel-Person zeigen
+        # Show example person
         example = personnel_data[0]
         print(f"\n📋 Example Person:")
         print(f"   Name: {example['name'].get('full_name', 'N/A')}")
@@ -752,7 +874,7 @@ def print_summary(personnel_data: List[Dict[str, Any]]):
         print(f"   Skills: {len(example.get('skills', {}))}")
         print(f"   Attributes: {len(example.get('attributes', {}))}")
 
-        # Personality Traits des Beispiels
+        # Personality traits of example
         example_pers = example.get("personality", {})
         if example_pers:
             print(f"   Personality:")
@@ -775,69 +897,80 @@ def print_summary(personnel_data: List[Dict[str, Any]]):
 # ============================================================
 
 def main():
-    """Hauptprogramm mit Datei-Dialog"""
+    """Main program with file dialog"""
     print("\n" + "="*60)
-    print("🎮 MekHQ Personnel + TO&E Exporter")
-    print("    (inkl. Personality Trait Enums)")
+    print("🎮 MekHQ 5.10 Personnel + TO&E Exporter")
+    print("    (with Personality Trait Enums)")
     print("="*60 + "\n")
 
-    # Datei-Dialog
+    # Check if tkinter is available
+    if not TKINTER_AVAILABLE:
+        print("❌ tkinter not available. Run with a file path argument instead:")
+        print("   python mekhq_personnel_exporter.py <path_to_campaign.cpnx>")
+        return
+
+    # File dialog
     Tk().withdraw()
     file_path = filedialog.askopenfilename(
-        title="Wähle eine MekHQ-Kampagnendatei",
+        title="Select a MekHQ Campaign File",
         filetypes=[
-            ("MekHQ Kampagnen", "*.cpnx *.cpnx.gz"),
-            ("Alle Dateien", "*.*"),
+            ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
+            ("All Files", "*.*"),
         ],
     )
 
     if not file_path:
-        print("❌ Keine Datei gewählt. Abbruch.")
+        print("❌ No file selected. Aborting.")
         return
 
-    print(f"📂 Lade Kampagne: {os.path.basename(file_path)}")
+    print(f"📂 Loading campaign: {os.path.basename(file_path)}")
 
     try:
-        # Laden
+        # Load
         root = load_cpnx(file_path)
-        print("✅ Kampagne erfolgreich geladen")
+        print("✅ Campaign loaded successfully")
 
         # --- PERSONNEL ---
-        print("📊 Extrahiere Personaldaten...")
+        print("📊 Extracting personnel data...")
         personnel_data = parse_personnel(root)
 
         if not personnel_data:
-            print("⚠️  Keine Personaldaten gefunden!")
+            print("⚠️  No personnel data found!")
 
         # --- TO&E (FORCES & UNITS) ---
-        print("📊 Extrahiere TO&E (Forces & Units)...")
+        print("📊 Extracting TO&E (Forces & Units from mothballInfo)...")
         forces_data = parse_forces(root)
         units_data = parse_units(root)
 
         # --- EXPORT ---
-        print("💾 Exportiere JSON...")
+        print("💾 Exporting JSON...")
 
         personnel_output_path = export_personnel_to_json(personnel_data)
         toe_output_path = export_toe_to_json(forces_data, units_data)
 
-        # --- ZUSAMMENFASSUNG ---
+        # --- SUMMARY ---
         print_summary(personnel_data)
 
         total_forces = count_forces_recursive(forces_data)
+        units_with_force = sum(1 for u in units_data if u.get("forceId"))
+        units_with_crew = sum(1 for u in units_data if u.get("crew"))
+
         print(f"\n{'='*60}")
-        print("📊 TO&E SUMMARY")
+        print("📊 TO&E SUMMARY (MekHQ 5.10)")
         print(f"{'='*60}")
         print(f"Root Forces: {len(forces_data)}")
-        print(f"Total Forces (inkl. Unterforces): {total_forces}")
+        print(f"Total Forces (incl. sub-forces): {total_forces}")
         print(f"Units: {len(units_data)}")
+        print(f"Units with Force Assignment: {units_with_force}")
+        print(f"Units with Crew Data: {units_with_crew}")
         print(f"{'='*60}\n")
 
-        print("✅ Export erfolgreich abgeschlossen!")
-        print(f"📄 Personnel-Datei gespeichert: {personnel_output_path}")
-        print(f"📄 TO&E-Datei gespeichert:      {toe_output_path}")
+        print("✅ Export completed successfully!")
+        print(f"📄 Personnel file saved: {personnel_output_path}")
+        print(f"📄 TO&E file saved:      {toe_output_path}")
 
     except Exception as e:
-        print(f"\n❌ FEHLER: {e}")
+        print(f"\n❌ ERROR: {e}")
         import traceback
         traceback.print_exc()
 

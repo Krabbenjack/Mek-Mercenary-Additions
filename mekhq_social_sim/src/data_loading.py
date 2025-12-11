@@ -1,10 +1,34 @@
+"""
+MekHQ 5.10 Data Loading Module
+
+Loads personnel and TO&E data from JSON files exported by mekhq_personnel_exporter.py.
+Supports ONLY MekHQ 5.10 schema - no backward compatibility with older versions.
+
+Key MekHQ 5.10 changes:
+- Crew roles are in units[].crew (from mothballInfo)
+- Forces include preferred_role and formation_level
+- Units are assigned to forces via mothballInfo.forceID
+"""
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional, Any
 from datetime import datetime, date
 
 from models import Character, UnitAssignment, PortraitInfo
+
+
+# Force type mapping (MekHQ 5.10)
+FORCE_TYPE_NAMES = {
+    0: "Combat",
+    1: "Support",
+    2: "Transport",
+    3: "Security",
+    4: "Salvage",
+}
+
+# Valid crew roles (MekHQ 5.10)
+VALID_CREW_ROLES = {"driver", "gunner", "commander", "navigator", "tech", "crew"}
 
 
 def _parse_iso_date(date_str: str) -> date | None:
@@ -12,10 +36,10 @@ def _parse_iso_date(date_str: str) -> date | None:
     if not date_str:
         return None
     try:
-        # expected format in JSON: yyyy-mm-dd
+        # Expected format in JSON: yyyy-mm-dd
         return datetime.strptime(date_str, "%Y-%m-%d").date()
     except Exception:
-        # fallback to generic ISO parse
+        # Fallback to generic ISO parse
         try:
             return datetime.fromisoformat(date_str).date()
         except Exception:
@@ -25,20 +49,26 @@ def _parse_iso_date(date_str: str) -> date | None:
 def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
     """Load personnel_complete.json and convert to Character objects.
 
-    Expected JSON structure from mekhq_personnel_exporter.py:
+    Expected JSON structure from mekhq_personnel_exporter.py (MekHQ 5.10):
     [
       {
-        "id": "123",
+        "id": "uuid",
         "name": {
           "full_name": "John Doe",
           "callsign": "Bulldog"
         },
         "age": 32,
-        "birthday": "1990-05-12",
-        "primary_role": "MechWarrior",
+        "birthday": "2961-05-12",
+        "primary_role": "MEKWARRIOR",
         "personality": {
           "aggression": "AGGRESSIVE",
           "aggressionDescriptionIndex": 3,
+          "ambition": "AMBITIOUS",
+          "ambitionDescriptionIndex": 4,
+          "greed": "PROFITABLE",
+          "greedDescriptionIndex": 3,
+          "social": "FRIENDLY",
+          "socialDescriptionIndex": 5,
           ...
         }
       },
@@ -54,7 +84,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         if not cid or cid in characters:
             continue
 
-        # Name-Struktur aus dem Exporter
+        # Name structure from exporter
         name_data = entry.get("name", {})
         if isinstance(name_data, dict):
             name = name_data.get("full_name") or "Unknown"
@@ -71,34 +101,28 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         birth_str = entry.get("birthday") or entry.get("birthdate") or entry.get("dateOfBirth")
         birthday = _parse_iso_date(birth_str) if birth_str else None
 
-        # Personality traits extrahieren und in 0-100 Werte konvertieren
+        # Personality traits: scale from 0-N indices to 0-100
         traits = {}
         personality = entry.get("personality", {})
 
         if isinstance(personality, dict):
-            # Trait-Index-Werte (0-4 oder 0-5) in 0-100 skalieren
+            # MekHQ 5.10 trait index ranges (updated)
             trait_mappings = {
-                "aggressionDescriptionIndex": ("aggression", 4),  # 0-4 -> 0-100
-                "ambitionDescriptionIndex": ("ambition", 4),
-                "greedDescriptionIndex": ("greed", 2),  # 0-2 -> 0-100
-                "socialDescriptionIndex": ("gregariousness", 5),  # 0-5 -> 0-100
+                "aggressionDescriptionIndex": ("aggression", 5),   # 0-5 range
+                "ambitionDescriptionIndex": ("ambition", 5),       # 0-5 range
+                "greedDescriptionIndex": ("greed", 6),             # 0-6 range
+                "socialDescriptionIndex": ("gregariousness", 6),   # 0-6 range
             }
 
             for index_key, (trait_name, max_val) in trait_mappings.items():
                 index_val = personality.get(index_key)
                 if index_val is not None:
                     try:
-                        # Skaliere von 0-max_val auf 0-100
-                        scaled_value = int((int(index_val) / max_val) * 100)
-                        traits[trait_name] = scaled_value
+                        # Scale from 0-max_val to 0-100
+                        scaled_value = int((int(index_val) / max_val) * 100) if max_val > 0 else 0
+                        traits[trait_name] = min(100, scaled_value)  # Cap at 100
                     except (ValueError, TypeError, ZeroDivisionError):
                         pass
-
-        # Fallback: Wenn alte "traits" Struktur vorhanden
-        if not traits and "traits" in entry:
-            old_traits = entry.get("traits", {})
-            if isinstance(old_traits, dict):
-                traits = {k: int(v) for k, v in old_traits.items() if v is not None}
 
         # Portrait info from JSON
         portrait_data = entry.get("portrait", {})
@@ -131,13 +155,15 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
 def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) -> None:
     """Apply TO&E structure from toe_complete.json to Character objects.
 
-    Expected JSON structure from mekhq_personnel_exporter.py:
+    MekHQ 5.10 JSON structure:
     {
       "forces": [
         {
           "id": "0",
           "name": "Alpha Regiment",
           "force_type": 0,
+          "formation_level": "Company",
+          "preferred_role": "FRONTLINE",
           "units": ["unit-uuid-1", ...],
           "sub_forces": [...]
         }
@@ -145,10 +171,15 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
       "units": [
         {
           "id": "unit-uuid-1",
-          "forceId": "0",
-          "driverId": "person-uuid",
-          "gunnerId": "person-uuid",
-          ...
+          "entity": {"chassis": "Victor", "model": "VTR-9B", ...},
+          "forceId": "1",
+          "maintenanceMultiplier": 4,
+          "crew": {
+            "driverId": "person-uuid",
+            "gunnerId": "person-uuid",
+            "techId": "person-uuid",
+            "vesselCrewIds": ["person-uuid", ...]
+          }
         }
       ]
     }
@@ -159,69 +190,123 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
     forces = data.get("forces", [])
     units = data.get("units", [])
 
-    # Erstelle Mapping: Force-ID -> Force-Info
-    force_map = {}
+    # Build force ID -> force info mapping (flatten hierarchy)
+    force_map: Dict[str, Dict[str, Any]] = {}
 
-    def _flatten_forces(force_list, parent_name=None, parent_type=None):
+    def _flatten_forces(force_list: List[Dict], parent_name: Optional[str] = None) -> None:
         for force in force_list:
-            fid = str(force.get("id"))
+            fid = str(force.get("id", ""))
             fname = force.get("name", "Unknown Force")
             ftype_num = force.get("force_type", 0)
-
-            # Force-Type als String
-            force_type_names = {
-                0: "Combat",
-                1: "Support",
-                2: "Transport",
-                3: "Civilian"
-            }
-            ftype = force_type_names.get(ftype_num, "Unknown")
+            ftype = FORCE_TYPE_NAMES.get(ftype_num, f"Type_{ftype_num}")
 
             force_map[fid] = {
                 "name": fname,
-                "type": ftype
+                "type": ftype,
+                "formation_level": force.get("formation_level"),
+                "preferred_role": force.get("preferred_role"),
+                "force_commander_id": force.get("force_commander_id"),
             }
 
-            # Rekursiv Sub-Forces verarbeiten
+            # Recursively process sub-forces
             sub_forces = force.get("sub_forces", [])
             if sub_forces:
-                _flatten_forces(sub_forces, fname, ftype)
+                _flatten_forces(sub_forces, fname)
 
     _flatten_forces(forces)
 
-    # Erstelle Mapping: Unit-ID -> Force-Info
-    unit_to_force = {}
+    # Build unit ID -> unit info mapping
+    unit_map: Dict[str, Dict[str, Any]] = {}
     for unit in units:
-        uid = str(unit.get("id"))
-        fid = str(unit.get("forceId", ""))
-        if fid and fid in force_map:
-            unit_to_force[uid] = force_map[fid]
+        uid = str(unit.get("id", ""))
+        if not uid:
+            continue
 
-    # Erstelle Mapping: Person-ID -> Unit-ID
-    person_to_unit = {}
+        entity = unit.get("entity", {})
+        unit_map[uid] = {
+            "id": uid,
+            "force_id": str(unit.get("forceId", "")),
+            "chassis": entity.get("chassis", ""),
+            "model": entity.get("model", ""),
+            "entity_type": entity.get("type", ""),
+            "crew": unit.get("crew", {}),
+            "maintenance_multiplier": unit.get("maintenanceMultiplier"),
+        }
+
+    # Build person ID -> (unit_id, crew_role) mapping
+    person_to_unit: Dict[str, Dict[str, Any]] = {}
     for unit in units:
-        uid = str(unit.get("id"))
+        uid = str(unit.get("id", ""))
+        crew = unit.get("crew", {})
 
-        # Verschiedene Crew-Positionen
-        crew_ids = []
-        for key in ["driverId", "gunnerId", "commanderId", "navigatorId", "techId"]:
-            cid = unit.get(key)
-            if cid:
-                crew_ids.append(str(cid))
+        # Map crew roles (MekHQ 5.10 uses mothballInfo)
+        # NOTE: Infantry/vehicle units can have MULTIPLE crew per role
+        crew_role_map = {
+            "driverIds": "driver",
+            "gunnerIds": "gunner",
+            "commanderIds": "commander",
+            "navigatorIds": "navigator",
+            "techIds": "tech",
+        }
 
-        for cid in crew_ids:
-            person_to_unit[cid] = uid
+        for crew_key, role_name in crew_role_map.items():
+            person_ids = crew.get(crew_key, [])
+            # Handle both list and single string value for robustness
+            if isinstance(person_ids, str):
+                person_ids = [person_ids]
+            if isinstance(person_ids, list):
+                for person_id in person_ids:
+                    if person_id:
+                        person_to_unit[str(person_id)] = {
+                            "unit_id": uid,
+                            "role": role_name,
+                        }
 
-    # Wende TO&E auf Charaktere an
+        # Vessel crew (multiple people, same role)
+        vessel_crew_ids = crew.get("vesselCrewIds", [])
+        if isinstance(vessel_crew_ids, str):
+            vessel_crew_ids = [vessel_crew_ids]
+        for person_id in vessel_crew_ids:
+            if person_id:
+                person_to_unit[str(person_id)] = {
+                    "unit_id": uid,
+                    "role": "crew",
+                }
+
+    # Apply TO&E to characters
     for cid, char in characters.items():
-        uid = person_to_unit.get(cid)
-        if uid and uid in unit_to_force:
-            force_info = unit_to_force[uid]
-            char.unit = UnitAssignment(
-                force_name=force_info["name"],
-                unit_name=f"Unit {uid[:8]}",  # Gekürzte Unit-ID als Name
-                force_type=force_info["type"]
-            )
+        assignment = person_to_unit.get(cid)
+        if not assignment:
+            continue
+
+        uid = assignment["unit_id"]
+        unit_info = unit_map.get(uid)
+        if not unit_info:
+            continue
+
+        force_id = unit_info["force_id"]
+        force_info = force_map.get(force_id)
+        if not force_info:
+            continue
+
+        # Build unit name from entity data
+        chassis = unit_info.get("chassis", "")
+        model = unit_info.get("model", "")
+        if chassis and model:
+            unit_name = f"{chassis} {model}"
+        elif chassis:
+            unit_name = chassis
+        else:
+            unit_name = f"Unit {uid[:8]}"
+
+        char.unit = UnitAssignment(
+            force_name=force_info["name"],
+            unit_name=unit_name,
+            force_type=force_info["type"],
+            formation_level=force_info.get("formation_level"),
+            preferred_role=force_info.get("preferred_role"),
+            crew_role=assignment.get("role"),
+        )
 
 
 def load_campaign(
