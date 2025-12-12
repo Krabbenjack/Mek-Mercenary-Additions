@@ -121,9 +121,16 @@ class TestLoadPersonnel(unittest.TestCase):
 
         self.assertIsNotNone(char_with_traits, "No character with traits found")
 
+        # Test that traits are in Category:KEY enum format
         for trait_name, trait_value in char_with_traits.traits.items():
-            self.assertGreaterEqual(trait_value, 0)
-            self.assertLessEqual(trait_value, 100)
+            # Traits should now be in "Category:KEY" format
+            if isinstance(trait_value, str):
+                # Should be in format "Category:KEY"
+                self.assertIn(":", trait_value, f"Trait {trait_name} should be in Category:KEY format")
+            elif isinstance(trait_value, int):
+                # Legacy format: should be 0-100
+                self.assertGreaterEqual(trait_value, 0)
+                self.assertLessEqual(trait_value, 100)
 
 
 @unittest.skipUnless(SAMPLE_CAMPAIGN.exists(), "Sample campaign file not found")

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Tuple, Dict
 
 from models import Character
-from personality_synergy import trait_synergy_modifier
+from trait_synergy_engine import calculate_synergy
 import config_loader as cfg
 
 
@@ -74,7 +74,7 @@ def combined_social_modifier(a: Character, b: Character) -> Tuple[int, Dict[str,
     total += amod
     breakdown["age_group"] = f"{ainfo} ({amod:+d})"
 
-    tmod, tinfo = trait_synergy_modifier(a, b)
+    tmod, tinfo = calculate_synergy(a, b)
     total += tmod
 
     breakdown["traits_total"] = f"personality synergy total ({tmod:+d})"
