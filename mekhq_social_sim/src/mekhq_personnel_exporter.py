@@ -18,6 +18,7 @@ Key MekHQ 5.10 changes:
 """
 
 import os
+import sys
 import gzip
 import json
 import xml.etree.ElementTree as ET
@@ -897,33 +898,45 @@ def print_summary(personnel_data: List[Dict[str, Any]]):
 # ============================================================
 
 def main():
-    """Main program with file dialog"""
+    """Main program with file dialog or command line argument"""
     print("\n" + "="*60)
     print("🎮 MekHQ 5.10 Personnel + TO&E Exporter")
     print("    (with Personality Trait Enums)")
     print("="*60 + "\n")
 
-    # Check if tkinter is available
-    if not TKINTER_AVAILABLE:
+    file_path = None
+    output_dir = None
+    
+    # Check for command line arguments
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        if len(sys.argv) > 3 and sys.argv[2] == "-o":
+            output_dir = sys.argv[3]
+        print(f"📂 Loading campaign from command line: {os.path.basename(file_path)}")
+        if output_dir:
+            print(f"📁 Output directory: {output_dir}")
+    elif TKINTER_AVAILABLE:
+        # File dialog
+        Tk().withdraw()
+        file_path = filedialog.askopenfilename(
+            title="Select a MekHQ Campaign File",
+            filetypes=[
+                ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
+                ("All Files", "*.*"),
+            ],
+        )
+        if not file_path:
+            print("❌ No file selected. Aborting.")
+            return
+        print(f"📂 Loading campaign: {os.path.basename(file_path)}")
+    else:
         print("❌ tkinter not available. Run with a file path argument instead:")
-        print("   python mekhq_personnel_exporter.py <path_to_campaign.cpnx>")
+        print("   python mekhq_personnel_exporter.py <path_to_campaign.cpnx> [-o output_dir]")
         return
 
-    # File dialog
-    Tk().withdraw()
-    file_path = filedialog.askopenfilename(
-        title="Select a MekHQ Campaign File",
-        filetypes=[
-            ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
-            ("All Files", "*.*"),
-        ],
-    )
-
-    if not file_path:
-        print("❌ No file selected. Aborting.")
+    if not file_path or not os.path.exists(file_path):
+        print(f"❌ File not found: {file_path}")
         return
-
-    print(f"📂 Loading campaign: {os.path.basename(file_path)}")
 
     try:
         # Load
@@ -945,8 +958,16 @@ def main():
         # --- EXPORT ---
         print("💾 Exporting JSON...")
 
-        personnel_output_path = export_personnel_to_json(personnel_data)
-        toe_output_path = export_toe_to_json(forces_data, units_data)
+        # Prepare output paths
+        if output_dir:
+            personnel_output = os.path.join(output_dir, "personnel_complete.json")
+            toe_output = os.path.join(output_dir, "toe_complete.json")
+        else:
+            personnel_output = "exports/personnel_complete.json"
+            toe_output = "exports/toe_complete.json"
+
+        personnel_output_path = export_personnel_to_json(personnel_data, personnel_output)
+        toe_output_path = export_toe_to_json(forces_data, units_data, toe_output)
 
         # --- SUMMARY ---
         print_summary(personnel_data)

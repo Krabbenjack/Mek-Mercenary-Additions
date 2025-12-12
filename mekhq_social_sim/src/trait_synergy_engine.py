@@ -268,20 +268,22 @@ def get_character_traits_as_enums(character: Character) -> Dict[str, str]:
     """
     trait_enums = {}
     
-    # Map old trait names to enum categories
-    trait_category_map = {
-        "aggression": "Aggression",
-        "ambition": "Ambition",
-        "greed": "Greed",
-        "gregariousness": "Social",
-        "social": "Social",
-    }
+    # Categories we support
+    categories = ["Aggression", "Ambition", "Greed", "Social"]
     
-    for trait_name, trait_value in character.traits.items():
-        category = trait_category_map.get(trait_name.lower())
-        if category:
-            # Resolve numeric value to enum
-            enum_str = resolve_trait_to_enum(category, trait_value)
+    for category in categories:
+        # Check if trait is already in "Category:KEY" format
+        if category in character.traits:
+            enum_str = character.traits[category]
+            if isinstance(enum_str, str) and ":" in enum_str:
+                trait_enums[category] = enum_str
+            elif isinstance(enum_str, str):
+                # Add category prefix if missing
+                trait_enums[category] = f"{category}:{enum_str}"
+        # Check for index-based storage
+        elif f"{category}_index" in character.traits:
+            index_val = character.traits[f"{category}_index"]
+            enum_str = resolve_trait_to_enum(category, index_val)
             if enum_str:
                 trait_enums[category] = enum_str
     
