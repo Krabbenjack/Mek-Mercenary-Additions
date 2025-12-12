@@ -1,0 +1,29 @@
+{
+  "version": 1,
+
+  "tokens": {
+    "--": { "weight": -2, "label": "katastrophal", "description": "massiver Konflikt, eskaliert sehr wahrscheinlich" },
+    "-":  { "weight": -1, "label": "schlecht",      "description": "merkliche Reibung, unangenehm/konfliktträchtig" },
+    "0":  { "weight":  0, "label": "neutral",       "description": "kein nennenswerter Effekt" },
+    "+":  { "weight":  1, "label": "gut",           "description": "sympathisch/kompatibel, spürbar positiv" },
+    "++": { "weight":  2, "label": "hammer",        "description": "starke Chemie, sehr wahrscheinlich richtiges Match" }
+  },
+
+  "defaults": {
+    "missing_rule_value": "0",
+    "missing_trait_value": "0"
+  },
+
+  "aggregation": {
+    "pairwise_sum": true,
+    "clamp_min": -10,
+    "clamp_max": 10,
+    "score_to_label": [
+      { "min": -10, "max": -6, "label": "Feindschaft" },
+      { "min": -5,  "max": -2, "label": "Reibung" },
+      { "min": -1,  "max":  1, "label": "Neutral" },
+      { "min":  2,  "max":  5, "label": "Sympathie" },
+      { "min":  6,  "max": 10, "label": "Chemie++" }
+    ]
+  }
+}

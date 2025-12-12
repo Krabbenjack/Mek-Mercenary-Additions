@@ -1,0 +1,223 @@
+{
+  "NONE": {
+    "Ambition:DRIVEN": "-",
+    "Ambition:RUTHLESS": "--",
+    "Social:CONSIDERATE": "+",
+    "Social:APATHETIC": "+",
+    "Greed:SHAMELESS": "-",
+    "Aggression:OVERBEARING": "-"
+  },
+
+  "ASPIRING": {
+    "Ambition:ASPIRING": "++",
+    "Ambition:AMBITIOUS": "+",
+    "Ambition:RUTHLESS": "-",
+    "Social:ENCOURAGING": "+",
+    "Social:CONDESCENDING": "-",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "AMBITIOUS": {
+    "Ambition:AMBITIOUS": "++",
+    "Ambition:DRIVEN": "++",
+    "Ambition:UNAMBITIOUS": "--",
+    "Social:INSPIRING": "+",
+    "Social:APATHETIC": "-",
+    "Greed:OPPORTUNISTIC": "+"
+  },
+
+  "DRIVEN": {
+    "Ambition:DRIVEN": "++",
+    "Ambition:EXCESSIVE": "+",
+    "Ambition:UNAMBITIOUS": "--",
+    "Social:APATHETIC": "-",
+    "Social:ERRATIC": "-",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "DILIGENT": {
+    "Ambition:DILIGENT": "++",
+    "Ambition:PERSISTENT": "+",
+    "Social:DEPENDABLE": "+",
+    "Social:ERRATIC": "-",
+    "Greed:SHAMELESS": "-"
+  },
+
+  "PERSISTENT": {
+    "Ambition:PERSISTENT": "++",
+    "Ambition:RESILIENT": "+",
+    "Ambition:IMPULSIVE": "-",
+    "Social:SUPPORTIVE": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "RESILIENT": {
+    "Ambition:RESILIENT": "++",
+    "Ambition:OVERCONFIDENT": "-",
+    "Social:CALM": "+",
+    "Social:VOLATILE": "-"
+  },
+
+  "FOCUSED": {
+    "Ambition:FOCUSED": "++",
+    "Ambition:ERRATIC": "--",
+    "Social:BLUNT": "+",
+    "Social:OVEREXPLAINER": "-"
+  },
+
+  "GOAL_ORIENTED": {
+    "Ambition:GOAL_ORIENTED": "++",
+    "Ambition:VISIONARY": "+",
+    "Ambition:UNAMBITIOUS": "--",
+    "Social:INSPIRING": "+",
+    "Social:APATHETIC": "-"
+  },
+
+  "VISIONARY": {
+    "Ambition:VISIONARY": "++",
+    "Ambition:STRATEGIC": "+",
+    "Social:INSPIRING": "+",
+    "Social:SCEPTICAL": "-",
+    "Reasoning:GENIUS": "++"
+  },
+
+  "STRATEGIC": {
+    "Ambition:STRATEGIC": "++",
+    "Ambition:CALCULATING": "+",
+    "Ambition:IMPULSIVE": "--",
+    "Social:PERSUASIVE": "+",
+    "Reasoning:BRILLIANT": "+"
+  },
+
+  "CALCULATING": {
+    "Ambition:CALCULATING": "++",
+    "Ambition:IMPULSIVE": "--",
+    "Social:DISINGENUOUS": "+",
+    "Social:SINCERE": "-"
+  },
+
+  "OPPORTUNISTIC": {
+    "Ambition:OPPORTUNISTIC": "++",
+    "Greed:SHAMELESS": "+",
+    "Greed:GENEROUS": "-",
+    "Social:AUTHENTIC": "-",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "OVERCONFIDENT": {
+    "Ambition:OVERCONFIDENT": "++",
+    "Ambition:RESILIENT": "-",
+    "Social:CONDESCENDING": "+",
+    "Social:AUTHENTIC": "-"
+  },
+
+  "ARROGANT": {
+    "Ambition:ARROGANT": "++",
+    "Ambition:AMBITIOUS": "+",
+    "Social:CONDESCENDING": "+",
+    "Social:CONSIDERATE": "-",
+    "Aggression:ASSERTIVE": "+"
+  },
+
+  "CONTROLLING": {
+    "Ambition:CONTROLLING": "++",
+    "Ambition:UNAMBITIOUS": "--",
+    "Social:CONDESCENDING": "+",
+    "Social:AUTHENTIC": "-",
+    "Aggression:DOMINEERING": "+"
+  },
+
+  "CUTTHROAT": {
+    "Ambition:CUTTHROAT": "++",
+    "Ambition:RUTHLESS": "++",
+    "Social:CALLOUS": "+",
+    "Social:EMPATHETIC": "--",
+    "Greed:SHAMELESS": "+"
+  },
+
+  "RUTHLESS": {
+    "Ambition:RUTHLESS": "++",
+    "Ambition:UNSCRUPULOUS": "+",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Aggression:SAVAGE": "+"
+  },
+
+  "UNSCRUPULOUS": {
+    "Ambition:UNSCRUPULOUS": "++",
+    "Greed:CORRUPT": "+",
+    "Greed:GENEROUS": "--",
+    "Social:SINCERE": "-"
+  },
+
+  "MANIPULATIVE": {
+    "Ambition:MANIPULATIVE": "++",
+    "Social:DISINGENUOUS": "+",
+    "Social:AUTHENTIC": "--",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "DISHONEST": {
+    "Ambition:DISHONEST": "++",
+    "Social:DISINGENUOUS": "+",
+    "Social:SINCERE": "--",
+    "Social:AUTHENTIC": "--"
+  },
+
+  "SELFISH": {
+    "Ambition:SELFISH": "++",
+    "Greed:SHAMELESS": "+",
+    "Social:CONSIDERATE": "--",
+    "Social:EMPATHETIC": "--"
+  },
+
+  "UNAMBITIOUS": {
+    "Ambition:UNAMBITIOUS": "++",
+    "Ambition:DRIVEN": "--",
+    "Ambition:AMBITIOUS": "--",
+    "Social:APATHETIC": "+",
+    "Social:INSPIRING": "-"
+  },
+
+  "ENERGETIC": {
+    "Ambition:ENERGETIC": "++",
+    "Ambition:EXCESSIVE": "+",
+    "Social:INSPIRING": "+",
+    "Social:APATHETIC": "-"
+  },
+
+  "EXCESSIVE": {
+    "Ambition:EXCESSIVE": "++",
+    "Ambition:ENERGETIC": "+",
+    "Social:ERRATIC": "+",
+    "Social:CALM": "-"
+  },
+
+  "MOTIVATED": {
+    "Ambition:MOTIVATED": "++",
+    "Ambition:DRIVEN": "+",
+    "Social:SUPPORTIVE": "+",
+    "Social:APATHETIC": "-"
+  },
+
+  "PROACTIVE": {
+    "Ambition:PROACTIVE": "++",
+    "Ambition:PERSISTENT": "+",
+    "Social:INSPIRING": "+",
+    "Social:PASSIVE": "-"
+  },
+
+  "RESOURCEFUL": {
+    "Ambition:RESOURCEFUL": "++",
+    "Greed:ASTUTE": "+",
+    "Greed:GENEROUS": "-",
+    "Reasoning:BRIGHT": "+"
+  },
+
+  "TYRANNICAL": {
+    "Ambition:TYRANNICAL": "++",
+    "Social:CONDESCENDING": "+",
+    "Social:AUTHENTIC": "--",
+    "Aggression:OVERBEARING": "+"
+  }
+}

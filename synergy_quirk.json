@@ -1,0 +1,346 @@
+{
+  "QuirkGroup:PHOBIA": {
+    "Aggression:DARING": "--",
+    "Aggression:FEARLESS": "--",
+    "Aggression:RECKLESS": "--",
+    "Social:CONSIDERATE": "+",
+    "Social:ENCOURAGING": "+",
+    "Social:CALLOUS": "-"
+  },
+
+  "QuirkGroup:ORDERLY": {
+    "Social:ERRATIC": "--",
+    "Social:BLUNT": "-",
+    "Social:RECEPTIVE": "+",
+    "Ambition:DILIGENT": "++",
+    "Ambition:DRIVEN": "+",
+    "Greed:HOARDING": "--"
+  },
+
+  "QuirkGroup:NEUROTIC": {
+    "Social:ENCOURAGING": "+",
+    "Social:CALLOUS": "-",
+    "Aggression:HOT_HEADED": "--",
+    "Reasoning:DISCERNING": "+",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "QuirkGroup:DISTRACTED": {
+    "Social:CONSIDERATE": "+",
+    "Social:CONDESCENDING": "-",
+    "Ambition:FOCUSED": "--",
+    "Ambition:PROACTIVE": "-",
+    "Reasoning:BRIGHT": "-"
+  },
+
+  "QuirkGroup:TALKATIVE": {
+    "Social:FRIENDLY": "++",
+    "Social:INTROVERTED": "--",
+    "Social:RECEPTIVE": "-",
+    "Social:PERSUASIVE": "+",
+    "Aggression:DIPLOMATIC": "+"
+  },
+
+  "QuirkGroup:INTROVERT_VIBE": {
+    "Social:GREGARIOUS": "--",
+    "Social:VERBOSE": "-",
+    "Social:RECEPTIVE": "+",
+    "Social:SINCERE": "+"
+  },
+
+  "QuirkGroup:SENTIMENTAL": {
+    "Social:AUTHENTIC": "+",
+    "Social:SINCERE": "++",
+    "Social:DISINGENUOUS": "--",
+    "Greed:GENEROUS": "+",
+    "Greed:SHAMELESS": "-"
+  },
+
+  "QuirkGroup:SUPERSTITIOUS": {
+    "Reasoning:INTELLECTUAL": "-",
+    "Reasoning:GENIUS": "--",
+    "Social:AUTHENTIC": "-",
+    "Social:ENCOURAGING": "+",
+    "Aggression:VIGILANT": "+"
+  },
+
+  "QuirkGroup:HEDONISM": {
+    "Greed:SHAMELESS": "++",
+    "Greed:LUSTFUL": "++",
+    "Greed:GENEROUS": "--",
+    "Ambition:DRIVEN": "+",
+    "Aggression:DIPLOMATIC": "-"
+  },
+
+  "QuirkGroup:HOARDING": {
+    "Greed:HOARDING": "++",
+    "Greed:GENEROUS": "--",
+    "Social:CONSIDERATE": "-",
+    "Social:CALLOUS": "+",
+    "Ambition:RESOURCEFUL": "+"
+  },
+
+  "QuirkGroup:HYGIENE": {
+    "Social:CALLOUS": "--",
+    "Social:CONSIDERATE": "+",
+    "Social:BLUNT": "-",
+    "Aggression:HOT_HEADED": "-"
+  },
+
+  "QuirkGroup:QUIET_HOBBY": {
+    "Reasoning:STUDIOUS": "++",
+    "Reasoning:INTELLECTUAL": "+",
+    "Social:INTROVERTED": "+",
+    "Social:VERBOSE": "-",
+    "Social:FRIENDLY": "+"
+  },
+
+  "QuirkGroup:TECH_SUSPICION": {
+    "Reasoning:INTELLECTUAL": "--",
+    "Reasoning:BRILLIANT": "-",
+    "Social:AUTHENTIC": "+",
+    "Social:DISINGENUOUS": "-"
+  },
+
+  "QuirkGroup:SOCIAL_WARM": {
+    "Social:CONSIDERATE": "++",
+    "Social:EMPATHETIC": "++",
+    "Social:CALLOUS": "--",
+    "Social:APATHETIC": "--"
+  },
+
+  "QuirkGroup:APOLOGETIC": {
+    "Social:ENCOURAGING": "++",
+    "Social:CONDESCENDING": "-",
+    "Aggression:OVERBEARING": "--",
+    "Social:CONSIDERATE": "+"
+  },
+
+  "QuirkGroup:TIMING_ISSUES": {
+    "Ambition:DRIVEN": "--",
+    "Ambition:DILIGENT": "--",
+    "Social:CONSIDERATE": "-",
+    "Social:APATHETIC": "+"
+  },
+
+  "QuirkGroup:SPEECH": {
+    "Social:PERSUASIVE": "+",
+    "Social:BLUNT": "+",
+    "Social:CONDESCENDING": "-"
+  },
+
+  "QuirkGroup:NERVOUS_TICK": {
+    "Social:CONSIDERATE": "+",
+    "Social:CALLOUS": "-",
+    "Aggression:IMPULSIVE": "+"
+  },
+
+  "HEDONIST": {
+    "Greed:SHAMELESS": "++",
+    "Greed:LUSTFUL": "++",
+    "Social:CONSIDERATE": "-",
+    "Aggression:DIPLOMATIC": "-"
+  },
+
+  "STICKLER_FOR_RULES": {
+    "Ambition:CUTTHROAT": "--",
+    "Ambition:UNSCRUPULOUS": "--",
+    "Aggression:RECKLESS": "--",
+    "Greed:SHAMELESS": "--",
+    "Social:RECEPTIVE": "+"
+  },
+
+  "CHRONIC_LATENESS": {
+    "Ambition:DILIGENT": "--",
+    "Ambition:DRIVEN": "--",
+    "Social:CONSIDERATE": "-",
+    "Social:APATHETIC": "+"
+  },
+
+  "BOOKWORM": {
+    "Reasoning:STUDIOUS": "++",
+    "Reasoning:INTELLECTUAL": "+",
+    "Social:VERBOSE": "-",
+    "Social:INTROVERTED": "+"
+  },
+
+  "OVERSHARER": {
+    "Social:GREGARIOUS": "+",
+    "Social:INTROVERTED": "--",
+    "Social:RECEPTIVE": "-",
+    "Social:DISMISSIVE": "-"
+  }
+}
+{
+  "QuirkGroup:PHOBIA": {
+    "Aggression:DARING": "-",
+    "Aggression:FEARLESS": "-",
+    "Aggression:RECKLESS": "-",
+    "Social:CONSIDERATE": "+",
+    "Social:ENCOURAGING": "+",
+    "Social:CALLOUS": "-"
+  },
+
+  "QuirkGroup:ORDERLY": {
+    "Social:ERRATIC": "-",
+    "Social:BLUNT": "-",
+    "Social:RECEPTIVE": "+",
+    "Ambition:DILIGENT": "+",
+    "Ambition:DRIVEN": "+",
+    "Greed:HOARDING": "-"
+  },
+
+  "QuirkGroup:NEUROTIC": {
+    "Social:ENCOURAGING": "+",
+    "Social:CALLOUS": "-",
+    "Aggression:HOT_HEADED": "-",
+    "Reasoning:DISCERNING": "+",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "QuirkGroup:DISTRACTED": {
+    "Social:CONSIDERATE": "+",
+    "Social:CONDESCENDING": "-",
+    "Ambition:FOCUSED": "-",
+    "Ambition:PROACTIVE": "-",
+    "Reasoning:BRIGHT": "-"
+  },
+
+  "QuirkGroup:TALKATIVE": {
+    "Social:FRIENDLY": "+",
+    "Social:INTROVERTED": "-",
+    "Social:RECEPTIVE": "-",
+    "Social:PERSUASIVE": "+",
+    "Aggression:DIPLOMATIC": "+"
+  },
+
+  "QuirkGroup:INTROVERT_VIBE": {
+    "Social:GREGARIOUS": "-",
+    "Social:VERBOSE": "-",
+    "Social:RECEPTIVE": "+",
+    "Social:SINCERE": "+"
+  },
+
+  "QuirkGroup:SENTIMENTAL": {
+    "Social:AUTHENTIC": "+",
+    "Social:SINCERE": "+",
+    "Social:DISINGENUOUS": "-",
+    "Greed:GENEROUS": "+",
+    "Greed:SHAMELESS": "-"
+  },
+
+  "QuirkGroup:SUPERSTITIOUS": {
+    "Reasoning:INTELLECTUAL": "-",
+    "Reasoning:GENIUS": "-",
+    "Social:AUTHENTIC": "-",
+    "Social:ENCOURAGING": "+",
+    "Aggression:VIGILANT": "+"
+  },
+
+  "QuirkGroup:HEDONISM": {
+    "Greed:SHAMELESS": "+",
+    "Greed:LUSTFUL": "+",
+    "Greed:GENEROUS": "-",
+    "Ambition:DRIVEN": "+",
+    "Aggression:DIPLOMATIC": "-"
+  },
+
+  "QuirkGroup:HOARDING": {
+    "Greed:HOARDING": "+",
+    "Greed:GENEROUS": "-",
+    "Social:CONSIDERATE": "-",
+    "Social:CALLOUS": "+",
+    "Ambition:RESOURCEFUL": "+"
+  },
+
+  "QuirkGroup:HYGIENE": {
+    "Social:CALLOUS": "-",
+    "Social:CONSIDERATE": "+",
+    "Social:BLUNT": "-",
+    "Aggression:HOT_HEADED": "-"
+  },
+
+  "QuirkGroup:QUIET_HOBBY": {
+    "Reasoning:STUDIOUS": "+",
+    "Reasoning:INTELLECTUAL": "+",
+    "Social:INTROVERTED": "+",
+    "Social:VERBOSE": "-",
+    "Social:FRIENDLY": "+"
+  },
+
+  "QuirkGroup:TECH_SUSPICION": {
+    "Reasoning:INTELLECTUAL": "-",
+    "Reasoning:BRILLIANT": "-",
+    "Social:AUTHENTIC": "+",
+    "Social:DISINGENUOUS": "-"
+  },
+
+  "QuirkGroup:SOCIAL_WARM": {
+    "Social:CONSIDERATE": "+",
+    "Social:EMPATHETIC": "+",
+    "Social:CALLOUS": "-",
+    "Social:APATHETIC": "-"
+  },
+
+  "QuirkGroup:APOLOGETIC": {
+    "Social:ENCOURAGING": "+",
+    "Social:CONDESCENDING": "-",
+    "Aggression:OVERBEARING": "-",
+    "Social:CONSIDERATE": "+"
+  },
+
+  "QuirkGroup:TIMING_ISSUES": {
+    "Ambition:DRIVEN": "-",
+    "Ambition:DILIGENT": "-",
+    "Social:CONSIDERATE": "-",
+    "Social:APATHETIC": "+"
+  },
+
+  "QuirkGroup:SPEECH": {
+    "Social:PERSUASIVE": "+",
+    "Social:BLUNT": "+",
+    "Social:CONDESCENDING": "-"
+  },
+
+  "QuirkGroup:NERVOUS_TICK": {
+    "Social:CONSIDERATE": "+",
+    "Social:CALLOUS": "-",
+    "Aggression:IMPULSIVE": "+"
+  },
+
+  "HEDONIST": {
+    "Greed:SHAMELESS": "+",
+    "Greed:LUSTFUL": "+",
+    "Social:CONSIDERATE": "-",
+    "Aggression:DIPLOMATIC": "-"
+  },
+
+  "STICKLER_FOR_RULES": {
+    "Ambition:CUTTHROAT": "-",
+    "Ambition:UNSCRUPULOUS": "-",
+    "Aggression:RECKLESS": "-",
+    "Greed:SHAMELESS": "-",
+    "Social:RECEPTIVE": "+"
+  },
+
+  "CHRONIC_LATENESS": {
+    "Ambition:DILIGENT": "-",
+    "Ambition:DRIVEN": "-",
+    "Social:CONSIDERATE": "-",
+    "Social:APATHETIC": "+"
+  },
+
+  "BOOKWORM": {
+    "Reasoning:STUDIOUS": "+",
+    "Reasoning:INTELLECTUAL": "+",
+    "Social:VERBOSE": "-",
+    "Social:INTROVERTED": "+"
+  },
+
+  "OVERSHARER": {
+    "Social:GREGARIOUS": "+",
+    "Social:INTROVERTED": "-",
+    "Social:RECEPTIVE": "-",
+    "Social:DISMISSIVE": "-"
+  }
+}

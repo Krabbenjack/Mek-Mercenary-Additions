@@ -1,0 +1,219 @@
+{
+  "NONE": {
+    "Greed:GENEROUS": "+",
+    "Greed:SHAMELESS": "-",
+    "Greed:AVARICIOUS": "-",
+    "Social:CONSIDERATE": "+",
+    "Social:CALLOUS": "-"
+  },
+
+  "GENEROUS": {
+    "Greed:GENEROUS": "++",
+    "Greed:SHAMELESS": "--",
+    "Greed:AVARICIOUS": "--",
+    "Social:CONSIDERATE": "++",
+    "Social:EMPATHETIC": "++",
+    "Ambition:RUTHLESS": "-"
+  },
+
+  "GREEDY": {
+    "Greed:GREEDY": "++",
+    "Greed:AVARICIOUS": "+",
+    "Greed:GENEROUS": "--",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "-",
+    "Ambition:OPPORTUNISTIC": "+"
+  },
+
+  "AVARICIOUS": {
+    "Greed:AVARICIOUS": "++",
+    "Greed:GREEDY": "+",
+    "Greed:GENEROUS": "--",
+    "Social:CALLOUS": "+",
+    "Social:EMPATHETIC": "--",
+    "Ambition:RUTHLESS": "+"
+  },
+
+  "SHAMELESS": {
+    "Greed:SHAMELESS": "++",
+    "Greed:LUSTFUL": "++",
+    "Greed:GENEROUS": "--",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Ambition:CUTTHROAT": "+",
+    "Aggression:BLOODTHIRSTY": "+"
+  },
+
+  "LUSTFUL": {
+    "Greed:LUSTFUL": "++",
+    "Greed:SHAMELESS": "++",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Reasoning:GENIUS": "-"
+  },
+
+  "MERCENARY": {
+    "Greed:MERCENARY": "++",
+    "Greed:SHAMELESS": "+",
+    "Greed:GENEROUS": "--",
+    "Ambition:OPPORTUNISTIC": "+",
+    "Social:AUTHENTIC": "-"
+  },
+
+  "SELF_SERVING": {
+    "Greed:SELF_SERVING": "++",
+    "Greed:GENEROUS": "--",
+    "Social:EMPATHETIC": "--",
+    "Ambition:SELFISH": "+"
+  },
+
+  "EXPLOITATIVE": {
+    "Greed:EXPLOITATIVE": "++",
+    "Greed:UNPRINCIPLED": "+",
+    "Social:CALLOUS": "+",
+    "Social:SINCERE": "--",
+    "Ambition:UNSCRUPULOUS": "+"
+  },
+
+  "UNPRINCIPLED": {
+    "Greed:UNPRINCIPLED": "++",
+    "Greed:CORRUPT": "+",
+    "Social:SINCERE": "--",
+    "Social:AUTHENTIC": "--",
+    "Ambition:RUTHLESS": "+"
+  },
+
+  "CORRUPT": {
+    "Greed:CORRUPT": "++",
+    "Greed:FRAUDULENT": "+",
+    "Social:SINCERE": "--",
+    "Social:AUTHENTIC": "--",
+    "Ambition:UNSCRUPULOUS": "+"
+  },
+
+  "FRAUDULENT": {
+    "Greed:FRAUDULENT": "++",
+    "Greed:CORRUPT": "+",
+    "Social:SINCERE": "--",
+    "Social:DISINGENUOUS": "+",
+    "Reasoning:BRIGHT": "+"
+  },
+
+  "THIEF": {
+    "Greed:THIEF": "++",
+    "Greed:CORRUPT": "+",
+    "Social:SINCERE": "--",
+    "Social:AUTHENTIC": "--",
+    "Ambition:OPPORTUNISTIC": "+"
+  },
+
+  "HOARDING": {
+    "Greed:HOARDING": "++",
+    "Greed:VORACIOUS": "+",
+    "Social:GENEROUS": "--",
+    "Social:CONSIDERATE": "-"
+  },
+
+  "INSATIABLE": {
+    "Greed:INSATIABLE": "++",
+    "Greed:VORACIOUS": "+",
+    "Social:GENEROUS": "--",
+    "Reasoning:GENIUS": "-"
+  },
+
+  "VORACIOUS": {
+    "Greed:VORACIOUS": "++",
+    "Greed:INSATIABLE": "+",
+    "Social:GENEROUS": "--",
+    "Social:CONSIDERATE": "-"
+  },
+
+  "ASTUTE": {
+    "Greed:ASTUTE": "++",
+    "Greed:SHREWD": "++",
+    "Ambition:STRATEGIC": "+",
+    "Reasoning:BRILLIANT": "+"
+  },
+
+  "SHREWD": {
+    "Greed:SHREWD": "++",
+    "Greed:ASTUTE": "++",
+    "Ambition:CALCULATING": "+",
+    "Reasoning:BRIGHT": "+"
+  },
+
+  "TACTICAL": {
+    "Greed:TACTICAL": "++",
+    "Ambition:STRATEGIC": "+",
+    "Reasoning:SHARP": "+"
+  },
+
+  "SAVVY": {
+    "Greed:SAVVY": "++",
+    "Greed:ASTUTE": "+",
+    "Ambition:OPPORTUNISTIC": "+"
+  },
+
+  "PROFITABLE": {
+    "Greed:PROFITABLE": "++",
+    "Ambition:GOAL_ORIENTED": "+",
+    "Social:GENEROUS": "-"
+  },
+
+  "OVERREACHING": {
+    "Greed:OVERREACHING": "++",
+    "Greed:INSATIABLE": "+",
+    "Reasoning:GENIUS": "--",
+    "Social:CAREFUL": "-"
+  },
+
+  "INTUITIVE": {
+    "Greed:INTUITIVE": "++",
+    "Reasoning:PERCEPTIVE": "+",
+    "Reasoning:GENIUS": "+"
+  },
+
+  "ENTERPRISING": {
+    "Greed:ENTERPRISING": "++",
+    "Ambition:VISIONARY": "+",
+    "Ambition:PROACTIVE": "+"
+  },
+
+  "METICULOUS": {
+    "Greed:METICULOUS": "++",
+    "Greed:ASTUTE": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "JUDICIOUS": {
+    "Greed:JUDICIOUS": "++",
+    "Greed:OVERREACHING": "--",
+    "Social:CAREFUL": "+",
+    "Ambition:CALCULATING": "+"
+  },
+
+  "ADEPT": {
+    "Greed:ADEPT": "++",
+    "Ambition:RESOURCEFUL": "+",
+    "Reasoning:BRIGHT": "+"
+  },
+
+  "DYNAMIC": {
+    "Greed:DYNAMIC": "++",
+    "Ambition:ENERGETIC": "+",
+    "Social:APATHETIC": "-"
+  },
+
+  "EAGER": {
+    "Greed:EAGER": "++",
+    "Greed:OVERREACHING": "+",
+    "Social:CAREFUL": "-"
+  },
+
+  "NEFARIOUS": {
+    "Greed:NEFARIOUS": "++",
+    "Greed:CORRUPT": "+",
+    "Social:EMPATHETIC": "--",
+    "Ambition:RUTHLESS": "+"
+  }
+}

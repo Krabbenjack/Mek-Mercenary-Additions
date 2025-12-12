@@ -1,0 +1,216 @@
+{
+  "NONE": {
+    "Aggression:BLOODTHIRSTY": "--",
+    "Aggression:SADISTIC": "--",
+    "Social:CALLOUS": "-",
+    "Social:APATHETIC": "-",
+    "Social:CONSIDERATE": "+"
+  },
+
+  "ASSERTIVE": {
+    "Aggression:ASSERTIVE": "++",
+    "Aggression:DOMINEERING": "-",
+    "Aggression:STUBBORN": "-",
+    "Social:AUTHENTIC": "+",
+    "Social:BLUNT": "+",
+    "Social:CONDESCENDING": "-",
+    "Reasoning:GENIUS": "+",
+    "Reasoning:BRAIN_DEAD": "-"
+  },
+
+  "BOLD": {
+    "Aggression:BOLD": "++",
+    "Aggression:RECKLESS": "+",
+    "Aggression:VIGILANT": "-",
+    "Social:BLUNT": "+",
+    "Social:INTROVERTED": "-",
+    "Greed:SHAMELESS": "+"
+  },
+
+  "BRASH": {
+    "Aggression:BRASH": "++",
+    "Aggression:HOT_HEADED": "+",
+    "Aggression:VIGILANT": "-",
+    "Social:BLUNT": "+",
+    "Social:SINCERE": "-",
+    "Social:CONSIDERATE": "-"
+  },
+
+  "CONFIDENT": {
+    "Aggression:CONFIDENT": "++",
+    "Aggression:OVERBEARING": "-",
+    "Social:AUTHENTIC": "+",
+    "Social:CONDESCENDING": "-",
+    "Reasoning:BRIGHT": "+"
+  },
+
+  "COURAGEOUS": {
+    "Aggression:COURAGEOUS": "++",
+    "Aggression:FEARLESS": "++",
+    "Aggression:PACIFISTIC": "-",
+    "Social:INSPIRING": "+",
+    "Social:APATHETIC": "-"
+  },
+
+  "DARING": {
+    "Aggression:DARING": "++",
+    "Aggression:RECKLESS": "+",
+    "Aggression:VIGILANT": "-",
+    "Social:BLUNT": "+",
+    "Social:CAREFUL": "-"
+  },
+
+  "DECISIVE": {
+    "Aggression:DECISIVE": "++",
+    "Aggression:IMPULSIVE": "-",
+    "Social:AUTHENTIC": "+",
+    "Social:ERRATIC": "-",
+    "Reasoning:SHARP": "+"
+  },
+
+  "DETERMINED": {
+    "Aggression:DETERMINED": "++",
+    "Aggression:RESOLUTE": "+",
+    "Aggression:IMPETUOUS": "-",
+    "Social:PERSISTENT": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "DOMINEERING": {
+    "Aggression:DOMINEERING": "++",
+    "Aggression:ASSERTIVE": "-",
+    "Social:CONDESCENDING": "++",
+    "Social:AUTHENTIC": "-",
+    "Social:CONSIDERATE": "-"
+  },
+
+  "FEARLESS": {
+    "Aggression:FEARLESS": "++",
+    "Aggression:RECKLESS": "+",
+    "Aggression:VIGILANT": "-",
+    "Social:INSPIRING": "+",
+    "Social:ANXIOUS": "-"
+  },
+
+  "HOSTILE": {
+    "Aggression:HOSTILE": "++",
+    "Aggression:DIPLOMATIC": "--",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Greed:SHAMELESS": "+"
+  },
+
+  "HOT_HEADED": {
+    "Aggression:HOT_HEADED": "++",
+    "Aggression:VIGILANT": "-",
+    "Social:IRRITABLE": "+",
+    "Social:SINCERE": "-"
+  },
+
+  "IMPETUOUS": {
+    "Aggression:IMPETUOUS": "++",
+    "Aggression:RESOLUTE": "-",
+    "Social:ERRATIC": "+",
+    "Reasoning:GENIUS": "-"
+  },
+
+  "IMPULSIVE": {
+    "Aggression:IMPULSIVE": "++",
+    "Aggression:DECISIVE": "-",
+    "Social:ERRATIC": "+",
+    "Social:RECEPTIVE": "-"
+  },
+
+  "INFLEXIBLE": {
+    "Aggression:INFLEXIBLE": "++",
+    "Aggression:STUBBORN": "+",
+    "Social:AUTHENTIC": "-",
+    "Social:COMPROMISING": "-"
+  },
+
+  "OVERBEARING": {
+    "Aggression:OVERBEARING": "++",
+    "Aggression:ASSERTIVE": "-",
+    "Social:CONDESCENDING": "++",
+    "Social:CONSIDERATE": "-"
+  },
+
+  "RECKLESS": {
+    "Aggression:RECKLESS": "++",
+    "Aggression:VIGILANT": "-",
+    "Social:BLUNT": "+",
+    "Social:CAREFUL": "-"
+  },
+
+  "RESOLUTE": {
+    "Aggression:RESOLUTE": "++",
+    "Aggression:IMPETUOUS": "-",
+    "Social:DEPENDABLE": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "STUBBORN": {
+    "Aggression:STUBBORN": "++",
+    "Aggression:ASSERTIVE": "-",
+    "Social:CONSIDERATE": "-",
+    "Social:BLUNT": "+"
+  },
+
+  "TENACIOUS": {
+    "Aggression:TENACIOUS": "++",
+    "Aggression:RECKLESS": "-",
+    "Social:PERSISTENT": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "VIGILANT": {
+    "Aggression:VIGILANT": "++",
+    "Aggression:RECKLESS": "--",
+    "Aggression:IMPULSIVE": "--",
+    "Social:CAREFUL": "+",
+    "Social:ERRATIC": "-"
+  },
+
+  "BLOODTHIRSTY": {
+    "Aggression:BLOODTHIRSTY": "++",
+    "Aggression:PACIFISTIC": "--",
+    "Aggression:DIPLOMATIC": "--",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Greed:SHAMELESS": "+",
+    "Greed:GENEROUS": "-"
+  },
+
+  "DIPLOMATIC": {
+    "Aggression:DIPLOMATIC": "++",
+    "Aggression:BLOODTHIRSTY": "--",
+    "Aggression:SAVAGE": "--",
+    "Social:CONSIDERATE": "+",
+    "Social:AUTHENTIC": "+",
+    "Social:BLUNT": "-"
+  },
+
+  "PACIFISTIC": {
+    "Aggression:PACIFISTIC": "++",
+    "Aggression:BLOODTHIRSTY": "--",
+    "Aggression:SADISTIC": "--",
+    "Social:CONSIDERATE": "+",
+    "Social:CALLOUS": "-"
+  },
+
+  "SAVAGE": {
+    "Aggression:SAVAGE": "++",
+    "Aggression:DIPLOMATIC": "--",
+    "Social:CALLOUS": "+",
+    "Social:CONSIDERATE": "--",
+    "Greed:SHAMELESS": "+"
+  },
+
+  "SADISTIC": {
+    "Aggression:SADISTIC": "++",
+    "Aggression:PACIFISTIC": "--",
+    "Social:CALLOUS": "+",
+    "Social:EMPATHETIC": "--",
+    "Greed:SHAMELESS": "+"
+  }
+}

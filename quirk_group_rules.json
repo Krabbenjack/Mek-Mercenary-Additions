@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "group": "PHOBIA",
+      "match": { "suffix": "PHOBIA" }
+    },
+    {
+      "group": "PHOBIA",
+      "match": { "any_of": ["FEAR_OF_FIRE", "ZERO_G_PARALYSIS"] }
+    },
+    {
+      "group": "ORDERLY",
+      "match": { "any_of": ["ORGANIZER", "ORGANIZATIONAL_TENDENCIES", "MINIMALIST", "CALENDAR", "TO_DO_LISTS", "LOVES_CHECKLISTS", "LIST_MAKER", "TIDY_BUNK", "CLEANER", "SPOT_CLEANER", "REORGANIZER", "DOUBLE_CHECKER"] }
+    },
+    {
+      "group": "NEUROTIC",
+      "match": { "any_of": ["NEUROTIC_PLANNER", "RECHECKS_DOORS", "PERFECTIONIST"] }
+    },
+    {
+      "group": "DISTRACTED",
+      "match": { "any_of": ["DAYDREAMER", "EASILY_DISTRACTED", "MIND_WANDERER", "WALL_STARE", "DOODLER"] }
+    },
+    {
+      "group": "TALKATIVE",
+      "match": { "any_of": ["OVERSHARER", "OVEREXPLAINER", "HAND_TALKER"] }
+    },
+    {
+      "group": "INTROVERT_VIBE",
+      "match": { "any_of": ["SILENT_BROODER"] }
+    },
+    {
+      "group": "SENTIMENTAL",
+      "match": { "any_of": ["SENTIMENTAL", "MEMORY_BOX", "MEMENTO_KEEPER", "WRITES_LETTERS", "DREAMS_OF_HOME"] }
+    },
+    {
+      "group": "SUPERSTITIOUS",
+      "match": { "any_of": ["SUPERSTITIOUS", "PRE_BATTLE_SUPERSTITIONS", "GOOD_LUCK_CHARM", "TOUCHES_LUCKY_ITEM", "CANDLES", "WIND_DOWN_RITUAL", "RITUALISTIC"] }
+    },
+    {
+      "group": "HEDONISM",
+      "match": { "any_of": ["HEDONIST", "SUGAR_TOOTH", "SNACK_STASH"] }
+    },
+    {
+      "group": "HOARDING",
+      "match": { "any_of": ["HOARDER", "PACK_RAT", "PACK_RAT", "PAPER_HOARDER", "HOARDER", "SPARE_PARTS_KEEPER", "SNACK_STASH", "POCKETS_FULL"] }
+    },
+    {
+      "group": "HYGIENE",
+      "match": { "any_of": ["WASHES_HANDS_OFTEN"] }
+    },
+    {
+      "group": "QUIET_HOBBY",
+      "match": { "any_of": ["BOOKWORM", "PUZZLES", "ORIGAMI", "PLANTS", "NOTEBOOK", "JOURNAL_KEEPER", "NOTE_TAKER", "READS_MANUALS", "PREFERS_NOTEPADS"] }
+    },
+    {
+      "group": "TECH_SUSPICION",
+      "match": { "any_of": ["SUSPICIOUS_OF_TECH"] }
+    },
+    {
+      "group": "SOCIAL_WARM",
+      "match": { "any_of": ["AFFECTIONATE", "COMPLIMENTS"] }
+    },
+    {
+      "group": "APOLOGETIC",
+      "match": { "any_of": ["APOLOGETIC"] }
+    },
+    {
+      "group": "TIMING_ISSUES",
+      "match": { "any_of": ["CHRONIC_LATENESS", "EARLY_RISER", "WORKS_LATE"] }
+    },
+    {
+      "group": "SPEECH",
+      "match": { "any_of": ["MUMBLER", "STUTTERS", "PRECISE_SPEAKER"] }
+    },
+    {
+      "group": "NERVOUS_TICK",
+      "match": { "any_of": ["NAIL_BITER", "KNUCKLE_CRACKER", "FEET_TAPPER", "WHISTLES", "HUMMER", "PEN_CLICKER", "PEN_TWIRLER"] }
+    }
+  ]
+}
