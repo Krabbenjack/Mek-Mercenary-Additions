@@ -18,6 +18,9 @@ from datetime import datetime, date
 from models import Character, UnitAssignment, PortraitInfo
 
 
+# Constants
+TRAIT_NONE_VALUE = "NONE"
+
 # Force type mapping (MekHQ 5.10)
 FORCE_TYPE_NAMES = {
     0: "Combat",
@@ -118,7 +121,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             for trait_key, (category, index_key, max_val) in trait_mappings.items():
                 # Try to get enum name first
                 enum_name = personality.get(trait_key)
-                if enum_name and isinstance(enum_name, str) and enum_name.upper() != "NONE":
+                if enum_name and isinstance(enum_name, str) and enum_name.upper() != TRAIT_NONE_VALUE:
                     # Store as "Category:KEY" format
                     traits[category] = f"{category}:{enum_name.upper()}"
                 else:
@@ -136,14 +139,14 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         if isinstance(personality, dict):
             # Check for single quirk (legacy)
             quirk_str = personality.get("personalityQuirk")
-            if quirk_str and quirk_str.upper() != "NONE":
+            if quirk_str and quirk_str.upper() != TRAIT_NONE_VALUE:
                 quirks.append(quirk_str.upper())
             
             # Check for quirks list (if available)
             quirks_list = personality.get("quirks", [])
             if isinstance(quirks_list, list):
                 for quirk in quirks_list:
-                    if isinstance(quirk, str) and quirk.upper() != "NONE":
+                    if isinstance(quirk, str) and quirk.upper() != TRAIT_NONE_VALUE:
                         quirk_key = quirk.upper()
                         if quirk_key not in quirks:
                             quirks.append(quirk_key)

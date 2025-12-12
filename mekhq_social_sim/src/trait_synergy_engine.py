@@ -10,6 +10,9 @@ This module:
 3. Evaluates synergy rules from synergy_*.json files
 4. Converts tokens (--,-,0,+,++) to numeric weights
 5. Produces total modifier and human-readable breakdown
+
+Note: This module uses a simple global cache for JSON files. For multi-threaded
+environments, consider adding thread safety with threading.Lock.
 """
 from __future__ import annotations
 from typing import Dict, List, Tuple, Optional, Any
@@ -19,7 +22,11 @@ import json
 from models import Character
 
 
+# Constants
+TRAIT_NONE_VALUE = "NONE"
+
 # Global cache for JSON configuration data
+# Note: Not thread-safe, add threading.Lock if used in concurrent contexts
 _config_cache: Dict[str, Any] = {}
 
 
@@ -203,8 +210,8 @@ def lookup_trait_synergy(trait_a: str, trait_b: str) -> Tuple[int, str]:
     # Load synergy rules for trait_a's category
     try:
         synergy_rules = _get_synergy_rules(category_a)
-    except (FileNotFoundError, KeyError):
-        return 0, "no synergy rules for category"
+    except (FileNotFoundError, KeyError) as e:
+        return 0, f"no synergy rules for category {category_a}"
     
     # Look up trait_a's rules
     trait_rules = synergy_rules.get(key_a, {})
