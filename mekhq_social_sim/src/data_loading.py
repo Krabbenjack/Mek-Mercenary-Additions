@@ -124,6 +124,23 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
                     except (ValueError, TypeError, ZeroDivisionError):
                         pass
 
+        # Load personality quirks from JSON
+        quirks = []
+        if isinstance(personality, dict):
+            # Check for single quirk (legacy)
+            quirk_str = personality.get("personalityQuirk")
+            if quirk_str and quirk_str.upper() != "NONE":
+                quirks.append(quirk_str.upper())
+            
+            # Check for quirks list (if available)
+            quirks_list = personality.get("quirks", [])
+            if isinstance(quirks_list, list):
+                for quirk in quirks_list:
+                    if isinstance(quirk, str) and quirk.upper() != "NONE":
+                        quirk_key = quirk.upper()
+                        if quirk_key not in quirks:
+                            quirks.append(quirk_key)
+
         # Portrait info from JSON
         portrait_data = entry.get("portrait", {})
         portrait = None
@@ -146,6 +163,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             birthday=birthday,
             portrait=portrait,
             rank=rank,
+            quirks=quirks,
         )
         characters[cid] = char
 
