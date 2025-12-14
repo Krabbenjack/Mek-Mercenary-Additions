@@ -1,3 +1,16 @@
+"""
+DEPRECATED: This module has been replaced by trait_synergy_engine.py
+
+This legacy personality synergy system used numeric trait values (0-100)
+and delta-based similarity calculations. It has been fully replaced with
+a data-driven system based on explicit JSON rules.
+
+DO NOT USE THIS MODULE. Use trait_synergy_engine.calculate_synergy() instead.
+
+Replaced by: trait_synergy_engine.py
+Date: December 2025
+"""
+
 from __future__ import annotations
 from typing import Dict, Tuple
 

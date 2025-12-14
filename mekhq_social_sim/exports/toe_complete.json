@@ -1,0 +1,438 @@
+{
+  "forces": [
+    {
+      "id": "0",
+      "name": "Helix Tactical Unit",
+      "formation_level": "Company",
+      "force_type": 0,
+      "force_commander_id": "45c8bda5-a685-4d73-b65e-1a562306fa18",
+      "preferred_role": "FRONTLINE",
+      "parent_id": null,
+      "units": [],
+      "sub_forces": [
+        {
+          "id": "1",
+          "name": "Able Lance",
+          "formation_level": "Lance",
+          "force_type": 0,
+          "force_commander_id": null,
+          "preferred_role": "FRONTLINE",
+          "parent_id": "0",
+          "units": [
+            "3a2af1b4-c9f9-48a4-b5b5-a69edf1a4bed",
+            "71182a14-d78b-4058-800e-03894dbe1f5d",
+            "fbea1ce1-bd38-4ba0-92b1-b740115caf48",
+            "ec4ccfe3-72b4-4660-8c49-44e0885a1040"
+          ],
+          "sub_forces": []
+        },
+        {
+          "id": "2",
+          "name": "Helix salvage Crew",
+          "formation_level": "Team",
+          "force_type": 4,
+          "force_commander_id": null,
+          "preferred_role": "FRONTLINE",
+          "parent_id": "0",
+          "units": [
+            "ebe6d8ff-4646-4608-85df-86abe947ef16"
+          ],
+          "sub_forces": []
+        },
+        {
+          "id": "3",
+          "name": "Helix Security",
+          "formation_level": "Team",
+          "force_type": 3,
+          "force_commander_id": null,
+          "preferred_role": "FRONTLINE",
+          "parent_id": "0",
+          "units": [
+            "50fca963-dc59-4da8-b3f6-921897ef473b"
+          ],
+          "sub_forces": []
+        },
+        {
+          "id": "4",
+          "name": "Helix Convoy",
+          "formation_level": "Lance",
+          "force_type": 2,
+          "force_commander_id": null,
+          "preferred_role": "FRONTLINE",
+          "parent_id": "0",
+          "units": [
+            "eaddaf83-9c0f-4970-8187-410e67ab863a",
+            "c8014d18-4ac3-4d84-a202-d9cf2e3f277f",
+            "1fc2766b-d618-4beb-8f49-ed00177b7036",
+            "ec878737-59cc-4193-a3ba-0aca4721075c"
+          ],
+          "sub_forces": []
+        },
+        {
+          "id": "5",
+          "name": "Helix Camp Support",
+          "formation_level": "Team",
+          "force_type": 1,
+          "force_commander_id": null,
+          "preferred_role": "FRONTLINE",
+          "parent_id": "0",
+          "units": [
+            "4d422c41-65a9-48a2-a951-c6c1d9c196b7",
+            "453b2627-bf0f-4fb4-a4ec-0d7b9a9d5985"
+          ],
+          "sub_forces": []
+        }
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "3a2af1b4-c9f9-48a4-b5b5-a69edf1a4bed",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Victor",
+        "model": "VTR-9B",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "3a2af1b4-c9f9-48a4-b5b5-a69edf1a4bed",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "1",
+      "crew": {
+        "driverIds": [
+          "2f4fffb2-c40e-4074-9933-da7c621aac30"
+        ],
+        "gunnerIds": [
+          "2f4fffb2-c40e-4074-9933-da7c621aac30"
+        ],
+        "techIds": [
+          "38add9a0-6a5a-4307-a8fa-6054d6a15e69"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "71182a14-d78b-4058-800e-03894dbe1f5d",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Shadow Hawk",
+        "model": "SHD-2D",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "71182a14-d78b-4058-800e-03894dbe1f5d",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "1",
+      "crew": {
+        "driverIds": [
+          "159420f8-6a71-4094-ba89-b096cd2b82cc"
+        ],
+        "gunnerIds": [
+          "159420f8-6a71-4094-ba89-b096cd2b82cc"
+        ],
+        "techIds": [
+          "d2c1af4e-6a7a-4ce3-bfbc-b1e8b7702474"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "fbea1ce1-bd38-4ba0-92b1-b740115caf48",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Wasp",
+        "model": "WSP-1A",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "fbea1ce1-bd38-4ba0-92b1-b740115caf48",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "1",
+      "crew": {
+        "driverIds": [
+          "edeb90a8-14d1-4263-a3ac-170c571a569a"
+        ],
+        "gunnerIds": [
+          "edeb90a8-14d1-4263-a3ac-170c571a569a"
+        ],
+        "techIds": [
+          "728b9369-e0c9-415a-8026-0718140bf73d"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "ec4ccfe3-72b4-4660-8c49-44e0885a1040",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Locust",
+        "model": "LCT-1V",
+        "type": "Biped",
+        "commander": "false",
+        "externalId": "ec4ccfe3-72b4-4660-8c49-44e0885a1040",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "1",
+      "crew": {
+        "driverIds": [
+          "3fa1dd27-dade-4922-8635-d5f38be6797a"
+        ],
+        "gunnerIds": [
+          "3fa1dd27-dade-4922-8635-d5f38be6797a"
+        ],
+        "techIds": [
+          "7bb0d50e-42e0-4503-ae2c-5d7daf3cabe1"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "4d422c41-65a9-48a2-a951-c6c1d9c196b7",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Sherpa Armored Truck",
+        "model": "(Mobile Canteen)",
+        "type": "Tracked",
+        "commander": "false",
+        "externalId": "4d422c41-65a9-48a2-a951-c6c1d9c196b7",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "5",
+      "crew": {
+        "driverIds": [
+          "3bf6a21a-abaa-41f3-bd6e-6054075127f3"
+        ],
+        "gunnerIds": [
+          "45c8bda5-a685-4d73-b65e-1a562306fa18"
+        ],
+        "vesselCrewIds": [
+          "3653d5c5-bf2e-4189-9cf7-96126cac5f41",
+          "d0cf71fd-85c5-4ea8-b4a4-b00dc3f2621d",
+          "09f55be0-58e7-4534-afa4-8e92118abe60",
+          "6485bd95-21d2-41bb-b634-a013ce44f4e2",
+          "70c79683-635f-4c27-99e3-e5b61f6d5f95",
+          "d14e7420-2d6e-4a6c-91fa-8248b6e310a3",
+          "e534c423-94e0-4448-9bec-1a02e42a4dd6",
+          "cd770049-51af-439c-8b76-ea7b191e223a",
+          "301b49d4-4e2b-4036-b51c-e12649321162"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "453b2627-bf0f-4fb4-a4ec-0d7b9a9d5985",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "MASH Truck",
+        "model": "(Small)",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "453b2627-bf0f-4fb4-a4ec-0d7b9a9d5985",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "5",
+      "crew": {
+        "driverIds": [
+          "bac469a7-4769-44e3-b026-0b6ba7b01dd9"
+        ],
+        "vesselCrewIds": [
+          "d31859fd-7c41-40e0-9c10-191d08954bbc",
+          "7b15b79b-5bd6-418f-b987-46740bff6c78",
+          "6666a463-ef7f-490e-8c5c-074561273ebe",
+          "0cfc7daf-3a61-40f7-a7dd-b07ef352c25e",
+          "b91968de-00c5-4bf0-8dda-618fb8dc784c"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "50fca963-dc59-4da8-b3f6-921897ef473b",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Foot Platoon",
+        "model": "(Rifle)",
+        "type": "Leg",
+        "commander": "false",
+        "externalId": "50fca963-dc59-4da8-b3f6-921897ef473b",
+        "squadNum": "4",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "3",
+      "crew": {
+        "driverIds": [
+          "9498266d-189f-466d-ae2d-a75e39ca34f8",
+          "8f9ccd09-e7a9-4417-a736-68afb0d416a5",
+          "a9c91360-6630-4bd7-80d9-68df40584fda",
+          "76f501ce-1cbf-4968-a19d-4ae615ba5bbe",
+          "0a72b139-74b3-406c-b9cd-b392346bdace",
+          "acc08148-2f24-412f-b6ef-6666c0b42771",
+          "508d54be-2a3a-4e4e-abd6-3885338d3326",
+          "1c774bee-7a92-4e2d-b566-762d39d2d61e",
+          "8af0cce1-3efd-46e6-b490-b1f53721f519",
+          "2ea5793c-959c-4237-82be-0a42cfbc4162",
+          "c61e9d60-398b-4ccd-b7ee-b1deb3f439e0",
+          "af211931-d690-4a1b-809a-dfc9ae2e2fc6",
+          "ed4f5a62-de47-4ab7-89cf-d3fd0eb9026f",
+          "d5cc99f8-7e24-430d-9659-b544b2e4ebbd",
+          "2287de97-b1cc-47db-a28e-c2972fe3c879",
+          "d63a4075-f3c0-4343-a45c-4df08314f515",
+          "4feb4dfb-6a12-4ce8-af02-6aa6202b26e0",
+          "b8751ce0-680a-4673-ba5d-6dec42e8e354",
+          "03a9be0b-c272-4bc6-9818-35cc589f91e1",
+          "090fde7c-5b1f-417e-b073-99e1f1258333",
+          "66c48bb9-859d-49cc-86d5-dac2adb7a300",
+          "7de2b43c-70af-41e7-b6e4-2a13231044d5",
+          "eefd289c-e6a0-44fa-a4fa-d6ad4d8adb01",
+          "474cde48-2e26-49b7-a9c5-27b649d8dafb",
+          "5ba98f01-f9d1-44e4-8509-dbb8f3ad8cc0",
+          "993143ac-2b5b-41c2-b0b8-92b5d6c434cc",
+          "ec53ae92-9d45-43a9-a94f-5d8f3c907425",
+          "9cc2a39d-508b-4cd3-8b3d-7ef801693a81"
+        ],
+        "gunnerIds": [
+          "5ba98f01-f9d1-44e4-8509-dbb8f3ad8cc0",
+          "993143ac-2b5b-41c2-b0b8-92b5d6c434cc",
+          "8f9ccd09-e7a9-4417-a736-68afb0d416a5",
+          "2287de97-b1cc-47db-a28e-c2972fe3c879",
+          "4feb4dfb-6a12-4ce8-af02-6aa6202b26e0",
+          "474cde48-2e26-49b7-a9c5-27b649d8dafb",
+          "9498266d-189f-466d-ae2d-a75e39ca34f8",
+          "a9c91360-6630-4bd7-80d9-68df40584fda",
+          "66c48bb9-859d-49cc-86d5-dac2adb7a300",
+          "acc08148-2f24-412f-b6ef-6666c0b42771",
+          "2ea5793c-959c-4237-82be-0a42cfbc4162",
+          "76f501ce-1cbf-4968-a19d-4ae615ba5bbe",
+          "090fde7c-5b1f-417e-b073-99e1f1258333",
+          "8af0cce1-3efd-46e6-b490-b1f53721f519",
+          "ec53ae92-9d45-43a9-a94f-5d8f3c907425",
+          "d5cc99f8-7e24-430d-9659-b544b2e4ebbd",
+          "c61e9d60-398b-4ccd-b7ee-b1deb3f439e0",
+          "af211931-d690-4a1b-809a-dfc9ae2e2fc6",
+          "1c774bee-7a92-4e2d-b566-762d39d2d61e",
+          "d63a4075-f3c0-4343-a45c-4df08314f515",
+          "b8751ce0-680a-4673-ba5d-6dec42e8e354",
+          "7de2b43c-70af-41e7-b6e4-2a13231044d5",
+          "eefd289c-e6a0-44fa-a4fa-d6ad4d8adb01",
+          "9cc2a39d-508b-4cd3-8b3d-7ef801693a81",
+          "0a72b139-74b3-406c-b9cd-b392346bdace",
+          "ed4f5a62-de47-4ab7-89cf-d3fd0eb9026f",
+          "03a9be0b-c272-4bc6-9818-35cc589f91e1",
+          "508d54be-2a3a-4e4e-abd6-3885338d3326"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "ebe6d8ff-4646-4608-85df-86abe947ef16",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "BattleMech Recovery Vehicle",
+        "model": "",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "ebe6d8ff-4646-4608-85df-86abe947ef16",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "2",
+      "crew": {
+        "driverIds": [
+          "00b0298e-3c54-4d48-933b-ee9c5130d511"
+        ],
+        "gunnerIds": [
+          "631c18de-a17a-4014-a603-0c52780707fb",
+          "752c29ae-bd3c-4635-9e7e-2e93a5939182",
+          "b4dc9f02-ec1e-4f8b-ac2f-95c61c3bc3d4"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "eaddaf83-9c0f-4970-8187-410e67ab863a",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Flatbed Truck",
+        "model": "",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "eaddaf83-9c0f-4970-8187-410e67ab863a",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "4",
+      "crew": {
+        "driverIds": [
+          "bbf49897-62b3-490f-977c-124cc7facd30"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "c8014d18-4ac3-4d84-a202-d9cf2e3f277f",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Flatbed Truck",
+        "model": "",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "c8014d18-4ac3-4d84-a202-d9cf2e3f277f",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "4",
+      "crew": {
+        "driverIds": [
+          "f37b8be3-dc99-4082-a967-7c3cc73f3fc1"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "1fc2766b-d618-4beb-8f49-ed00177b7036",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Flatbed Truck",
+        "model": "",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "1fc2766b-d618-4beb-8f49-ed00177b7036",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "4",
+      "crew": {
+        "driverIds": [
+          "6a292baf-5fd5-466c-a435-67df1af833ea"
+        ]
+      },
+      "mothballed": true
+    },
+    {
+      "id": "ec878737-59cc-4193-a3ba-0aca4721075c",
+      "campaign_type": "mekhq.campaign.unit.Unit",
+      "entity": {
+        "chassis": "Flatbed Truck",
+        "model": "",
+        "type": "Wheeled",
+        "commander": "false",
+        "externalId": "ec878737-59cc-4193-a3ba-0aca4721075c",
+        "altitude": "0"
+      },
+      "maintenanceMultiplier": 4,
+      "forceId": "4",
+      "crew": {
+        "driverIds": [
+          "f280dc18-8692-4e0b-99a3-f65eb944cbfa"
+        ]
+      },
+      "mothballed": true
+    }
+  ]
+}

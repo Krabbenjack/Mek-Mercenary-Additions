@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import config_loader as cfg
 from datetime import date
@@ -44,6 +44,9 @@ class Character:
 
     # Rank from JSON
     rank: Optional[str] = None
+    
+    # Personality quirks (list of quirk keys)
+    quirks: List[str] = field(default_factory=list)
 
     def label(self) -> str:
         """Short label for GUI/logs."""

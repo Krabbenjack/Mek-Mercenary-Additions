@@ -18,6 +18,9 @@ from datetime import datetime, date
 from models import Character, UnitAssignment, PortraitInfo
 
 
+# Constants
+TRAIT_NONE_VALUE = "NONE"
+
 # Force type mapping (MekHQ 5.10)
 FORCE_TYPE_NAMES = {
     0: "Combat",
@@ -101,28 +104,52 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         birth_str = entry.get("birthday") or entry.get("birthdate") or entry.get("dateOfBirth")
         birthday = _parse_iso_date(birth_str) if birth_str else None
 
-        # Personality traits: scale from 0-N indices to 0-100
+        # Personality traits: Load enum keys directly from JSON
+        # The JSON already contains both enum names (e.g., "AMBITIOUS") and indices
         traits = {}
         personality = entry.get("personality", {})
 
         if isinstance(personality, dict):
-            # MekHQ 5.10 trait index ranges (updated)
+            # Map trait categories - use enum keys if available, fall back to indices
             trait_mappings = {
-                "aggressionDescriptionIndex": ("aggression", 5),   # 0-5 range
-                "ambitionDescriptionIndex": ("ambition", 5),       # 0-5 range
-                "greedDescriptionIndex": ("greed", 6),             # 0-6 range
-                "socialDescriptionIndex": ("gregariousness", 6),   # 0-6 range
+                "aggression": ("Aggression", "aggressionDescriptionIndex", 5),
+                "ambition": ("Ambition", "ambitionDescriptionIndex", 5),
+                "greed": ("Greed", "greedDescriptionIndex", 6),
+                "social": ("Social", "socialDescriptionIndex", 6),
             }
 
-            for index_key, (trait_name, max_val) in trait_mappings.items():
-                index_val = personality.get(index_key)
-                if index_val is not None:
-                    try:
-                        # Scale from 0-max_val to 0-100
-                        scaled_value = int((int(index_val) / max_val) * 100) if max_val > 0 else 0
-                        traits[trait_name] = min(100, scaled_value)  # Cap at 100
-                    except (ValueError, TypeError, ZeroDivisionError):
-                        pass
+            for trait_key, (category, index_key, max_val) in trait_mappings.items():
+                # Try to get enum name first
+                enum_name = personality.get(trait_key)
+                if enum_name and isinstance(enum_name, str) and enum_name.upper() != TRAIT_NONE_VALUE:
+                    # Store as "Category:KEY" format
+                    traits[category] = f"{category}:{enum_name.upper()}"
+                else:
+                    # Fall back to index
+                    index_val = personality.get(index_key)
+                    if index_val is not None:
+                        try:
+                            # Store the raw index for later enum resolution
+                            traits[f"{category}_index"] = int(index_val)
+                        except (ValueError, TypeError):
+                            pass
+
+        # Load personality quirks from JSON
+        quirks = []
+        if isinstance(personality, dict):
+            # Check for single quirk (legacy)
+            quirk_str = personality.get("personalityQuirk")
+            if quirk_str and quirk_str.upper() != TRAIT_NONE_VALUE:
+                quirks.append(quirk_str.upper())
+            
+            # Check for quirks list (if available)
+            quirks_list = personality.get("quirks", [])
+            if isinstance(quirks_list, list):
+                for quirk in quirks_list:
+                    if isinstance(quirk, str) and quirk.upper() != TRAIT_NONE_VALUE:
+                        quirk_key = quirk.upper()
+                        if quirk_key not in quirks:
+                            quirks.append(quirk_key)
 
         # Portrait info from JSON
         portrait_data = entry.get("portrait", {})
@@ -146,6 +173,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             birthday=birthday,
             portrait=portrait,
             rank=rank,
+            quirks=quirks,
         )
         characters[cid] = char
 

@@ -40,6 +40,7 @@ from data_loading import load_campaign, apply_toe_structure
 from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
+from trait_synergy_engine import get_character_traits_as_enums
 
 # Try to import PIL for image handling
 try:
@@ -228,29 +229,53 @@ class CharacterDetailDialog:
         """Build the Personality/Traits tab."""
         char = self.character
 
-        if not char.traits:
-            label = ttk.Label(parent, text="No personality traits available.")
+        if not char.traits and not char.quirks:
+            label = ttk.Label(parent, text="No personality traits or quirks available.")
             label.pack(pady=20)
             return
 
-        # Create a frame for traits with a scrollable canvas
+        # Create a scrollable frame
         canvas_frame = ttk.Frame(parent)
-        canvas_frame.pack(fill=tk.BOTH, expand=True)
+        canvas_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        for i, (trait_name, trait_value) in enumerate(sorted(char.traits.items())):
-            row_frame = ttk.Frame(canvas_frame)
-            row_frame.pack(fill=tk.X, pady=2)
+        # Display traits as enum labels
+        if char.traits:
+            traits_label = ttk.Label(canvas_frame, text="Personality Traits:", font=("TkDefaultFont", 10, "bold"))
+            traits_label.pack(anchor="w", pady=(0, 5))
+            
+            # Get trait enums
+            trait_enums = get_character_traits_as_enums(char)
+            
+            for category, enum_str in sorted(trait_enums.items()):
+                # Extract just the trait key from "Category:KEY"
+                if ":" in enum_str:
+                    _, trait_key = enum_str.split(":", 1)
+                else:
+                    trait_key = enum_str
+                
+                row_frame = ttk.Frame(canvas_frame)
+                row_frame.pack(fill=tk.X, pady=2)
 
-            label = ttk.Label(row_frame, text=f"{trait_name.capitalize()}:", width=15, anchor="w")
-            label.pack(side=tk.LEFT, padx=5)
+                label = ttk.Label(row_frame, text=f"{category}:", width=15, anchor="w")
+                label.pack(side=tk.LEFT, padx=5)
 
-            # Progress bar to visualize trait value (0-100)
-            progress = ttk.Progressbar(row_frame, length=150, mode="determinate", maximum=100)
-            progress["value"] = trait_value
-            progress.pack(side=tk.LEFT, padx=5)
+                value_label = ttk.Label(row_frame, text=trait_key, width=20, anchor="w")
+                value_label.pack(side=tk.LEFT, padx=5)
 
-            value_label = ttk.Label(row_frame, text=f"{trait_value}", width=5)
-            value_label.pack(side=tk.LEFT, padx=5)
+        # Display quirks
+        if char.quirks:
+            quirks_label = ttk.Label(canvas_frame, text="Personality Quirks:", font=("TkDefaultFont", 10, "bold"))
+            quirks_label.pack(anchor="w", pady=(15, 5))
+            
+            for quirk in sorted(char.quirks):
+                row_frame = ttk.Frame(canvas_frame)
+                row_frame.pack(fill=tk.X, pady=2)
+                
+                # Format quirk name (replace underscores with spaces, title case)
+                quirk_display = quirk.replace("_", " ").title()
+                
+                quirk_label = ttk.Label(row_frame, text=f"• {quirk_display}", anchor="w")
+                quirk_label.pack(side=tk.LEFT, padx=15)
 
     def _build_relationships_tab(self, parent: ttk.Frame) -> None:
         """Build the Relationships tab."""
@@ -777,8 +802,21 @@ class MekSocialGUI:
         if char.traits:
             lines.append("")
             lines.append("--- Personality Traits ---")
-            for k, v in sorted(char.traits.items()):
-                lines.append(f"  {k}: {v}")
+            trait_enums = get_character_traits_as_enums(char)
+            for category, enum_str in sorted(trait_enums.items()):
+                # Extract just the trait key from "Category:KEY"
+                if ":" in enum_str:
+                    _, trait_key = enum_str.split(":", 1)
+                else:
+                    trait_key = enum_str
+                lines.append(f"  {category}: {trait_key}")
+        
+        if char.quirks:
+            lines.append("")
+            lines.append("--- Personality Quirks ---")
+            for quirk in sorted(char.quirks):
+                quirk_display = quirk.replace("_", " ").title()
+                lines.append(f"  • {quirk_display}")
 
         if char.friendship:
             lines.append("")
