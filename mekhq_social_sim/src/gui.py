@@ -6,6 +6,7 @@ from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 from typing import Dict, Optional, List
 from datetime import date, timedelta, datetime
+import json
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
@@ -51,33 +52,168 @@ except ImportError:
 
 
 # Shared portrait base path used by all portrait handling code
-PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "Images" / "Personnel"
+PORTRAIT_BASE_PATH = Path(__file__).resolve().parents[1] / "images" / "portraits"
+
+# Portrait configuration file path
+PORTRAIT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "config" / "portrait_config.json"
+
+
+class PortraitConfig:
+    """Manages portrait configuration including external portrait folders."""
+    
+    def __init__(self):
+        self.external_portrait_root: Optional[Path] = None
+        self._load_config()
+    
+    def _load_config(self) -> None:
+        """Load portrait configuration from JSON file."""
+        if not PORTRAIT_CONFIG_PATH.exists():
+            return
+        
+        try:
+            with open(PORTRAIT_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                external_path = data.get('external_portrait_root')
+                if external_path:
+                    self.external_portrait_root = Path(external_path)
+        except Exception:
+            # If config is invalid, proceed with module-only behavior
+            pass
+    
+    def save_config(self, external_root: Optional[Path]) -> None:
+        """Save external portrait root to config file."""
+        self.external_portrait_root = external_root
+        
+        # Ensure config directory exists
+        PORTRAIT_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        
+        data = {}
+        if external_root:
+            data['external_portrait_root'] = str(external_root)
+        
+        try:
+            with open(PORTRAIT_CONFIG_PATH, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            pass
+    
+    def get_search_paths(self) -> List[Path]:
+        """Get list of portrait search paths in priority order."""
+        paths = [PORTRAIT_BASE_PATH]
+        if self.external_portrait_root and self.external_portrait_root.exists():
+            paths.append(self.external_portrait_root)
+        return paths
+
+
+# Global portrait configuration instance
+portrait_config = PortraitConfig()
 
 
 class PortraitHelper:
     """Shared helper class for loading and displaying character portraits."""
 
-    @staticmethod
-    def resolve_portrait_path(character: Character) -> Optional[Path]:
-        """Resolve the portrait path for a character.
+    # Supported image extensions
+    IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
 
-        Returns the Path to the portrait file if found, None otherwise.
+    @staticmethod
+    def _extract_base_and_extension(filename: str) -> tuple[str, str]:
+        """Extract base name and extension from filename.
+        
+        Returns:
+            Tuple of (base_name, extension) e.g. ("MW_F_4", ".png")
+        """
+        path = Path(filename)
+        return (path.stem, path.suffix.lower())
+
+    @staticmethod
+    def _find_portrait_variant(base_path: Path, category: str, filename: str, variant_suffix: str = "") -> Optional[Path]:
+        """Find a portrait file with optional variant suffix.
+        
+        Args:
+            base_path: Root path to search in
+            category: Portrait category subdirectory (can be empty)
+            filename: Original filename
+            variant_suffix: Suffix to add before extension (e.g. "_cas")
+            
+        Returns:
+            Path to portrait if found, None otherwise
+        """
+        base_name, original_ext = PortraitHelper._extract_base_and_extension(filename)
+        
+        # Build variant filename
+        if variant_suffix:
+            variant_base = f"{base_name}{variant_suffix}"
+        else:
+            variant_base = base_name
+        
+        # Try with category first
+        if category:
+            category_dir = base_path / category
+            # Try original extension first
+            if original_ext:
+                portrait_path = category_dir / f"{variant_base}{original_ext}"
+                if portrait_path.exists():
+                    return portrait_path
+            
+            # Try other extensions
+            for ext in PortraitHelper.IMAGE_EXTENSIONS:
+                if ext != original_ext:
+                    portrait_path = category_dir / f"{variant_base}{ext}"
+                    if portrait_path.exists():
+                        return portrait_path
+        
+        # Try without category
+        # Try original extension first
+        if original_ext:
+            portrait_path = base_path / f"{variant_base}{original_ext}"
+            if portrait_path.exists():
+                return portrait_path
+        
+        # Try other extensions
+        for ext in PortraitHelper.IMAGE_EXTENSIONS:
+            if ext != original_ext:
+                portrait_path = base_path / f"{variant_base}{ext}"
+                if portrait_path.exists():
+                    return portrait_path
+        
+        return None
+
+    @staticmethod
+    def resolve_portrait_path(character: Character, prefer_casual: bool = False) -> Optional[Path]:
+        """Resolve the portrait path for a character.
+        
+        Args:
+            character: Character object
+            prefer_casual: If True, prefer _cas variant with fallback to default
+            
+        Returns:
+            Path to the portrait file if found, None otherwise
         """
         if not character.portrait or not character.portrait.filename:
             return None
 
         category = character.portrait.category or ""
         filename = character.portrait.filename
-
-        # Try loading from the expected path with category
-        portrait_path = PORTRAIT_BASE_PATH / category / filename
-        if portrait_path.exists():
-            return portrait_path
-
-        # Try without category
-        portrait_path = PORTRAIT_BASE_PATH / filename
-        if portrait_path.exists():
-            return portrait_path
+        
+        # Get all search paths
+        search_paths = portrait_config.get_search_paths()
+        
+        # If prefer_casual, try casual variant first
+        if prefer_casual:
+            for base_path in search_paths:
+                portrait_path = PortraitHelper._find_portrait_variant(
+                    base_path, category, filename, "_cas"
+                )
+                if portrait_path:
+                    return portrait_path
+        
+        # Try default (no suffix)
+        for base_path in search_paths:
+            portrait_path = PortraitHelper._find_portrait_variant(
+                base_path, category, filename, ""
+            )
+            if portrait_path:
+                return portrait_path
 
         return None
 
@@ -336,13 +472,14 @@ class CharacterDetailDialog:
             value.grid(row=i, column=1, sticky="w", padx=10, pady=5)
 
     def _load_portrait(self) -> None:
-        """Attempt to automatically load the character's portrait."""
+        """Attempt to automatically load the character's portrait (prefer casual variant)."""
         if not PIL_AVAILABLE:
             self.portrait_label.config(text="PIL not available\nfor image loading")
             return
 
         char = self.character
-        portrait_path = PortraitHelper.resolve_portrait_path(char)
+        # Prefer casual variant (_cas) for detail dialog
+        portrait_path = PortraitHelper.resolve_portrait_path(char, prefer_casual=True)
 
         if portrait_path is None:
             if not char.portrait or not char.portrait.filename:
@@ -400,9 +537,41 @@ class MekSocialGUI:
         self.log_window = None
         self.log_text = None
 
+        self._build_menu_bar()
         self._build_widgets()
 
     # --- GUI construction -------------------------------------------------
+
+    def _build_menu_bar(self) -> None:
+        """Build the menu bar at the top of the window."""
+        menubar = tk.Menu(self.master)
+        self.master.config(menu=menubar)
+        
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        
+        # Import submenu
+        import_menu = tk.Menu(file_menu, tearoff=0)
+        file_menu.add_cascade(label="Import", menu=import_menu)
+        
+        import_menu.add_command(
+            label="Import Personnel (JSON)...",
+            command=self._import_personnel
+        )
+        import_menu.add_command(
+            label="Import TO&E (JSON)...",
+            command=self._import_toe
+        )
+        import_menu.add_separator()
+        import_menu.add_command(
+            label="Set External Portrait Folder...",
+            command=self._set_external_portrait_folder
+        )
+        
+        # Exit option
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.master.quit)
 
     def _build_widgets(self) -> None:
         # Notebook fÃ¼r Tabs
@@ -458,15 +627,8 @@ class MekSocialGUI:
         next_day_btn = ttk.Button(top_bar, text="NÃ¤chster Tag", command=self._next_day)
         next_day_btn.pack(side=tk.LEFT, padx=4)
 
-        import_pers_btn = ttk.Button(
-            top_bar, text="Importiere Personal (JSON)", command=self._import_personnel
-        )
-        import_pers_btn.pack(side=tk.LEFT, padx=4)
-
-        import_toe_btn = ttk.Button(
-            top_bar, text="Importiere TO&E (JSON)", command=self._import_toe
-        )
-        import_toe_btn.pack(side=tk.LEFT, padx=4)
+        # Old import buttons removed - now in menu bar
+        # import_pers_btn and import_toe_btn removed
 
         # Day events summary bar (under date label)
         self.day_events_frame = ttk.Frame(right_frame)
@@ -727,12 +889,13 @@ class MekSocialGUI:
         self.portrait_label.config(image="", text="")
 
     def _update_portrait(self, char: Character) -> None:
-        """Load and display the character's portrait in the main Charakter frame."""
+        """Load and display the character's portrait in the main Charakter frame (default portrait only)."""
         if not PIL_AVAILABLE:
             self.portrait_label.config(text="PIL not available")
             return
 
-        portrait_path = PortraitHelper.resolve_portrait_path(char)
+        # Use default portrait only (no casual variant) for main panel
+        portrait_path = PortraitHelper.resolve_portrait_path(char, prefer_casual=False)
 
         if portrait_path is None:
             if not char.portrait or not char.portrait.filename:
@@ -969,6 +1132,27 @@ class MekSocialGUI:
             messagebox.showerror("Fehler beim Laden der TO&E", str(exc))
             import traceback
             traceback.print_exc()
+
+    def _set_external_portrait_folder(self) -> None:
+        """Open dialog to set external portrait folder."""
+        folder = filedialog.askdirectory(
+            title="Select External Portrait Folder",
+            mustexist=True
+        )
+        if not folder:
+            return
+        
+        # Save to config
+        portrait_config.save_config(Path(folder))
+        
+        messagebox.showinfo(
+            "External Portrait Folder Set",
+            f"External portrait folder set to:\n{folder}\n\nPortraits will now be searched in both the module folder and this external folder."
+        )
+        
+        # Refresh current character display if any
+        if self.selected_character_id and self.selected_character_id in self.characters:
+            self._update_details(self.characters[self.selected_character_id])
 
     def _next_day(self) -> None:
         if not self.characters:
