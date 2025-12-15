@@ -82,6 +82,9 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
     path = Path(personnel_path)
     data = json.loads(path.read_text(encoding="utf-8"))
 
+    # Get rank resolver once outside the loop for efficiency
+    resolver = get_rank_resolver()
+
     characters: Dict[str, Character] = {}
     for entry in data:
         cid = str(entry.get("id"))
@@ -164,13 +167,11 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         # Rank from JSON (numeric ID)
         rank = entry.get("rank")
         
-        # Resolve rank name using the global rank resolver
-        # This will use the currently set rank system
+        # Resolve rank name using the rank resolver (already retrieved above)
         rank_name = None
         if rank is not None:
             try:
                 rank_id = int(rank)
-                resolver = get_rank_resolver()
                 rank_name = resolver.resolve_rank_name(rank_id)
             except (ValueError, TypeError):
                 rank_name = f"Rank {rank}"

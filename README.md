@@ -313,21 +313,8 @@ GUI Application
     │
     └── import_campaign_meta() ─► Sets date and rank system
 ```
-        parse_units()     ├─► toe_complete.json
-        export_toe_to_json()
-    │
-    ▼
-data_loading.py
-    │
-    ├── load_personnel()    ──► Dict[str, Character]
-    │
-    └── apply_toe_structure() ──► UnitAssignment on Characters
-    │
-    ▼
-gui.py
-    │
-    └── Display in TreeView / Detail Panels
-```
+
+### Rank Resolution System
 
 ### TO&E Mapping Logic (MekHQ 5.10)
 
