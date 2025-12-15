@@ -21,6 +21,12 @@ This version removes backward compatibility with MekHQ 5.7 and older formats to 
 - **Portrait extraction** with category and filename
 - **Family relationships** (spouse, children, parents, siblings)
 
+### Campaign Metadata Export (NEW)
+- **Campaign date extraction** - Current in-game date from MekHQ campaign
+- **Rank system extraction** - Rank system code (SLDF, AFFS, LCAF, etc.)
+- **Automatic rank name resolution** - Converts numeric rank IDs to human-readable names
+- **One-click import** - Load campaign date and rank system directly from .cpnx files
+
 ### TO&E Export (MekHQ 5.10 Schema)
 - **Full TO&E extraction** using the MekHQ 5.10 `mothballInfo` schema
 - **Units with crew roles**:
@@ -234,14 +240,27 @@ This opens a file dialog to select your campaign file and exports:
 
 ## 🖥 Using the GUI
 
+### Import Campaign Metadata (NEW)
+1. Click **File → Import → Import Campaign Meta (Date & Rank System)**
+2. Select your MekHQ campaign file (.cpnx or .cpnx.gz)
+3. The campaign date is automatically loaded into the date field (remains editable)
+4. The rank system is loaded and personnel ranks are resolved to human-readable names
+5. If personnel are already loaded, their rank names will be updated immediately
+
+**Benefits:**
+- Sets the correct in-game date for your campaign
+- Displays proper rank names (e.g., "Lieutenant", "Captain") instead of numeric IDs
+- Ensures rank names match your campaign's rank system (SLDF, AFFS, etc.)
+
 ### Import Personnel
-1. Click **"Importiere Personal (JSON)"**
+1. Click **File → Import → Import Personnel (JSON)**
 2. Select `personnel_complete.json`
 3. Characters are loaded into the tree view
+4. If rank system was previously loaded, rank names are automatically resolved
 
 ### Import TO&E
 1. First import personnel
-2. Click **"Importiere TO&E (JSON)"**
+2. Click **File → Import → Import TO&E (JSON)**
 3. Select `toe_complete.json`
 4. Characters are grouped by Force → Unit
 
@@ -249,6 +268,7 @@ This opens a file dialog to select your campaign file and exports:
 - Click a character in the tree view to see details
 - Right-click a character for the full detail dialog
 - Details include:
+  - **Rank** (human-readable name when rank system is loaded)
   - Name, Callsign, Age, Birthday, Profession
   - TO&E Assignment (Unit, Force, Force Type, Formation Level, Preferred Role, Crew Role)
   - Personality Traits (scaled 0-100)
@@ -275,9 +295,24 @@ MekHQ Campaign (.cpnx/.cpnx.gz)
     ▼
 mekhq_personnel_exporter.py
     │
-    ├── parse_personnel() ──► personnel_complete.json
+    ├── parse_personnel() ──────► personnel_complete.json
     │
-    └── parse_forces()    ┐
+    ├── parse_forces() ─────────┐
+    │   parse_units() ──────────┤
+    │                           ├─► toe_complete.json
+    │                           │
+    └── parse_campaign_metadata()─► campaign_meta.json
+                                    (date + rank system)
+    │
+    ▼
+GUI Application
+    │
+    ├── load_campaign() ────► Loads personnel with rank resolution
+    │
+    ├── apply_toe_structure() ─► Assigns units and forces
+    │
+    └── import_campaign_meta() ─► Sets date and rank system
+```
         parse_units()     ├─► toe_complete.json
         export_toe_to_json()
     │
