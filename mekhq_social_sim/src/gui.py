@@ -7,12 +7,16 @@ from pathlib import Path
 from typing import Dict, Optional, List
 from datetime import date, timedelta, datetime
 import json
+import traceback
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
 src_path = repo_root.joinpath("src")
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
+
+# Define canonical export directory
+EXPORT_DIR = repo_root / "mekhq_social_sim" / "exports"
 
 # Calendar system imports (required by the full integration)
 try:
@@ -1122,9 +1126,8 @@ class MekSocialGUI:
             return
         
         try:
-            # Get the canonical export directory
-            repo_root = Path(__file__).resolve().parents[2]
-            export_dir = repo_root / "mekhq_social_sim" / "exports"
+            # Use the canonical export directory
+            export_dir = EXPORT_DIR
             export_dir.mkdir(parents=True, exist_ok=True)
             
             # Load the campaign file
@@ -1173,7 +1176,6 @@ class MekSocialGUI:
         except Exception as exc:
             self._log(f"❌ Export failed: {exc}")
             messagebox.showerror("Export Failed", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _import_campaign_meta(self) -> None:
@@ -1246,7 +1248,6 @@ class MekSocialGUI:
                 
         except Exception as exc:
             messagebox.showerror("Error Loading Campaign Metadata", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _import_personnel(self) -> None:
@@ -1270,7 +1271,6 @@ class MekSocialGUI:
             self._update_day_events_description()
         except Exception as exc:
             messagebox.showerror("Fehler beim Laden", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _import_toe(self) -> None:
@@ -1292,7 +1292,6 @@ class MekSocialGUI:
             messagebox.showinfo("Erfolg", "TO&E-Struktur angewendet!")
         except Exception as exc:
             messagebox.showerror("Fehler beim Laden der TO&E", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _set_external_portrait_folder(self) -> None:
