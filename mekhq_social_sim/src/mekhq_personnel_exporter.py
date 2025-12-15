@@ -759,6 +759,42 @@ def count_forces_recursive(forces: List[Dict[str, Any]]) -> int:
 
 
 # ============================================================
+# CAMPAIGN METADATA PARSER
+# ============================================================
+
+def parse_campaign_metadata(root: ET.Element) -> Dict[str, Any]:
+    """
+    Extract campaign metadata (current date and rank system).
+    
+    Returns dictionary with:
+    - campaign_date: Current in-game date (YYYY-MM-DD format)
+    - rank_system: Rank system code (e.g., SLDF, AFFS, etc.)
+    """
+    metadata: Dict[str, Any] = {
+        "campaign_date": None,
+        "rank_system": None,
+    }
+    
+    # Both calendar and rankSystem are under <info>
+    info_elem = root.find("info")
+    if info_elem is not None:
+        # Extract current date from <calendar>
+        calendar_text = info_elem.findtext("calendar")
+        if calendar_text:
+            # Calendar is stored as YYYY-MM-DD
+            metadata["campaign_date"] = calendar_text.strip()
+        
+        # Extract rank system code from <rankSystem><code>
+        rank_system_elem = info_elem.find("rankSystem")
+        if rank_system_elem is not None:
+            code = rank_system_elem.findtext("code")
+            if code:
+                metadata["rank_system"] = code.strip()
+    
+    return metadata
+
+
+# ============================================================
 # EXPORT
 # ============================================================
 
@@ -820,6 +856,19 @@ def export_toe_to_json(
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
+    return output_path
+
+
+def export_campaign_meta_to_json(
+    metadata: Dict[str, Any],
+    output_path: str = "exports/campaign_meta.json",
+) -> str:
+    """Export campaign metadata (date and rank system) as JSON."""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+    
     return output_path
 
 
@@ -955,6 +1004,10 @@ def main():
         forces_data = parse_forces(root)
         units_data = parse_units(root)
 
+        # --- CAMPAIGN METADATA ---
+        print("📊 Extracting campaign metadata (date & rank system)...")
+        campaign_metadata = parse_campaign_metadata(root)
+
         # --- EXPORT ---
         print("💾 Exporting JSON...")
 
@@ -962,12 +1015,15 @@ def main():
         if output_dir:
             personnel_output = os.path.join(output_dir, "personnel_complete.json")
             toe_output = os.path.join(output_dir, "toe_complete.json")
+            meta_output = os.path.join(output_dir, "campaign_meta.json")
         else:
             personnel_output = "exports/personnel_complete.json"
             toe_output = "exports/toe_complete.json"
+            meta_output = "exports/campaign_meta.json"
 
         personnel_output_path = export_personnel_to_json(personnel_data, personnel_output)
         toe_output_path = export_toe_to_json(forces_data, units_data, toe_output)
+        meta_output_path = export_campaign_meta_to_json(campaign_metadata, meta_output)
 
         # --- SUMMARY ---
         print_summary(personnel_data)
@@ -986,9 +1042,18 @@ def main():
         print(f"Units with Crew Data: {units_with_crew}")
         print(f"{'='*60}\n")
 
+        # Campaign metadata summary
+        print(f"\n{'='*60}")
+        print("📊 CAMPAIGN METADATA")
+        print(f"{'='*60}")
+        print(f"Campaign Date:  {campaign_metadata.get('campaign_date') or 'Not found'}")
+        print(f"Rank System:    {campaign_metadata.get('rank_system') or 'Not found'}")
+        print(f"{'='*60}\n")
+
         print("✅ Export completed successfully!")
-        print(f"📄 Personnel file saved: {personnel_output_path}")
-        print(f"📄 TO&E file saved:      {toe_output_path}")
+        print(f"📄 Personnel file saved:      {personnel_output_path}")
+        print(f"📄 TO&E file saved:           {toe_output_path}")
+        print(f"📄 Campaign metadata saved:   {meta_output_path}")
 
     except Exception as e:
         print(f"\n❌ ERROR: {e}")
