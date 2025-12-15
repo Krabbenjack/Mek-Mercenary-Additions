@@ -240,6 +240,18 @@ This opens a file dialog to select your campaign file and exports:
 
 ## 🖥 Using the GUI
 
+### Export Campaign Data (NEW)
+1. Click **File → Export → Export Campaign Data from .cpnx...**
+2. Select your MekHQ campaign file (.cpnx or .cpnx.gz)
+3. The exporter will extract and save:
+   - `personnel_complete.json` - All personnel data
+   - `toe_complete.json` - Complete TO&E structure
+   - `campaign_meta.json` - Campaign date and rank system
+
+**Export Location:** `mekhq_social_sim/exports/`
+
+**Note:** The export folder is in .gitignore to prevent accidentally committing campaign data.
+
 ### Import Campaign Metadata (NEW)
 1. Click **File → Import → Import Campaign Meta (Date & Rank System)**
 2. Select your MekHQ campaign file (.cpnx or .cpnx.gz)
@@ -254,14 +266,14 @@ This opens a file dialog to select your campaign file and exports:
 
 ### Import Personnel
 1. Click **File → Import → Import Personnel (JSON)**
-2. Select `personnel_complete.json`
+2. Select `personnel_complete.json` from the exports folder
 3. Characters are loaded into the tree view
 4. If rank system was previously loaded, rank names are automatically resolved
 
 ### Import TO&E
 1. First import personnel
 2. Click **File → Import → Import TO&E (JSON)**
-3. Select `toe_complete.json`
+3. Select `toe_complete.json` from the exports folder
 4. Characters are grouped by Force → Unit
 
 ### Character Details

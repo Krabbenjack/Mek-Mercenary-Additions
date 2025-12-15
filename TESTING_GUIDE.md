@@ -1,19 +1,38 @@
-# Campaign Metadata Import - Testing Guide
+# Campaign Metadata Import & Export - Testing Guide
 
 ## Overview
-This feature allows one-click import of campaign metadata (date and rank system) from MekHQ .cpnx files, with automatic resolution of numeric rank IDs to human-readable names.
+This feature provides one-click export and import of MekHQ campaign data, including automatic resolution of numeric rank IDs to human-readable names.
 
 ## Files Modified
 1. `mekhq_social_sim/src/mekhq_personnel_exporter.py` - Added campaign metadata extraction
 2. `mekhq_social_sim/src/rank_resolver.py` - NEW: Rank name resolution system
 3. `mekhq_social_sim/src/models.py` - Added `rank_name` field to Character
 4. `mekhq_social_sim/src/data_loading.py` - Integrated rank resolution
-5. `mekhq_social_sim/src/gui.py` - Added import menu and display updates
+5. `mekhq_social_sim/src/gui.py` - Added export/import menus and display updates
 6. `README.md` - Updated documentation
 
 ## How to Test
 
-### 1. Export Campaign Metadata
+### 1. Export Campaign Data (GUI Method - NEW)
+**Step 1: Launch GUI**
+```bash
+cd mekhq_social_sim/src
+python gui.py
+```
+
+**Step 2: Export via Menu**
+1. Click **File → Export → Export Campaign Data from .cpnx...**
+2. Select your .cpnx or .cpnx.gz file
+3. Observe success dialog
+
+**Expected Result:**
+- Three files created in `mekhq_social_sim/exports/`:
+  - `personnel_complete.json`
+  - `toe_complete.json`
+  - `campaign_meta.json`
+- Success message shows: personnel count, units count, date, rank system
+
+### 2. Export Campaign Data (CLI Method)
 ```bash
 cd mekhq_social_sim/src
 python mekhq_personnel_exporter.py "path/to/campaign.cpnx" -o ../exports
@@ -23,7 +42,7 @@ python mekhq_personnel_exporter.py "path/to/campaign.cpnx" -o ../exports
 - Three files created in `exports/`:
   - `personnel_complete.json`
   - `toe_complete.json`
-  - `campaign_meta.json` (NEW)
+  - `campaign_meta.json`
 
 **Verify campaign_meta.json contains:**
 ```json
@@ -33,7 +52,7 @@ python mekhq_personnel_exporter.py "path/to/campaign.cpnx" -o ../exports
 }
 ```
 
-### 2. Test Rank Resolution (CLI)
+### 3. Test Rank Resolution (CLI)
 ```bash
 cd mekhq_social_sim/src
 python3 -c "
@@ -90,7 +109,17 @@ cd mekhq_social_sim/src
 python gui.py
 ```
 
-**Step 2: Import Campaign Metadata**
+**Step 2: Export Campaign Data (Alternative to CLI)**
+1. Click **File → Export → Export Campaign Data from .cpnx...**
+2. Select your .cpnx or .cpnx.gz file
+3. Observe success dialog showing export summary
+
+**Expected Behavior:**
+- Files created in `mekhq_social_sim/exports/`
+- Success dialog shows personnel count, units, date, rank system
+- Log window shows export progress
+
+**Step 3: Import Campaign Metadata**
 1. Click **File → Import → Import Campaign Meta (Date & Rank System)**
 2. Select your .cpnx or .cpnx.gz file
 3. Observe success message with:
@@ -102,7 +131,7 @@ python gui.py
 - Date field remains editable (you can still change it)
 - If personnel already loaded, ranks update immediately
 
-**Step 3: Import Personnel**
+**Step 4: Import Personnel**
 1. Click **File → Import → Import Personnel (JSON)**
 2. Select `personnel_complete.json`
 
