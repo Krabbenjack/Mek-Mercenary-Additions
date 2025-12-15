@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, date
 
 from models import Character, UnitAssignment, PortraitInfo
+from rank_resolver import get_rank_resolver
 
 
 # Constants
@@ -160,8 +161,19 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
                 filename=portrait_data.get("filename")
             )
 
-        # Rank from JSON
+        # Rank from JSON (numeric ID)
         rank = entry.get("rank")
+        
+        # Resolve rank name using the global rank resolver
+        # This will use the currently set rank system
+        rank_name = None
+        if rank is not None:
+            try:
+                rank_id = int(rank)
+                resolver = get_rank_resolver()
+                rank_name = resolver.resolve_rank_name(rank_id)
+            except (ValueError, TypeError):
+                rank_name = f"Rank {rank}"
 
         char = Character(
             id=cid,
@@ -173,6 +185,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             birthday=birthday,
             portrait=portrait,
             rank=rank,
+            rank_name=rank_name,
             quirks=quirks,
         )
         characters[cid] = char
@@ -335,6 +348,29 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
             preferred_role=force_info.get("preferred_role"),
             crew_role=assignment.get("role"),
         )
+
+
+def load_campaign_metadata(meta_path: str | Path) -> Dict[str, Any]:
+    """
+    Load campaign metadata from campaign_meta.json.
+    
+    Returns dictionary with:
+    - campaign_date: Current in-game date (YYYY-MM-DD format)
+    - rank_system: Rank system code (e.g., SLDF, AFFS, etc.)
+    """
+    path = Path(meta_path)
+    
+    if not path.exists():
+        raise FileNotFoundError(f"Campaign metadata file not found: {path}")
+    
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return {
+            "campaign_date": data.get("campaign_date"),
+            "rank_system": data.get("rank_system"),
+        }
+    except Exception as e:
+        raise ValueError(f"Failed to load campaign metadata: {e}")
 
 
 def load_campaign(
