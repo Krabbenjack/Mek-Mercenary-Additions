@@ -37,11 +37,13 @@ except Exception:
         EVENTS_PACKAGE_AVAILABLE = False
 
 from models import Character
-from data_loading import load_campaign, apply_toe_structure
+from data_loading import load_campaign, apply_toe_structure, load_campaign_metadata
 from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
 from trait_synergy_engine import get_character_traits_as_enums
+from rank_resolver import get_rank_resolver
+import mekhq_personnel_exporter
 
 # Try to import PIL for image handling
 try:
@@ -313,7 +315,7 @@ class CharacterDetailDialog:
 
         # Create info labels
         info_data = [
-            ("Rank:", char.rank or "-"),
+            ("Rank:", char.rank_name or char.rank or "-"),
             ("Name:", char.name),
             ("Callsign:", char.callsign or "-"),
             ("Age:", f"{char.age} ({char.age_group})"),
@@ -555,6 +557,11 @@ class MekSocialGUI:
         import_menu = tk.Menu(file_menu, tearoff=0)
         file_menu.add_cascade(label="Import", menu=import_menu)
         
+        import_menu.add_command(
+            label="Import Campaign Meta (Date & Rank System)...",
+            command=self._import_campaign_meta
+        )
+        import_menu.add_separator()
         import_menu.add_command(
             label="Import Personnel (JSON)...",
             command=self._import_personnel
@@ -936,9 +943,14 @@ class MekSocialGUI:
 
         # Make sure details show current birthday and recalculated age
         birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
+        
+        # Show rank name if available, otherwise fall back to rank ID
+        rank_display = char.rank_name or char.rank or "-"
+        
         lines = [
             f"Name: {char.name}",
             f"Callsign: {char.callsign or '-'}",
+            f"Rank: {rank_display}",
             f"Age: {char.age} ({char.age_group})",
             f"Birthday: {birthday_str}",
             f"Profession: {char.profession or '-'}",
@@ -1086,6 +1098,79 @@ class MekSocialGUI:
                 self.manual_roll_btn.config(state=tk.NORMAL)
             else:
                 self.manual_roll_btn.config(state=tk.DISABLED)
+
+    def _import_campaign_meta(self) -> None:
+        """Import campaign metadata (date and rank system) from a .cpnx file."""
+        path = filedialog.askopenfilename(
+            title="Select MekHQ Campaign File (.cpnx)",
+            filetypes=[
+                ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
+                ("All Files", "*.*")
+            ],
+        )
+        if not path:
+            return
+
+        try:
+            # Use the exporter to parse the .cpnx file
+            root = mekhq_personnel_exporter.load_cpnx(path)
+            metadata = mekhq_personnel_exporter.parse_campaign_metadata(root)
+            
+            campaign_date_str = metadata.get("campaign_date")
+            rank_system = metadata.get("rank_system")
+            
+            # Update GUI date if campaign date is available
+            if campaign_date_str:
+                try:
+                    # Parse YYYY-MM-DD format
+                    self.current_date = datetime.strptime(campaign_date_str, "%Y-%m-%d").date()
+                    self._update_date_display()
+                    self._log(f"Campaign date set to: {campaign_date_str}")
+                except Exception as e:
+                    self._log(f"Warning: Could not parse campaign date '{campaign_date_str}': {e}")
+            
+            # Set rank system in the rank resolver
+            if rank_system:
+                rank_resolver = get_rank_resolver()
+                rank_resolver.set_rank_system(rank_system)
+                self._log(f"Rank system set to: {rank_system}")
+                
+                # If characters are already loaded, re-resolve their rank names
+                if self.characters:
+                    for char in self.characters.values():
+                        if char.rank is not None:
+                            try:
+                                rank_id = int(char.rank)
+                                char.rank_name = rank_resolver.resolve_rank_name(rank_id)
+                            except (ValueError, TypeError):
+                                char.rank_name = f"Rank {char.rank}"
+                    
+                    # Refresh display if a character is selected
+                    if self.selected_character_id and self.selected_character_id in self.characters:
+                        self._update_details(self.characters[self.selected_character_id])
+            
+            # Show success message
+            msg_parts = []
+            if campaign_date_str:
+                msg_parts.append(f"Date: {campaign_date_str}")
+            if rank_system:
+                msg_parts.append(f"Rank System: {rank_system}")
+            
+            if msg_parts:
+                messagebox.showinfo(
+                    "Campaign Metadata Loaded",
+                    "Successfully loaded:\n" + "\n".join(msg_parts)
+                )
+            else:
+                messagebox.showwarning(
+                    "No Metadata Found",
+                    "No campaign date or rank system found in the file."
+                )
+                
+        except Exception as exc:
+            messagebox.showerror("Error Loading Campaign Metadata", str(exc))
+            import traceback
+            traceback.print_exc()
 
     def _import_personnel(self) -> None:
         path = filedialog.askopenfilename(
