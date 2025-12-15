@@ -178,6 +178,51 @@ Age: 32 (adult)
 6. **Calendar System** - Event management unchanged
 7. **Day Advancement** - Still works correctly
 
+## Automated Testing
+
+### TO&E Import Test Script
+
+Run the automated test to verify the complete export/import workflow:
+
+```bash
+cd /path/to/Mek-Mercenary-Additions
+python3 test_toe_import.py
+```
+
+**Expected Output:**
+```
+============================================================
+TO&E IMPORT TEST
+============================================================
+
+1. Loading personnel...
+   ✅ Loaded 83 characters
+
+2. Applying TO&E structure...
+   ✅ Characters with units: 61/83
+
+3. Building tree structure...
+   ✅ Forces found: 5
+   ✅ Personnel without TO&E: 22
+
+4. Tree structure:
+   Personal (root)
+   ├── Able Lance (8 personnel in 4 units)
+   ├── Helix Camp Support (17 personnel in 2 units)
+   ├── Helix Convoy (4 personnel in 1 unit)
+   ├── Helix Security (28 personnel in 1 unit)
+   ├── Helix salvage Crew (4 personnel in 1 unit)
+   └── Ohne TO&E (22 personnel without assignments)
+
+✅ TO&E IMPORT TEST PASSED
+```
+
+This test verifies:
+- Personnel loading works correctly
+- TO&E structure is properly applied
+- Characters are assigned to the correct forces and units
+- Tree structure is built correctly for GUI display
+
 ## Performance Benchmarks
 
 ### Expected Performance:
