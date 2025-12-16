@@ -62,6 +62,33 @@ def test_toe_import():
         print("  - CLI: cd mekhq_social_sim/src && python mekhq_personnel_exporter.py <campaign.cpnx> -o ../exports")
         return False
     
+    # Verify JSON file structure
+    print("\n0. Verifying exported JSON structure...")
+    import json
+    with open(str(toe_file), 'r') as f:
+        toe_data = json.load(f)
+    
+    root_forces_count = len(toe_data.get('forces', []))
+    units_count = len(toe_data.get('units', []))
+    
+    # Count total forces recursively
+    def count_all_forces(forces):
+        count = len(forces)
+        for force in forces:
+            count += count_all_forces(force.get('sub_forces', []))
+        return count
+    
+    total_forces_count = count_all_forces(toe_data.get('forces', []))
+    
+    print(f"   JSON file contains:")
+    print(f"   - Root forces: {root_forces_count}")
+    print(f"   - Total forces (including sub-forces): {total_forces_count}")
+    print(f"   - Units: {units_count}")
+    
+    if total_forces_count == 0:
+        print("   ❌ ERROR: No forces found in toe_complete.json!")
+        return False
+    
     # Step 1: Load personnel
     print("\n1. Loading personnel...")
     resolver = get_rank_resolver()

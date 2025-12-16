@@ -1155,10 +1155,13 @@ class MekSocialGUI:
             mekhq_personnel_exporter.export_toe_to_json(forces_data, units_data, str(toe_path))
             mekhq_personnel_exporter.export_campaign_meta_to_json(campaign_metadata, str(meta_path))
             
+            # Count total forces including sub-forces
+            total_forces = mekhq_personnel_exporter.count_forces_recursive(forces_data)
+            
             # Log success
             self._log(f"✅ Export complete:")
             self._log(f"  - {len(personnel_data)} personnel")
-            self._log(f"  - {len(forces_data)} root forces")
+            self._log(f"  - {len(forces_data)} root forces, {total_forces} total (with sub-forces)")
             self._log(f"  - {len(units_data)} units")
             self._log(f"  - Campaign date: {campaign_metadata.get('campaign_date', 'N/A')}")
             self._log(f"  - Rank system: {campaign_metadata.get('rank_system', 'N/A')}")
@@ -1168,6 +1171,8 @@ class MekSocialGUI:
                 f"Campaign data exported successfully!\n\n"
                 f"Files saved to:\n{export_dir}\n\n"
                 f"Personnel: {len(personnel_data)} characters\n"
+                f"Root Forces: {len(forces_data)}\n"
+                f"Total Forces (incl. sub-forces): {total_forces}\n"
                 f"Units: {len(units_data)}\n"
                 f"Date: {campaign_metadata.get('campaign_date', 'N/A')}\n"
                 f"Rank System: {campaign_metadata.get('rank_system', 'N/A')}"
