@@ -182,37 +182,42 @@ Age: 32 (adult)
 
 ### TO&E Import Test Script
 
-Run the automated test to verify the complete export/import workflow:
+**Before running the test**, export your campaign data first:
+- **GUI**: File → Export → Export Campaign Data from .cpnx...
+- **CLI**: `cd mekhq_social_sim/src && python mekhq_personnel_exporter.py <your_campaign.cpnx> -o ../exports`
+
+Then run the automated test to verify the complete export/import workflow:
 
 ```bash
 cd /path/to/Mek-Mercenary-Additions
 python3 test_toe_import.py
 ```
 
-**Expected Output:**
+**Example Output** (values will vary based on your campaign):
 ```
 ============================================================
 TO&E IMPORT TEST
 ============================================================
 
+This test verifies that TO&E import is working correctly.
+Make sure you have exported campaign data first!
+
 1. Loading personnel...
-   ✅ Loaded 83 characters
+   ✅ Loaded XX characters
 
 2. Applying TO&E structure...
-   ✅ Characters with units: 61/83
+   ✅ Characters with units: XX/XX
 
 3. Building tree structure...
-   ✅ Forces found: 5
-   ✅ Personnel without TO&E: 22
+   ✅ Forces found: X
+   ✅ Personnel without TO&E: XX
 
 4. Tree structure:
    Personal (root)
-   ├── Able Lance (8 personnel in 4 units)
-   ├── Helix Camp Support (17 personnel in 2 units)
-   ├── Helix Convoy (4 personnel in 1 unit)
-   ├── Helix Security (28 personnel in 1 unit)
-   ├── Helix salvage Crew (4 personnel in 1 unit)
-   └── Ohne TO&E (22 personnel without assignments)
+   ├── [Your Force Names]
+   │   ├── [Your Unit Names] (X personnel)
+   │   └── ...
+   └── Ohne TO&E (XX personnel without assignments)
 
 ✅ TO&E IMPORT TEST PASSED
 ```
@@ -222,6 +227,8 @@ This test verifies:
 - TO&E structure is properly applied
 - Characters are assigned to the correct forces and units
 - Tree structure is built correctly for GUI display
+
+**Note**: The test uses whatever data is currently in the `mekhq_social_sim/exports/` folder, so make sure to export your campaign first.
 
 ## Performance Benchmarks
 

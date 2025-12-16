@@ -4,6 +4,13 @@ TO&E Import Test Script
 
 This script tests the complete export/import workflow to verify
 that TO&E structure is properly applied and displayed.
+
+Usage:
+    python3 test_toe_import.py
+
+Note: Before running this test, export your campaign data using:
+    - GUI: File → Export → Export Campaign Data from .cpnx...
+    - CLI: python mekhq_personnel_exporter.py <campaign.cpnx> -o exports
 """
 
 from pathlib import Path
@@ -26,6 +33,10 @@ def test_toe_import():
     print("="*60)
     print("TO&E IMPORT TEST")
     print("="*60)
+    print()
+    print("This test verifies that TO&E import is working correctly.")
+    print("Make sure you have exported campaign data first!")
+    print()
     
     # Setup
     script_dir = Path(__file__).resolve().parent
@@ -36,11 +47,19 @@ def test_toe_import():
     if not personnel_file.exists():
         print("❌ ERROR: personnel_complete.json not found")
         print(f"   Expected at: {personnel_file}")
+        print()
+        print("Please export your campaign data first:")
+        print("  - GUI: File → Export → Export Campaign Data from .cpnx...")
+        print("  - CLI: cd mekhq_social_sim/src && python mekhq_personnel_exporter.py <campaign.cpnx> -o ../exports")
         return False
     
     if not toe_file.exists():
         print("❌ ERROR: toe_complete.json not found")
         print(f"   Expected at: {toe_file}")
+        print()
+        print("Please export your campaign data first:")
+        print("  - GUI: File → Export → Export Campaign Data from .cpnx...")
+        print("  - CLI: cd mekhq_social_sim/src && python mekhq_personnel_exporter.py <campaign.cpnx> -o ../exports")
         return False
     
     # Step 1: Load personnel
