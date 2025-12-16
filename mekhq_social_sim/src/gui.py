@@ -47,6 +47,8 @@ from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
 from trait_synergy_engine import get_character_traits_as_enums
 from rank_resolver import get_rank_resolver
+from collapsible_section import AccordionContainer
+from skill_attribute_mapping import format_skill_support
 import mekhq_personnel_exporter
 
 # Try to import PIL for image handling
@@ -247,12 +249,26 @@ class PortraitHelper:
 
 class CharacterDetailDialog:
     """
-    Character Detail Window - shows comprehensive info about a character.
+    Character Detail Window - "Character Sheet" UI with two-column layout.
+    
+    Left column: Portrait (1.2x scaled) + essential identity + quick chips
+    Right column: Scrollable accordion sections with pastel backgrounds
+    
     Opened by right-clicking on a character in the tree view.
     """
 
-    # Portrait size for detail dialog (smaller than main view)
-    PORTRAIT_SIZE = (150, 200)
+    # Portrait size for detail dialog (20% larger than before: 150x200 -> 180x240)
+    PORTRAIT_SIZE = (180, 240)
+
+    # Pastel background colors for accordion sections
+    COLORS = {
+        "overview": "#F6F4EF",      # warm sand
+        "attributes": "#F2F7FF",    # pale blue
+        "skills": "#F2FFF6",        # pale mint
+        "personality": "#F6F2FF",   # pale lavender
+        "relationships": "#FFF4F2", # pale peach
+        "equipment": "#F7F7F7",     # neutral light gray
+    }
 
     def __init__(self, parent: tk.Tk, character: Character, current_date: date) -> None:
         self.parent = parent
@@ -263,219 +279,536 @@ class CharacterDetailDialog:
 
         # Create dialog window
         self.window = tk.Toplevel(parent)
-        self.window.title(f"Character Details: {character.label()}")
-        self.window.geometry("800x600")
+        self.window.title(f"Character Sheet: {character.name}")
+        self.window.geometry("1000x700")
         self.window.transient(parent)
         self.window.grab_set()
 
         self._build_ui()
 
     def _build_ui(self) -> None:
-        """Build the main UI layout."""
-        main_frame = ttk.Frame(self.window, padding=10)
+        """Build the main two-column layout."""
+        main_frame = tk.Frame(self.window, bg="#FFFFFF")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Create horizontal paned window for left/right split
-        paned = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
-        paned.pack(fill=tk.BOTH, expand=True)
+        # Create horizontal layout: left (fixed) + right (scrollable)
+        # Left column: Portrait + Identity + Quick Chips (fixed width ~280px)
+        left_frame = tk.Frame(main_frame, bg="#FFFFFF", width=280)
+        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        left_frame.pack_propagate(False)  # Maintain fixed width
 
-        # Left panel: basic info + portrait
-        left_frame = ttk.Frame(paned, padding=5)
-        paned.add(left_frame, weight=1)
-
-        # Right panel: notebook with tabs
-        right_frame = ttk.Frame(paned, padding=5)
-        paned.add(right_frame, weight=2)
+        # Right column: Accordion sections (scrollable, expands to fill)
+        right_frame = tk.Frame(main_frame, bg="#FFFFFF")
+        right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self._build_left_panel(left_frame)
         self._build_right_panel(right_frame)
 
-    def _build_left_panel(self, parent: ttk.Frame) -> None:
-        """Build the left panel with basic info and portrait."""
-        # Portrait section
-        portrait_frame = ttk.LabelFrame(parent, text="Portrait", padding=5)
-        portrait_frame.pack(fill=tk.X, pady=(0, 10))
+    def _build_left_panel(self, parent: tk.Frame) -> None:
+        """Build the left panel: Portrait + Identity + Quick Chips."""
+        char = self.character
 
-        # Portrait display area
-        self.portrait_label = ttk.Label(portrait_frame, text="No portrait", anchor="center")
-        self.portrait_label.pack(fill=tk.BOTH, expand=True, pady=5)
+        # --- Portrait Section ---
+        portrait_frame = tk.Frame(parent, bg="#FFFFFF")
+        portrait_frame.pack(fill=tk.X, pady=(0, 12))
 
-        # Try to load the portrait automatically
+        self.portrait_label = tk.Label(portrait_frame, text="No portrait", bg="#E0E0E0", 
+                                       width=22, height=12, anchor="center")
+        self.portrait_label.pack(pady=5)
+
+        # Try to load portrait (prefer _cas variant)
         self._load_portrait()
 
-        # Override portrait button
-        override_btn = ttk.Button(
-            portrait_frame,
-            text="Select Portrait...",
-            command=self._select_portrait
-        )
-        override_btn.pack(pady=5)
+        # Select portrait button
+        btn_portrait = tk.Button(portrait_frame, text="Select Portrait...", 
+                                 command=self._select_portrait, bg="#DDDDDD", relief=tk.FLAT)
+        btn_portrait.pack(pady=5)
 
-        # Basic info section
-        info_frame = ttk.LabelFrame(parent, text="Basic Information", padding=5)
-        info_frame.pack(fill=tk.BOTH, expand=True)
+        # --- Identity Block ---
+        identity_frame = tk.Frame(parent, bg="#FFFFFF")
+        identity_frame.pack(fill=tk.X, pady=(0, 12))
 
-        char = self.character
-
-        # Create info labels
-        info_data = [
-            ("Rank:", char.rank_name or char.rank or "-"),
+        # Compact identity labels
+        identity_data = [
             ("Name:", char.name),
-            ("Callsign:", char.callsign or "-"),
-            ("Age:", f"{char.age} ({char.age_group})"),
-            ("Birthday:", char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"),
-            ("Profession:", char.profession or "-"),
+            ("Callsign:", char.callsign or "—"),
+            ("Rank:", char.rank_name or char.rank or "—"),
+            ("Unit:", char.unit.unit_name if char.unit else "—"),
+            ("Force:", char.unit.force_name if char.unit else "—"),
+            ("Primary:", char.profession or "—"),
+            ("Secondary:", char.secondary_profession or "—"),
         ]
 
-        # TO&E assignment (MekHQ 5.10)
-        if char.unit:
-            info_data.append(("Unit:", char.unit.unit_name))
-            info_data.append(("Force:", char.unit.force_name))
-            info_data.append(("Force Type:", char.unit.force_type))
-            if char.unit.formation_level:
-                info_data.append(("Formation:", char.unit.formation_level))
-            if char.unit.preferred_role:
-                info_data.append(("Role:", char.unit.preferred_role))
-            if char.unit.crew_role:
-                info_data.append(("Crew Role:", char.unit.crew_role))
-        else:
-            info_data.append(("Unit:", "(no TO&E assignment)"))
+        for label_text, value_text in identity_data:
+            row = tk.Frame(identity_frame, bg="#FFFFFF")
+            row.pack(fill=tk.X, pady=1)
+            
+            lbl = tk.Label(row, text=label_text, bg="#FFFFFF", fg="#1E1E1E",
+                          font=("TkDefaultFont", 9, "bold"), anchor="w", width=10)
+            lbl.pack(side=tk.LEFT, padx=(0, 5))
+            
+            val = tk.Label(row, text=value_text, bg="#FFFFFF", fg="#1E1E1E",
+                          font=("TkDefaultFont", 9), anchor="w")
+            val.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        for i, (label_text, value_text) in enumerate(info_data):
-            label = ttk.Label(info_frame, text=label_text, font=("Arial", 10, "bold"))
-            label.grid(row=i, column=0, sticky="w", padx=5, pady=2)
-            value = ttk.Label(info_frame, text=value_text, font=("Arial", 10))
-            value.grid(row=i, column=1, sticky="w", padx=5, pady=2)
+        # --- Quick Chips Strip ---
+        chips_frame = tk.Frame(parent, bg="#FFFFFF")
+        chips_frame.pack(fill=tk.X, pady=(12, 0))
 
-    def _build_right_panel(self, parent: ttk.Frame) -> None:
-        """Build the right panel with tabbed notebook."""
-        notebook = ttk.Notebook(parent)
-        notebook.pack(fill=tk.BOTH, expand=True)
+        chips_title = tk.Label(chips_frame, text="Quick Info", bg="#FFFFFF", fg="#1E1E1E",
+                              font=("TkDefaultFont", 10, "bold"))
+        chips_title.pack(anchor="w", pady=(0, 5))
 
-        # Tab 1: Personality / Traits
-        traits_tab = ttk.Frame(notebook, padding=10)
-        notebook.add(traits_tab, text="Personality")
-        self._build_traits_tab(traits_tab)
+        # Gunnery/Piloting chips
+        if char.skills:
+            gunnery = char.skills.get("Gunnery") or char.skills.get("Gunnery/Mek") or char.skills.get("Mek Gunnery")
+            piloting = char.skills.get("Piloting") or char.skills.get("Piloting/Mek") or char.skills.get("Mek Piloting")
+            
+            if gunnery or piloting:
+                skill_row = tk.Frame(chips_frame, bg="#FFFFFF")
+                skill_row.pack(fill=tk.X, pady=2)
+                
+                if gunnery:
+                    self._create_chip(skill_row, f"Gunnery: {gunnery}", "#D4E6F1")
+                if piloting:
+                    self._create_chip(skill_row, f"Piloting: {piloting}", "#D5F4E6")
 
-        # Tab 2: Relationships
-        relationships_tab = ttk.Frame(notebook, padding=10)
-        notebook.add(relationships_tab, text="Relationships")
-        self._build_relationships_tab(relationships_tab)
+        # Trait count chip
+        trait_count = len([t for t in char.traits.values() if "NONE" not in str(t).upper()])
+        if trait_count > 0:
+            chip_row = tk.Frame(chips_frame, bg="#FFFFFF")
+            chip_row.pack(fill=tk.X, pady=2)
+            self._create_chip(chip_row, f"{trait_count} Traits", "#E8DAEF")
 
-        # Tab 3: Stats
-        stats_tab = ttk.Frame(notebook, padding=10)
-        notebook.add(stats_tab, text="Stats")
-        self._build_stats_tab(stats_tab)
+        # Quirks count chip
+        if char.quirks:
+            chip_row = tk.Frame(chips_frame, bg="#FFFFFF")
+            chip_row.pack(fill=tk.X, pady=2)
+            self._create_chip(chip_row, f"{len(char.quirks)} Quirks", "#FADBD8")
 
-    def _build_traits_tab(self, parent: ttk.Frame) -> None:
-        """Build the Personality/Traits tab."""
+        # SPAs count chip
+        if char.abilities:
+            chip_row = tk.Frame(chips_frame, bg="#FFFFFF")
+            chip_row.pack(fill=tk.X, pady=2)
+            self._create_chip(chip_row, f"{len(char.abilities)} SPAs", "#FCF3CF")
+
+    def _create_chip(self, parent: tk.Frame, text: str, bg_color: str) -> None:
+        """Create a small colored chip label."""
+        chip = tk.Label(parent, text=text, bg=bg_color, fg="#1E1E1E",
+                       font=("TkDefaultFont", 8), padx=6, pady=2, relief=tk.FLAT)
+        chip.pack(side=tk.LEFT, padx=2)
+
+    def _build_right_panel(self, parent: tk.Frame) -> None:
+        """Build the right panel: Scrollable accordion sections."""
+        # Create scrollable canvas
+        canvas = tk.Canvas(parent, bg="#FFFFFF", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg="#FFFFFF")
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Create accordion container
+        accordion = AccordionContainer(scrollable_frame, single_open=True)
+        accordion.pack(fill=tk.BOTH, expand=True)
+
+        # Add sections in order
+        self._build_overview_section(accordion)
+        self._build_attributes_section(accordion)
+        self._build_skills_section(accordion)
+        self._build_personality_section(accordion)
+        self._build_relationships_section(accordion)
+        self._build_equipment_section(accordion)
+
+    def _build_overview_section(self, accordion: AccordionContainer) -> None:
+        """Overview section (default open)."""
+        section = accordion.add_section("Overview", self.COLORS["overview"], is_open=True)
+        body = section.get_body()
+
         char = self.character
 
-        if not char.traits and not char.quirks:
-            label = ttk.Label(parent, text="No personality traits or quirks available.")
-            label.pack(pady=20)
+        # Two-column mini-layout
+        left_col = tk.Frame(body, bg=self.COLORS["overview"])
+        left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+
+        right_col = tk.Frame(body, bg=self.COLORS["overview"])
+        right_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Left: Summary fields
+        summary_data = [
+            ("Rank:", char.rank_name or char.rank or "—"),
+            ("Age:", f"{char.age} ({char.age_group})"),
+            ("Birthday:", char.birthday.strftime("%Y-%m-%d") if char.birthday else "—"),
+            ("Primary Role:", char.profession or "—"),
+            ("Secondary Role:", char.secondary_profession or "—"),
+        ]
+
+        if char.unit:
+            summary_data.append(("Unit:", char.unit.unit_name))
+            summary_data.append(("Formation:", char.unit.formation_level or "—"))
+            summary_data.append(("Crew Role:", char.unit.crew_role or "—"))
+
+        for label_text, value_text in summary_data:
+            row = tk.Frame(left_col, bg=self.COLORS["overview"])
+            row.pack(fill=tk.X, pady=2)
+            
+            lbl = tk.Label(row, text=label_text, bg=self.COLORS["overview"], fg="#1E1E1E",
+                          font=("TkDefaultFont", 9, "bold"), anchor="w", width=14)
+            lbl.pack(side=tk.LEFT)
+            
+            val = tk.Label(row, text=value_text, bg=self.COLORS["overview"], fg="#1E1E1E",
+                          font=("TkDefaultFont", 9), anchor="w")
+            val.pack(side=tk.LEFT)
+
+        # Right: Highlights
+        highlights_title = tk.Label(right_col, text="Highlights", bg=self.COLORS["overview"],
+                                    fg="#1E1E1E", font=("TkDefaultFont", 10, "bold"))
+        highlights_title.pack(anchor="w", pady=(0, 5))
+
+        # Top skills (top 5 by level)
+        if char.skills:
+            sorted_skills = sorted(char.skills.items(), key=lambda x: -x[1])[:5]
+            skills_label = tk.Label(right_col, text="Top Skills:", bg=self.COLORS["overview"],
+                                   fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"))
+            skills_label.pack(anchor="w", pady=(5, 2))
+            
+            for skill_name, level in sorted_skills:
+                skill_line = tk.Label(right_col, text=f"• {skill_name}: {level}",
+                                     bg=self.COLORS["overview"], fg="#1E1E1E",
+                                     font=("TkDefaultFont", 9))
+                skill_line.pack(anchor="w", padx=(10, 0))
+
+        # SPAs preview
+        if char.abilities:
+            spa_label = tk.Label(right_col, text=f"Special Abilities ({len(char.abilities)}):",
+                                bg=self.COLORS["overview"], fg="#1E1E1E",
+                                font=("TkDefaultFont", 9, "bold"))
+            spa_label.pack(anchor="w", pady=(5, 2))
+            
+            for spa_name in list(char.abilities.keys())[:3]:
+                spa_line = tk.Label(right_col, text=f"• {spa_name}",
+                                   bg=self.COLORS["overview"], fg="#1E1E1E",
+                                   font=("TkDefaultFont", 9))
+                spa_line.pack(anchor="w", padx=(10, 0))
+
+        # Quirks preview
+        if char.quirks:
+            quirk_label = tk.Label(right_col, text=f"Quirks ({len(char.quirks)}):",
+                                  bg=self.COLORS["overview"], fg="#1E1E1E",
+                                  font=("TkDefaultFont", 9, "bold"))
+            quirk_label.pack(anchor="w", pady=(5, 2))
+            
+            for quirk in char.quirks[:3]:
+                quirk_display = quirk.replace("_", " ").title()
+                quirk_line = tk.Label(right_col, text=f"• {quirk_display}",
+                                     bg=self.COLORS["overview"], fg="#1E1E1E",
+                                     font=("TkDefaultFont", 9))
+                quirk_line.pack(anchor="w", padx=(10, 0))
+
+    def _build_attributes_section(self, accordion: AccordionContainer) -> None:
+        """Attributes section (numeric values only)."""
+        section = accordion.add_section("Attributes", self.COLORS["attributes"], is_open=False)
+        body = section.get_body()
+
+        char = self.character
+
+        if not char.attributes:
+            no_data = tk.Label(body, text="No attribute data available.",
+                              bg=self.COLORS["attributes"], fg="#1E1E1E")
+            no_data.pack(pady=10)
             return
 
-        # Create a scrollable frame
-        canvas_frame = ttk.Frame(parent)
-        canvas_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Simple grid: Attribute | Value
+        for attr_name, attr_value in sorted(char.attributes.items()):
+            row = tk.Frame(body, bg=self.COLORS["attributes"])
+            row.pack(fill=tk.X, pady=2)
+            
+            lbl = tk.Label(row, text=f"{attr_name}:", bg=self.COLORS["attributes"],
+                          fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), width=12, anchor="w")
+            lbl.pack(side=tk.LEFT, padx=(0, 10))
+            
+            val = tk.Label(row, text=str(attr_value), bg=self.COLORS["attributes"],
+                          fg="#1E1E1E", font=("TkDefaultFont", 9), anchor="w")
+            val.pack(side=tk.LEFT)
 
-        # Display traits as enum labels
+    def _build_skills_section(self, accordion: AccordionContainer) -> None:
+        """Skills section with search and attribute support hints."""
+        section = accordion.add_section("Skills", self.COLORS["skills"], is_open=False)
+        body = section.get_body()
+
+        char = self.character
+
+        if not char.skills:
+            no_data = tk.Label(body, text="No skill data available.",
+                              bg=self.COLORS["skills"], fg="#1E1E1E")
+            no_data.pack(pady=10)
+            return
+
+        # Search box
+        search_frame = tk.Frame(body, bg=self.COLORS["skills"])
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+
+        search_label = tk.Label(search_frame, text="Search:", bg=self.COLORS["skills"],
+                               fg="#1E1E1E", font=("TkDefaultFont", 9))
+        search_label.pack(side=tk.LEFT, padx=(0, 5))
+
+        search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=search_var, width=30)
+        search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Skills container (will be filtered by search)
+        skills_container = tk.Frame(body, bg=self.COLORS["skills"])
+        skills_container.pack(fill=tk.BOTH, expand=True)
+
+        def update_skills_display(*args):
+            """Update skills display based on search."""
+            # Clear container
+            for widget in skills_container.winfo_children():
+                widget.destroy()
+
+            search_text = search_var.get().lower()
+            
+            # Sort skills by name
+            sorted_skills = sorted(char.skills.items(), key=lambda x: x[0])
+            
+            for skill_name, skill_level in sorted_skills:
+                # Filter by search
+                if search_text and search_text not in skill_name.lower():
+                    continue
+
+                skill_row = tk.Frame(skills_container, bg=self.COLORS["skills"])
+                skill_row.pack(fill=tk.X, pady=3)
+
+                # Skill name and level
+                skill_label = tk.Label(skill_row, text=f"{skill_name} — {skill_level}",
+                                      bg=self.COLORS["skills"], fg="#1E1E1E",
+                                      font=("TkDefaultFont", 9, "bold"), anchor="w")
+                skill_label.pack(anchor="w")
+
+                # Attribute support hint (italic, smaller)
+                support_text = format_skill_support(skill_name)
+                if support_text:
+                    support_label = tk.Label(skill_row, text=support_text,
+                                           bg=self.COLORS["skills"], fg="#555555",
+                                           font=("TkDefaultFont", 8, "italic"), anchor="w")
+                    support_label.pack(anchor="w", padx=(15, 0))
+
+        # Bind search
+        search_var.trace("w", update_skills_display)
+        
+        # Initial display
+        update_skills_display()
+
+    def _build_personality_section(self, accordion: AccordionContainer) -> None:
+        """Personality section with subsections: Traits / Quirks / SPAs."""
+        section = accordion.add_section("Personality", self.COLORS["personality"], is_open=False)
+        body = section.get_body()
+
+        char = self.character
+
+        # Create sub-notebook for Traits / Quirks / SPAs
+        sub_notebook = ttk.Notebook(body)
+        sub_notebook.pack(fill=tk.BOTH, expand=True)
+
+        # --- Traits Tab ---
+        traits_tab = tk.Frame(sub_notebook, bg=self.COLORS["personality"])
+        sub_notebook.add(traits_tab, text="Traits")
+
         if char.traits:
-            traits_label = ttk.Label(canvas_frame, text="Personality Traits:", font=("TkDefaultFont", 10, "bold"))
-            traits_label.pack(anchor="w", pady=(0, 5))
-            
-            # Get trait enums
             trait_enums = get_character_traits_as_enums(char)
-            
             for category, enum_str in sorted(trait_enums.items()):
-                # Extract just the trait key from "Category:KEY"
                 if ":" in enum_str:
                     _, trait_key = enum_str.split(":", 1)
                 else:
                     trait_key = enum_str
-                
-                row_frame = ttk.Frame(canvas_frame)
-                row_frame.pack(fill=tk.X, pady=2)
 
-                label = ttk.Label(row_frame, text=f"{category}:", width=15, anchor="w")
-                label.pack(side=tk.LEFT, padx=5)
+                row = tk.Frame(traits_tab, bg=self.COLORS["personality"])
+                row.pack(fill=tk.X, pady=3, padx=10)
 
-                value_label = ttk.Label(row_frame, text=trait_key, width=20, anchor="w")
-                value_label.pack(side=tk.LEFT, padx=5)
+                lbl = tk.Label(row, text=f"{category}:", bg=self.COLORS["personality"],
+                              fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), width=12, anchor="w")
+                lbl.pack(side=tk.LEFT)
 
-        # Display quirks
+                val = tk.Label(row, text=trait_key, bg=self.COLORS["personality"],
+                              fg="#1E1E1E", font=("TkDefaultFont", 9), anchor="w")
+                val.pack(side=tk.LEFT)
+        else:
+            no_traits = tk.Label(traits_tab, text="No personality traits available.",
+                                bg=self.COLORS["personality"], fg="#1E1E1E")
+            no_traits.pack(pady=10)
+
+        # --- Quirks Tab ---
+        quirks_tab = tk.Frame(sub_notebook, bg=self.COLORS["personality"])
+        sub_notebook.add(quirks_tab, text="Quirks")
+
         if char.quirks:
-            quirks_label = ttk.Label(canvas_frame, text="Personality Quirks:", font=("TkDefaultFont", 10, "bold"))
-            quirks_label.pack(anchor="w", pady=(15, 5))
-            
+            quirk_container = tk.Frame(quirks_tab, bg=self.COLORS["personality"])
+            quirk_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
             for quirk in sorted(char.quirks):
-                row_frame = ttk.Frame(canvas_frame)
-                row_frame.pack(fill=tk.X, pady=2)
-                
-                # Format quirk name (replace underscores with spaces, title case)
                 quirk_display = quirk.replace("_", " ").title()
                 
-                quirk_label = ttk.Label(row_frame, text=f"• {quirk_display}", anchor="w")
-                quirk_label.pack(side=tk.LEFT, padx=15)
+                # Create chip-style badge
+                chip_frame = tk.Frame(quirk_container, bg=self.COLORS["personality"])
+                chip_frame.pack(fill=tk.X, pady=2)
 
-    def _build_relationships_tab(self, parent: ttk.Frame) -> None:
-        """Build the Relationships tab."""
+                chip = tk.Label(chip_frame, text=quirk_display, bg="#FADBD8", fg="#1E1E1E",
+                               font=("TkDefaultFont", 9), padx=8, pady=4, relief=tk.RAISED)
+                chip.pack(side=tk.LEFT)
+        else:
+            no_quirks = tk.Label(quirks_tab, text="No quirks available.",
+                                bg=self.COLORS["personality"], fg="#1E1E1E")
+            no_quirks.pack(pady=10)
+
+        # --- Special Abilities Tab ---
+        spa_tab = tk.Frame(sub_notebook, bg=self.COLORS["personality"])
+        sub_notebook.add(spa_tab, text="Special Abilities")
+
+        if char.abilities:
+            spa_container = tk.Frame(spa_tab, bg=self.COLORS["personality"])
+            spa_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+            for spa_name, spa_desc in sorted(char.abilities.items()):
+                spa_frame = tk.Frame(spa_container, bg=self.COLORS["personality"])
+                spa_frame.pack(fill=tk.X, pady=4)
+
+                # SPA name (bold)
+                name_label = tk.Label(spa_frame, text=spa_name, bg=self.COLORS["personality"],
+                                     fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), anchor="w")
+                name_label.pack(anchor="w")
+
+                # SPA description (smaller, italic)
+                if spa_desc:
+                    desc_label = tk.Label(spa_frame, text=spa_desc, bg=self.COLORS["personality"],
+                                         fg="#555555", font=("TkDefaultFont", 8, "italic"),
+                                         anchor="w", wraplength=400, justify=tk.LEFT)
+                    desc_label.pack(anchor="w", padx=(15, 0))
+        else:
+            no_spa = tk.Label(spa_tab, text="None", bg=self.COLORS["personality"], fg="#1E1E1E")
+            no_spa.pack(pady=10)
+
+    def _build_relationships_section(self, accordion: AccordionContainer) -> None:
+        """Relationships section with Family filter."""
+        section = accordion.add_section("Relationships", self.COLORS["relationships"], is_open=False)
+        body = section.get_body()
+
         char = self.character
 
         if not char.friendship:
-            label = ttk.Label(parent, text="No relationships established yet.")
-            label.pack(pady=20)
+            no_data = tk.Label(body, text="No relationships established yet.",
+                              bg=self.COLORS["relationships"], fg="#1E1E1E")
+            no_data.pack(pady=10)
             return
 
-        # Create treeview for relationships
-        columns = ("Name", "Relationship")
-        tree = ttk.Treeview(parent, columns=columns, show="headings", height=15)
-        tree.heading("Name", text="Name")
-        tree.heading("Relationship", text="Relationship Value")
-        tree.column("Name", width=200)
-        tree.column("Relationship", width=120, anchor="center")
+        # Filter chips: All | Allies | Rivals | Family
+        filter_frame = tk.Frame(body, bg=self.COLORS["relationships"])
+        filter_frame.pack(fill=tk.X, pady=(0, 10))
 
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=tree.yview)
-        tree.configure(yscrollcommand=scrollbar.set)
+        filter_var = tk.StringVar(value="All")
 
-        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        filters = ["All", "Allies", "Rivals", "Family"]
+        for filter_name in filters:
+            rb = tk.Radiobutton(filter_frame, text=filter_name, variable=filter_var,
+                               value=filter_name, bg=self.COLORS["relationships"],
+                               font=("TkDefaultFont", 9), command=lambda: update_relationships())
+            rb.pack(side=tk.LEFT, padx=5)
 
-        # Sort by relationship value (highest first)
-        sorted_relationships = sorted(char.friendship.items(), key=lambda x: -x[1])
+        # Relationships container
+        rel_container = tk.Frame(body, bg=self.COLORS["relationships"])
+        rel_container.pack(fill=tk.BOTH, expand=True)
 
-        for partner_id, value in sorted_relationships:
-            # Note: We don't have access to the partner's name here
-            # This would require passing the characters dict
-            tree.insert("", tk.END, values=(f"ID: {partner_id[:8]}...", value))
+        def update_relationships():
+            """Update relationships display based on filter."""
+            # Clear container
+            for widget in rel_container.winfo_children():
+                widget.destroy()
 
-    def _build_stats_tab(self, parent: ttk.Frame) -> None:
-        """Build the Stats tab."""
-        char = self.character
+            filter_val = filter_var.get()
+            
+            # Sort by strength (highest first)
+            sorted_rels = sorted(char.friendship.items(), key=lambda x: -x[1])
 
-        stats_data = [
-            ("Daily Interaction Points:", str(char.daily_interaction_points)),
-            ("Total Relationships:", str(len(char.friendship))),
-        ]
+            for partner_id, strength in sorted_rels:
+                # Apply filter
+                if filter_val == "Allies" and strength <= 0:
+                    continue
+                elif filter_val == "Rivals" and strength >= 0:
+                    continue
+                elif filter_val == "Family":
+                    # TODO: Implement family relationship detection
+                    # For now, skip this filter
+                    continue
 
-        # Calculate average relationship
-        if char.friendship:
-            avg_rel = sum(char.friendship.values()) / len(char.friendship)
-            stats_data.append(("Average Relationship:", f"{avg_rel:.1f}"))
+                rel_row = tk.Frame(rel_container, bg=self.COLORS["relationships"])
+                rel_row.pack(fill=tk.X, pady=2)
 
-            # Find best and worst relationships
-            best = max(char.friendship.values())
-            worst = min(char.friendship.values())
-            stats_data.append(("Best Relationship:", str(best)))
-            stats_data.append(("Worst Relationship:", str(worst)))
+                # Partner ID (shortened)
+                partner_label = tk.Label(rel_row, text=f"ID: {partner_id[:12]}...",
+                                        bg=self.COLORS["relationships"], fg="#1E1E1E",
+                                        font=("TkDefaultFont", 9), width=20, anchor="w")
+                partner_label.pack(side=tk.LEFT, padx=(0, 10))
 
-        for i, (label_text, value_text) in enumerate(stats_data):
-            label = ttk.Label(parent, text=label_text, font=("Arial", 10, "bold"))
-            label.grid(row=i, column=0, sticky="w", padx=10, pady=5)
-            value = ttk.Label(parent, text=value_text, font=("Arial", 10))
-            value.grid(row=i, column=1, sticky="w", padx=10, pady=5)
+                # Relationship type
+                rel_type = "Ally" if strength > 0 else "Rival" if strength < 0 else "Neutral"
+                type_label = tk.Label(rel_row, text=rel_type, bg=self.COLORS["relationships"],
+                                     fg="#1E1E1E", font=("TkDefaultFont", 9), width=10, anchor="w")
+                type_label.pack(side=tk.LEFT, padx=(0, 10))
+
+                # Strength value
+                strength_label = tk.Label(rel_row, text=str(strength), bg=self.COLORS["relationships"],
+                                         fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), anchor="w")
+                strength_label.pack(side=tk.LEFT)
+
+        # Initial display
+        update_relationships()
+
+    def _build_equipment_section(self, accordion: AccordionContainer) -> None:
+        """Equipment section (disabled scaffold placeholder)."""
+        section = accordion.add_section("Equipment", self.COLORS["equipment"], is_open=False)
+        body = section.get_body()
+
+        # Placeholder note
+        note = tk.Label(body, text="Equipment will be implemented later.",
+                       bg=self.COLORS["equipment"], fg="#888888",
+                       font=("TkDefaultFont", 9, "italic"))
+        note.pack(pady=10)
+
+        # Disabled table scaffold
+        table_frame = tk.Frame(body, bg=self.COLORS["equipment"])
+        table_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        # Headers
+        headers = ["Item", "Qty", "Notes"]
+        for i, header in enumerate(headers):
+            header_label = tk.Label(table_frame, text=header, bg="#D0D0D0", fg="#1E1E1E",
+                                   font=("TkDefaultFont", 9, "bold"), relief=tk.RIDGE,
+                                   width=15 if i == 0 else 10)
+            header_label.grid(row=0, column=i, sticky="ew", padx=1, pady=1)
+
+        # Placeholder row
+        placeholder_data = [("—", "—", "—")]
+        for row_idx, (item, qty, notes) in enumerate(placeholder_data, start=1):
+            for col_idx, value in enumerate([item, qty, notes]):
+                cell = tk.Label(table_frame, text=value, bg="#F0F0F0", fg="#AAAAAA",
+                               font=("TkDefaultFont", 9), relief=tk.RIDGE,
+                               width=15 if col_idx == 0 else 10)
+                cell.grid(row=row_idx, column=col_idx, sticky="ew", padx=1, pady=1)
+
+        # Disabled buttons
+        btn_frame = tk.Frame(body, bg=self.COLORS["equipment"])
+        btn_frame.pack(fill=tk.X, pady=10)
+
+        for btn_text in ["Add", "Remove", "Import"]:
+            btn = tk.Button(btn_frame, text=btn_text, state=tk.DISABLED, bg="#CCCCCC")
+            btn.pack(side=tk.LEFT, padx=5)
 
     def _load_portrait(self) -> None:
         """Attempt to automatically load the character's portrait (prefer casual variant)."""
@@ -504,7 +837,7 @@ class CharacterDetailDialog:
         photo_image = PortraitHelper.load_portrait_image(path, self.PORTRAIT_SIZE)
         if photo_image:
             self.portrait_image = photo_image
-            self.portrait_label.config(image=self.portrait_image, text="")
+            self.portrait_label.config(image=self.portrait_image, text="", bg="#FFFFFF")
         else:
             self.portrait_label.config(text="Error loading\nimage")
 
