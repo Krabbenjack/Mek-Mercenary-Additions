@@ -42,8 +42,11 @@ class Character:
     # Portrait info from JSON
     portrait: Optional[PortraitInfo] = None
 
-    # Rank from JSON
+    # Rank from JSON (numeric ID)
     rank: Optional[str] = None
+    
+    # Rank name (human-readable, resolved from rank system)
+    rank_name: Optional[str] = None
     
     # Personality quirks (list of quirk keys)
     quirks: List[str] = field(default_factory=list)

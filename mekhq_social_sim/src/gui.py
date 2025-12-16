@@ -7,12 +7,16 @@ from pathlib import Path
 from typing import Dict, Optional, List
 from datetime import date, timedelta, datetime
 import json
+import traceback
 
 # Ensure src is on sys.path so the merk_calendar package is importable.
 repo_root = Path(__file__).resolve().parents[2]  # mekhq_social_sim/src/gui.py -> repo root
 src_path = repo_root.joinpath("src")
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
+
+# Define canonical export directory
+EXPORT_DIR = repo_root / "mekhq_social_sim" / "exports"
 
 # Calendar system imports (required by the full integration)
 try:
@@ -37,11 +41,13 @@ except Exception:
         EVENTS_PACKAGE_AVAILABLE = False
 
 from models import Character
-from data_loading import load_campaign, apply_toe_structure
+from data_loading import load_campaign, apply_toe_structure, load_campaign_metadata
 from interaction_pool import reset_daily_pools, has_points
 from roll_engine import perform_random_interaction, perform_manual_interaction
 from social_modifiers import combined_social_modifier
 from trait_synergy_engine import get_character_traits_as_enums
+from rank_resolver import get_rank_resolver
+import mekhq_personnel_exporter
 
 # Try to import PIL for image handling
 try:
@@ -313,7 +319,7 @@ class CharacterDetailDialog:
 
         # Create info labels
         info_data = [
-            ("Rank:", char.rank or "-"),
+            ("Rank:", char.rank_name or char.rank or "-"),
             ("Name:", char.name),
             ("Callsign:", char.callsign or "-"),
             ("Age:", f"{char.age} ({char.age_group})"),
@@ -551,10 +557,24 @@ class MekSocialGUI:
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         
+        # Export submenu
+        export_menu = tk.Menu(file_menu, tearoff=0)
+        file_menu.add_cascade(label="Export", menu=export_menu)
+        
+        export_menu.add_command(
+            label="Export Campaign Data from .cpnx...",
+            command=self._export_campaign_data
+        )
+        
         # Import submenu
         import_menu = tk.Menu(file_menu, tearoff=0)
         file_menu.add_cascade(label="Import", menu=import_menu)
         
+        import_menu.add_command(
+            label="Import Campaign Meta (Date & Rank System)...",
+            command=self._import_campaign_meta
+        )
+        import_menu.add_separator()
         import_menu.add_command(
             label="Import Personnel (JSON)...",
             command=self._import_personnel
@@ -936,9 +956,14 @@ class MekSocialGUI:
 
         # Make sure details show current birthday and recalculated age
         birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
+        
+        # Show rank name if available, otherwise fall back to rank ID
+        rank_display = char.rank_name or char.rank or "-"
+        
         lines = [
             f"Name: {char.name}",
             f"Callsign: {char.callsign or '-'}",
+            f"Rank: {rank_display}",
             f"Age: {char.age} ({char.age_group})",
             f"Birthday: {birthday_str}",
             f"Profession: {char.profession or '-'}",
@@ -1087,6 +1112,149 @@ class MekSocialGUI:
             else:
                 self.manual_roll_btn.config(state=tk.DISABLED)
 
+    def _export_campaign_data(self) -> None:
+        """Export campaign data (personnel, TO&E, metadata) from a .cpnx file."""
+        # Select .cpnx file
+        cpnx_path = filedialog.askopenfilename(
+            title="Select MekHQ Campaign File (.cpnx)",
+            filetypes=[
+                ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
+                ("All Files", "*.*")
+            ],
+        )
+        if not cpnx_path:
+            return
+        
+        try:
+            # Use the canonical export directory
+            export_dir = EXPORT_DIR
+            export_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Load the campaign file
+            self._log(f"Loading campaign file: {Path(cpnx_path).name}")
+            root = mekhq_personnel_exporter.load_cpnx(cpnx_path)
+            
+            # Extract data
+            self._log("Extracting personnel data...")
+            personnel_data = mekhq_personnel_exporter.parse_personnel(root)
+            
+            self._log("Extracting TO&E data...")
+            forces_data = mekhq_personnel_exporter.parse_forces(root)
+            units_data = mekhq_personnel_exporter.parse_units(root)
+            
+            self._log("Extracting campaign metadata...")
+            campaign_metadata = mekhq_personnel_exporter.parse_campaign_metadata(root)
+            
+            # Export to JSON files
+            self._log("Exporting to JSON files...")
+            personnel_path = export_dir / "personnel_complete.json"
+            toe_path = export_dir / "toe_complete.json"
+            meta_path = export_dir / "campaign_meta.json"
+            
+            mekhq_personnel_exporter.export_personnel_to_json(personnel_data, str(personnel_path))
+            mekhq_personnel_exporter.export_toe_to_json(forces_data, units_data, str(toe_path))
+            mekhq_personnel_exporter.export_campaign_meta_to_json(campaign_metadata, str(meta_path))
+            
+            # Count total forces including sub-forces
+            total_forces = mekhq_personnel_exporter.count_forces_recursive(forces_data)
+            
+            # Log success
+            self._log(f"✅ Export complete:")
+            self._log(f"  - {len(personnel_data)} personnel")
+            self._log(f"  - {len(forces_data)} root forces, {total_forces} total (with sub-forces)")
+            self._log(f"  - {len(units_data)} units")
+            self._log(f"  - Campaign date: {campaign_metadata.get('campaign_date', 'N/A')}")
+            self._log(f"  - Rank system: {campaign_metadata.get('rank_system', 'N/A')}")
+            
+            messagebox.showinfo(
+                "Export Successful",
+                f"Campaign data exported successfully!\n\n"
+                f"Files saved to:\n{export_dir}\n\n"
+                f"Personnel: {len(personnel_data)} characters\n"
+                f"Root Forces: {len(forces_data)}\n"
+                f"Total Forces (incl. sub-forces): {total_forces}\n"
+                f"Units: {len(units_data)}\n"
+                f"Date: {campaign_metadata.get('campaign_date', 'N/A')}\n"
+                f"Rank System: {campaign_metadata.get('rank_system', 'N/A')}"
+            )
+            
+        except Exception as exc:
+            self._log(f"❌ Export failed: {exc}")
+            messagebox.showerror("Export Failed", str(exc))
+            traceback.print_exc()
+
+    def _import_campaign_meta(self) -> None:
+        """Import campaign metadata (date and rank system) from a .cpnx file."""
+        path = filedialog.askopenfilename(
+            title="Select MekHQ Campaign File (.cpnx)",
+            filetypes=[
+                ("MekHQ Campaigns", "*.cpnx *.cpnx.gz"),
+                ("All Files", "*.*")
+            ],
+        )
+        if not path:
+            return
+
+        try:
+            # Use the exporter to parse the .cpnx file
+            root = mekhq_personnel_exporter.load_cpnx(path)
+            metadata = mekhq_personnel_exporter.parse_campaign_metadata(root)
+            
+            campaign_date_str = metadata.get("campaign_date")
+            rank_system = metadata.get("rank_system")
+            
+            # Update GUI date if campaign date is available
+            if campaign_date_str:
+                try:
+                    # Parse YYYY-MM-DD format
+                    self.current_date = datetime.strptime(campaign_date_str, "%Y-%m-%d").date()
+                    self._update_date_display()
+                    self._log(f"Campaign date set to: {campaign_date_str}")
+                except Exception as e:
+                    self._log(f"Warning: Could not parse campaign date '{campaign_date_str}': {e}")
+            
+            # Set rank system in the rank resolver
+            if rank_system:
+                rank_resolver = get_rank_resolver()
+                rank_resolver.set_rank_system(rank_system)
+                self._log(f"Rank system set to: {rank_system}")
+                
+                # If characters are already loaded, re-resolve their rank names
+                if self.characters:
+                    for char in self.characters.values():
+                        if char.rank is not None:
+                            try:
+                                rank_id = int(char.rank)
+                                char.rank_name = rank_resolver.resolve_rank_name(rank_id)
+                            except (ValueError, TypeError):
+                                char.rank_name = f"Rank {char.rank}"
+                    
+                    # Refresh display if a character is selected
+                    if self.selected_character_id and self.selected_character_id in self.characters:
+                        self._update_details(self.characters[self.selected_character_id])
+            
+            # Show success message
+            msg_parts = []
+            if campaign_date_str:
+                msg_parts.append(f"Date: {campaign_date_str}")
+            if rank_system:
+                msg_parts.append(f"Rank System: {rank_system}")
+            
+            if msg_parts:
+                messagebox.showinfo(
+                    "Campaign Metadata Loaded",
+                    "Successfully loaded:\n" + "\n".join(msg_parts)
+                )
+            else:
+                messagebox.showwarning(
+                    "No Metadata Found",
+                    "No campaign date or rank system found in the file."
+                )
+                
+        except Exception as exc:
+            messagebox.showerror("Error Loading Campaign Metadata", str(exc))
+            traceback.print_exc()
+
     def _import_personnel(self) -> None:
         path = filedialog.askopenfilename(
             title="WÃ¤hle personnel_complete.json",
@@ -1108,7 +1276,6 @@ class MekSocialGUI:
             self._update_day_events_description()
         except Exception as exc:
             messagebox.showerror("Fehler beim Laden", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _import_toe(self) -> None:
@@ -1130,7 +1297,6 @@ class MekSocialGUI:
             messagebox.showinfo("Erfolg", "TO&E-Struktur angewendet!")
         except Exception as exc:
             messagebox.showerror("Fehler beim Laden der TO&E", str(exc))
-            import traceback
             traceback.print_exc()
 
     def _set_external_portrait_folder(self) -> None:

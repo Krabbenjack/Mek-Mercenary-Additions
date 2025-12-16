@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, date
 
 from models import Character, UnitAssignment, PortraitInfo
+from rank_resolver import get_rank_resolver
 
 
 # Constants
@@ -80,6 +81,9 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
     """
     path = Path(personnel_path)
     data = json.loads(path.read_text(encoding="utf-8"))
+
+    # Get rank resolver once outside the loop for efficiency
+    resolver = get_rank_resolver()
 
     characters: Dict[str, Character] = {}
     for entry in data:
@@ -160,8 +164,17 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
                 filename=portrait_data.get("filename")
             )
 
-        # Rank from JSON
+        # Rank from JSON (numeric ID)
         rank = entry.get("rank")
+        
+        # Resolve rank name using the rank resolver (already retrieved above)
+        rank_name = None
+        if rank is not None:
+            try:
+                rank_id = int(rank)
+                rank_name = resolver.resolve_rank_name(rank_id)
+            except (ValueError, TypeError):
+                rank_name = f"Rank {rank}"
 
         char = Character(
             id=cid,
@@ -173,6 +186,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             birthday=birthday,
             portrait=portrait,
             rank=rank,
+            rank_name=rank_name,
             quirks=quirks,
         )
         characters[cid] = char
@@ -182,6 +196,27 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
 
 def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) -> None:
     """Apply TO&E structure from toe_complete.json to Character objects.
+    
+    This function implements a robust normalization layer that supports multiple
+    JSON formats for TO&E data:
+    
+    Supported formats:
+    1. Standard format (current MekHQ 5.10 export):
+       - forceId at top level
+       - crew with plural IDs (driverIds, gunnerIds, etc.)
+    
+    2. Legacy/extras format:
+       - forceId in extras object
+       - singular crew IDs (driverId, gunnerId, etc.) in extras
+       
+    The normalization process:
+    - Checks top-level forceId first, then extras.forceId
+    - Checks crew object first, then constructs from extras singular IDs
+    - Converts singular IDs to plural ID lists for consistency
+    
+    Validation:
+    - Warns about units referencing non-existent forces
+    - Skips units without valid force assignments
 
     MekHQ 5.10 JSON structure:
     {
@@ -203,10 +238,15 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
           "forceId": "1",
           "maintenanceMultiplier": 4,
           "crew": {
-            "driverId": "person-uuid",
-            "gunnerId": "person-uuid",
-            "techId": "person-uuid",
+            "driverIds": ["person-uuid"],
+            "gunnerIds": ["person-uuid"],
+            "techIds": ["person-uuid"],
             "vesselCrewIds": ["person-uuid", ...]
+          },
+          "extras": {  // Optional legacy format support
+            "forceId": "1",
+            "driverId": "person-uuid",
+            "gunnerId": "person-uuid"
           }
         }
       ]
@@ -251,9 +291,16 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
             continue
 
         entity = unit.get("entity", {})
+        
+        # Get forceId - check top level first, then extras
+        force_id = unit.get("forceId")
+        if not force_id and "extras" in unit:
+            force_id = unit["extras"].get("forceId")
+        force_id = str(force_id) if force_id else ""
+        
         unit_map[uid] = {
             "id": uid,
-            "force_id": str(unit.get("forceId", "")),
+            "force_id": force_id,
             "chassis": entity.get("chassis", ""),
             "model": entity.get("model", ""),
             "entity_type": entity.get("type", ""),
@@ -266,8 +313,27 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
     for unit in units:
         uid = str(unit.get("id", ""))
         crew = unit.get("crew", {})
+        
+        # If crew is missing, try to construct from extras (legacy format)
+        if not crew and "extras" in unit:
+            extras = unit["extras"]
+            crew = {}
+            
+            # Map singular IDs to plural lists
+            if "driverId" in extras:
+                crew["driverIds"] = [extras["driverId"]]
+            if "gunnerId" in extras:
+                crew["gunnerIds"] = [extras["gunnerId"]]
+            if "commanderId" in extras:
+                crew["commanderIds"] = [extras["commanderId"]]
+            if "navigatorId" in extras:
+                crew["navigatorIds"] = [extras["navigatorId"]]
+            if "techId" in extras:
+                crew["techIds"] = [extras["techId"]]
+            if "vesselCrewId" in extras:
+                crew["vesselCrewIds"] = [extras["vesselCrewId"]]
 
-        # Map crew roles (MekHQ 5.10 uses mothballInfo)
+        # Map crew roles (MekHQ 5.10 uses plural Ids)
         # NOTE: Infantry/vehicle units can have MULTIPLE crew per role
         crew_role_map = {
             "driverIds": "driver",
@@ -302,6 +368,10 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
                 }
 
     # Apply TO&E to characters
+    # Track units and forces for validation
+    units_processed = 0
+    units_missing_force = []
+    
     for cid, char in characters.items():
         assignment = person_to_unit.get(cid)
         if not assignment:
@@ -311,10 +381,15 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
         unit_info = unit_map.get(uid)
         if not unit_info:
             continue
-
+        
+        units_processed += 1
         force_id = unit_info["force_id"]
+        
+        # Check if force exists
         force_info = force_map.get(force_id)
         if not force_info:
+            if force_id and force_id not in [u[0] for u in units_missing_force]:
+                units_missing_force.append((force_id, unit_info.get("chassis", "Unknown")))
             continue
 
         # Build unit name from entity data
@@ -335,6 +410,37 @@ def apply_toe_structure(toe_path: str | Path, characters: Dict[str, Character]) 
             preferred_role=force_info.get("preferred_role"),
             crew_role=assignment.get("role"),
         )
+    
+    # Log warnings for any units referencing non-existent forces
+    if units_missing_force:
+        print(f"⚠️  Warning: {len(units_missing_force)} units reference non-existent forces:")
+        for force_id, chassis in units_missing_force[:5]:  # Show first 5
+            print(f"   - Force ID '{force_id}' (unit: {chassis})")
+        if len(units_missing_force) > 5:
+            print(f"   ... and {len(units_missing_force) - 5} more")
+
+
+def load_campaign_metadata(meta_path: str | Path) -> Dict[str, Any]:
+    """
+    Load campaign metadata from campaign_meta.json.
+    
+    Returns dictionary with:
+    - campaign_date: Current in-game date (YYYY-MM-DD format)
+    - rank_system: Rank system code (e.g., SLDF, AFFS, etc.)
+    """
+    path = Path(meta_path)
+    
+    if not path.exists():
+        raise FileNotFoundError(f"Campaign metadata file not found: {path}")
+    
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return {
+            "campaign_date": data.get("campaign_date"),
+            "rank_system": data.get("rank_system"),
+        }
+    except Exception as e:
+        raise ValueError(f"Failed to load campaign metadata: {e}")
 
 
 def load_campaign(
