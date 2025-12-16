@@ -50,6 +50,18 @@ class Character:
     
     # Personality quirks (list of quirk keys)
     quirks: List[str] = field(default_factory=list)
+    
+    # Secondary profession (new for character sheet UI)
+    secondary_profession: Optional[str] = None
+    
+    # Attributes (e.g., STR, BOD, RFL, DEX, INT, WIL, CHA, EDG)
+    attributes: Dict[str, int] = field(default_factory=dict)
+    
+    # Skills (skill name -> level)
+    skills: Dict[str, int] = field(default_factory=dict)
+    
+    # Special Abilities / SPAs (name -> description)
+    abilities: Dict[str, str] = field(default_factory=dict)
 
     def label(self) -> str:
         """Short label for GUI/logs."""
