@@ -251,14 +251,15 @@ class CharacterDetailDialog:
     """
     Character Detail Window - "Character Sheet" UI with two-column layout.
     
-    Left column: Portrait (1.2x scaled) + essential identity + quick chips
+    Left column: Portrait (bounded scaling) + essential identity + quick chips
     Right column: Scrollable accordion sections with pastel backgrounds
     
     Opened by right-clicking on a character in the tree view.
     """
 
-    # Portrait size for detail dialog (20% larger than before: 150x200 -> 180x240)
-    PORTRAIT_SIZE = (180, 240)
+    # Portrait size limits for detail dialog (bounded scaling, no cropping)
+    MAX_PORTRAIT_WIDTH = 220
+    MAX_PORTRAIT_HEIGHT = 300
 
     # Pastel background colors for accordion sections
     COLORS = {
@@ -832,9 +833,50 @@ class CharacterDetailDialog:
 
         self._display_portrait(portrait_path)
 
+    def _load_portrait_bounded(self, path: Path) -> Optional[object]:
+        """
+        Load and scale a portrait image using bounded scaling (NO cropping).
+        
+        This method implements the required scaling algorithm:
+        - Keeps original aspect ratio
+        - Scales as large as possible within MAX_PORTRAIT_WIDTH x MAX_PORTRAIT_HEIGHT
+        - Never exceeds defined maximum dimensions
+        - No cropping, no distortion
+        - Does not upscale images smaller than the limits
+        
+        Args:
+            path: Path to the image file
+            
+        Returns:
+            ImageTk.PhotoImage if successful, None on error
+        """
+        if not PIL_AVAILABLE:
+            return None
+        
+        try:
+            # Load image at original resolution
+            img = Image.open(path)
+            w, h = img.size
+            
+            # Compute scaling factors
+            scale_w = self.MAX_PORTRAIT_WIDTH / w
+            scale_h = self.MAX_PORTRAIT_HEIGHT / h
+            scale = min(scale_w, scale_h, 1.0)  # Never upscale (scale > 1.0)
+            
+            # Compute new size
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            
+            # Resize using LANCZOS resampling (high quality)
+            resized_img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            
+            return ImageTk.PhotoImage(resized_img)
+        except Exception:
+            return None
+
     def _display_portrait(self, path: Path) -> None:
-        """Display a portrait image from the given path."""
-        photo_image = PortraitHelper.load_portrait_image(path, self.PORTRAIT_SIZE)
+        """Display a portrait image from the given path using bounded scaling."""
+        photo_image = self._load_portrait_bounded(path)
         if photo_image:
             self.portrait_image = photo_image
             self.portrait_label.config(image=self.portrait_image, text="", bg="#FFFFFF")
