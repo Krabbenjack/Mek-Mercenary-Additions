@@ -261,6 +261,9 @@ class CharacterDetailDialog:
     MAX_PORTRAIT_WIDTH = 220
     MAX_PORTRAIT_HEIGHT = 300
 
+    # Attribute section layout threshold
+    MULTI_COLUMN_THRESHOLD = 4  # Use 2 columns when attributes >= this value
+
     # Pastel background colors for accordion sections
     COLORS = {
         "overview": "#F6F4EF",      # warm sand
@@ -530,12 +533,12 @@ class CharacterDetailDialog:
             return
 
         # Multi-column grid layout for attributes
-        # Use 2-3 columns depending on number of attributes
+        # Use 2 columns for 4+ attributes, 1 column for fewer
         sorted_attrs = sorted(char.attributes.items())
         num_attrs = len(sorted_attrs)
         
-        # Determine column count: 2 columns for 4+ attributes, 1 column for fewer
-        num_columns = 2 if num_attrs >= 4 else 1
+        # Determine column count based on threshold
+        num_columns = 2 if num_attrs >= self.MULTI_COLUMN_THRESHOLD else 1
         
         # Create a grid container
         grid_frame = tk.Frame(body, bg=self.COLORS["attributes"])
