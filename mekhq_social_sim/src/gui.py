@@ -271,10 +271,12 @@ class CharacterDetailDialog:
         "equipment": "#F7F7F7",     # neutral light gray
     }
 
-    def __init__(self, parent: tk.Tk, character: Character, current_date: date) -> None:
+    def __init__(self, parent: tk.Tk, character: Character, current_date: date, 
+                 character_lookup: Optional[Dict[str, Character]] = None) -> None:
         self.parent = parent
         self.character = character
         self.current_date = current_date
+        self.character_lookup = character_lookup or {}  # For resolving relationship partner names
         self.portrait_image = None  # Keep reference to prevent garbage collection
         self.custom_portrait_path: Optional[Path] = None
 
@@ -515,7 +517,7 @@ class CharacterDetailDialog:
                 quirk_line.pack(anchor="w", padx=(10, 0))
 
     def _build_attributes_section(self, accordion: AccordionContainer) -> None:
-        """Attributes section (numeric values only)."""
+        """Attributes section (numeric values only) with multi-column layout."""
         section = accordion.add_section("Attributes", self.COLORS["attributes"], is_open=False)
         body = section.get_body()
 
@@ -527,16 +529,38 @@ class CharacterDetailDialog:
             no_data.pack(pady=10)
             return
 
-        # Simple grid: Attribute | Value
-        for attr_name, attr_value in sorted(char.attributes.items()):
-            row = tk.Frame(body, bg=self.COLORS["attributes"])
-            row.pack(fill=tk.X, pady=2)
+        # Multi-column grid layout for attributes
+        # Use 2-3 columns depending on number of attributes
+        sorted_attrs = sorted(char.attributes.items())
+        num_attrs = len(sorted_attrs)
+        
+        # Determine column count: 2 columns for 4+ attributes, 1 column for fewer
+        num_columns = 2 if num_attrs >= 4 else 1
+        
+        # Create a grid container
+        grid_frame = tk.Frame(body, bg=self.COLORS["attributes"])
+        grid_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        # Configure columns to expand evenly
+        for col in range(num_columns):
+            grid_frame.grid_columnconfigure(col, weight=1, uniform="attr_col")
+        
+        # Place attributes in grid
+        for idx, (attr_name, attr_value) in enumerate(sorted_attrs):
+            row = idx // num_columns
+            col = idx % num_columns
             
-            lbl = tk.Label(row, text=f"{attr_name}:", bg=self.COLORS["attributes"],
+            # Create frame for this attribute
+            attr_frame = tk.Frame(grid_frame, bg=self.COLORS["attributes"])
+            attr_frame.grid(row=row, column=col, sticky="ew", padx=5, pady=2)
+            
+            # Attribute label
+            lbl = tk.Label(attr_frame, text=f"{attr_name}:", bg=self.COLORS["attributes"],
                           fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), width=12, anchor="w")
             lbl.pack(side=tk.LEFT, padx=(0, 10))
             
-            val = tk.Label(row, text=str(attr_value), bg=self.COLORS["attributes"],
+            # Attribute value
+            val = tk.Label(attr_frame, text=str(attr_value), bg=self.COLORS["attributes"],
                           fg="#1E1E1E", font=("TkDefaultFont", 9), anchor="w")
             val.pack(side=tk.LEFT)
 
@@ -751,10 +775,19 @@ class CharacterDetailDialog:
                 rel_row = tk.Frame(rel_container, bg=self.COLORS["relationships"])
                 rel_row.pack(fill=tk.X, pady=2)
 
-                # Partner ID (shortened)
-                partner_label = tk.Label(rel_row, text=f"ID: {partner_id[:12]}...",
+                # Resolve partner name from character lookup
+                partner_name = "Unknown"
+                if self.character_lookup and partner_id in self.character_lookup:
+                    partner_char = self.character_lookup[partner_id]
+                    partner_name = partner_char.name
+                else:
+                    # Fallback to truncated ID
+                    partner_name = f"ID: {partner_id[:12]}..."
+
+                # Partner name/ID
+                partner_label = tk.Label(rel_row, text=partner_name,
                                         bg=self.COLORS["relationships"], fg="#1E1E1E",
-                                        font=("TkDefaultFont", 9), width=20, anchor="w")
+                                        font=("TkDefaultFont", 9), width=25, anchor="w")
                 partner_label.pack(side=tk.LEFT, padx=(0, 10))
 
                 # Relationship type
@@ -1467,8 +1500,8 @@ class MekSocialGUI:
         self.selected_character_id = item_id
         self._update_details(char)
 
-        # Open the character detail dialog
-        CharacterDetailDialog(self.master, char, self.current_date)
+        # Open the character detail dialog with character lookup for resolving relationship names
+        CharacterDetailDialog(self.master, char, self.current_date, self.characters)
 
     def _on_partner_select(self, event: object) -> None:
         selection = self.partner_list.curselection()
