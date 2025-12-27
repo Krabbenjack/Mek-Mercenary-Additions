@@ -779,7 +779,6 @@ class CharacterDetailDialog:
                 rel_row.pack(fill=tk.X, pady=2)
 
                 # Resolve partner name from character lookup
-                partner_name = "Unknown"
                 if self.character_lookup and partner_id in self.character_lookup:
                     partner_char = self.character_lookup[partner_id]
                     partner_name = partner_char.name
