@@ -176,6 +176,27 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             except (ValueError, TypeError):
                 rank_name = f"Rank {rank}"
 
+        # Secondary profession from JSON
+        secondary_profession = entry.get("secondary_role") or entry.get("secondary_profession")
+        
+        # Attributes from JSON (e.g., STR, BOD, RFL, DEX, INT, WIL, CHA, EDG)
+        attributes = {}
+        attr_data = entry.get("attributes", {})
+        if isinstance(attr_data, dict):
+            attributes = {k: int(v) for k, v in attr_data.items() if v is not None}
+        
+        # Skills from JSON (skill name -> level)
+        skills = {}
+        skills_data = entry.get("skills", {})
+        if isinstance(skills_data, dict):
+            skills = {k: int(v) for k, v in skills_data.items() if v is not None}
+        
+        # Special Abilities / SPAs from JSON (name -> description)
+        abilities = {}
+        abilities_data = entry.get("abilities", {})
+        if isinstance(abilities_data, dict):
+            abilities = {k: str(v) for k, v in abilities_data.items()}
+
         char = Character(
             id=cid,
             name=name,
@@ -188,6 +209,10 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             rank=rank,
             rank_name=rank_name,
             quirks=quirks,
+            secondary_profession=secondary_profession,
+            attributes=attributes,
+            skills=skills,
+            abilities=abilities,
         )
         characters[cid] = char
 

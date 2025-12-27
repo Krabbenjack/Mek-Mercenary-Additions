@@ -46,13 +46,22 @@ This version removes backward compatibility with MekHQ 5.7 and older formats to 
 
 ### GUI Application
 - **Tree view** of all characters grouped by Force → Unit
-- **Character detail panel** displaying:
-  - Basic info (name, callsign, age, birthday, profession)
-  - TO&E assignment (unit name, force name, force type)
-  - Formation level and preferred role (5.10 fields)
-  - Crew role assignment
-  - Personality traits (scaled 0-100)
-  - Relationships with other characters
+- **Character Sheet Detail Window** (redesigned):
+  - **Two-column layout**: Fixed left panel with portrait + identity, scrollable right panel with accordion sections
+  - **Enhanced portrait display**: 20% larger (180x240) with _cas variant preference
+  - **Left panel (fixed)**:
+    - Portrait with custom selection option
+    - Essential identity: Name, callsign, rank, unit, force
+    - Primary and secondary professions
+    - Quick info chips: Gunnery/Piloting levels, trait/quirk/SPA counts
+  - **Right panel (scrollable accordion sections with pastel backgrounds)**:
+    - **Overview** (warm sand #F6F4EF): Quick summary + top skills + ability/quirk previews
+    - **Attributes** (pale blue #F2F7FF): All character attributes (STR, DEX, INT, etc.) with numeric values
+    - **Skills** (pale mint #F2FFF6): Complete skill list with search, levels, and attribute support hints
+    - **Personality** (pale lavender #F6F2FF): Traits, quirks (chips), and Special Abilities with descriptions
+    - **Relationships** (pale peach #FFF4F2): Relationship list with filters (All/Allies/Rivals/Family)
+    - **Equipment** (light gray #F7F7F7): Placeholder scaffold (disabled, for future implementation)
+  - Single-open accordion behavior (default: only one section open at a time)
 - **Portrait display** with automatic path resolution
 - **Partner list** sorted by social modifier
 
