@@ -314,7 +314,7 @@ class CharacterDetailDialog:
         portrait_frame.pack(fill=tk.X, pady=(0, 12))
 
         self.portrait_label = tk.Label(portrait_frame, text="No portrait", bg="#E0E0E0", 
-                                       width=22, height=12, anchor="center")
+                                       width=200, height=320, anchor="center")
         self.portrait_label.pack(pady=5)
 
         # Try to load portrait (prefer _cas variant)
