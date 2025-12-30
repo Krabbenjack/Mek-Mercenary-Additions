@@ -1,0 +1,152 @@
+{
+  "contract": {
+    "system": "mekhq_social_relationships",
+    "version": "3.1.0",
+    "status": "final",
+    "authoritative": true,
+    "description": "Authoritative manifest and enforcement contract for the MekHQ social relationship system. This file defines system composition, constraints, and invariants. Code must adapt to this contract.",
+    "ownership": "config-only",
+    "modification_policy": "breaking changes require explicit major version increment"
+  },
+
+  /* =====================================================
+     VERSIONING & COMPATIBILITY
+     ===================================================== */
+  "versioning": {
+    "scheme": "semver",
+    "breaking_change_requires": "major",
+    "compatible_with": ["3.1.x"],
+    "migration_required_if_incompatible": true
+  },
+
+  /* =====================================================
+     TIME MODEL (GLOBAL INVARIANT)
+     ===================================================== */
+  "time_model": {
+    "type": "campaign_relative",
+    "unit": "day",
+    "absolute_calendar_dates_allowed": false,
+    "note": "All temporal data must be stored relative to campaign start."
+  },
+
+  /* =====================================================
+     REQUIRED AXES (SYSTEM INVARIANT)
+     ===================================================== */
+  "required_axes": [
+    "friendship",
+    "romance",
+    "respect"
+  ],
+
+  /* =====================================================
+     ENUM REGISTRY (AUTHORITATIVE)
+     ===================================================== */
+  "enums": {
+    "axes": ["friendship", "romance", "respect"],
+
+    "roles": [
+      "NONE",
+      "MENTOR",
+      "APPRENTICE",
+      "PARENT",
+      "CHILD",
+      "FAMILY",
+      "SPOUSE"
+    ],
+
+    "flags": [
+      "CONFLICT_ACTIVE",
+      "JEALOUS",
+      "SECRET_RELATIONSHIP",
+      "ESTRANGED",
+      "PREGNANT",
+      "GRIEVING"
+    ]
+  },
+
+  /* =====================================================
+     REQUIRED RULE FILES (COMPOSITION)
+     ===================================================== */
+  "required_rule_files": {
+    "axes_rules": "relations/relationship_axes_rules.json",
+    "state_thresholds": "relations/relationship_state_thresholds.json",
+    "dynamics_rules": "relations/relationship_dynamics_rules.json",
+    "roles_rules": "relations/relationship_roles_rules.json",
+    "flags_rules": "relations/relationship_flags_rules.json",
+    "sentiment_rules": "relations/relationship_sentiment_rules.json",
+    "acceptance_rules": "relations/relationship_acceptance_rules.json",
+    "mutual_effects_rules": "relations/relationship_mutual_effects.json",
+    "time_rules": "relations/relationship_time_rules.json"
+  },
+
+  /* =====================================================
+     ENFORCEMENT & ERROR HANDLING
+     ===================================================== */
+  "enforcement": {
+    "missing_rule_file": "error",
+    "unknown_rule_file": "error",
+    "unknown_axis_reference": "error",
+    "unknown_role_reference": "error",
+    "unknown_flag_reference": "error",
+    "unknown_sentiment_reference": "error",
+    "unknown_enum_value": "error",
+    "unknown_field_in_runtime": "error",
+    "silent_fallbacks": "forbidden"
+  },
+
+  /* =====================================================
+     REFERENCE INTEGRITY
+     ===================================================== */
+  "reference_integrity": {
+    "axes": "must_exist_in_contract",
+    "roles": "must_exist_in_contract",
+    "flags": "must_exist_in_contract",
+    "sentiments": "must_exist_in_rules",
+    "states": "must_exist_in_state_rules"
+  },
+
+  /* =====================================================
+     HARD SYSTEM RULES (NON-NEGOTIABLE)
+     ===================================================== */
+  "hard_rules": {
+    "daily_decay": "forbidden",
+    "implicit_decay": "forbidden",
+    "time_based_processing_without_trigger": "forbidden",
+    "ungated_romance_changes": "forbidden",
+    "secondary_effects_without_primary_event": "forbidden"
+  },
+
+  /* =====================================================
+     RUNTIME DATA BOUNDARIES
+     ===================================================== */
+  "runtime_constraints": {
+    "allowed_runtime_files": [
+      "runtime/relationships_runtime.json"
+    ],
+    "forbidden_in_contract": [
+      "relationships",
+      "axes_values",
+      "relationship_instances",
+      "history_entries"
+    ],
+    "note": "This contract must never contain runtime or savegame state."
+  },
+
+  /* =====================================================
+     AGENT BEHAVIOR CONTRACT
+     ===================================================== */
+  "agent_contract": {
+    "may_read": [
+      "relationship_contract.json",
+      "relations/*"
+    ],
+    "may_write": [
+      "runtime/relationships_runtime.json"
+    ],
+    "may_not_modify": [
+      "relationship_contract.json",
+      "relations/*"
+    ],
+    "must_error_on_violation": true
+  }
+}
