@@ -1495,13 +1495,9 @@ class MekSocialGUI:
                 quirk_display = quirk.replace("_", " ").title()
                 lines.append(f"  • {quirk_display}")
 
-        if char.friendship:
-            lines.append("")
-            lines.append("--- Relationships ---")
-            for pid, fval in sorted(char.friendship.items(), key=lambda x: -x[1])[:10]:
-                partner = self.characters.get(pid)
-                if partner:
-                    lines.append(f"  {partner.label()}: {fval}")
+        # NOTE: Relationships are now shown in the Character Sheet dialog only.
+        # The new relationship system is displayed via CharacterDetailDialog.
+        # Legacy friendship dict is no longer displayed here.
 
         # Show potential partners (sorted by modifier)
         self.potential_partners = []
