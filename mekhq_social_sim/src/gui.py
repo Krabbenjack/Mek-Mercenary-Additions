@@ -50,6 +50,8 @@ from rank_resolver import get_rank_resolver
 from collapsible_section import AccordionContainer
 from skill_attribute_mapping import format_skill_support
 import mekhq_personnel_exporter
+from relationship_ui_adapter import RelationshipRuntimeAdapter
+from relationship_detail_dialog import RelationshipDetailDialog
 
 # Try to import PIL for image handling
 try:
@@ -724,87 +726,164 @@ class CharacterDetailDialog:
             no_spa.pack(pady=10)
 
     def _build_relationships_section(self, accordion: AccordionContainer) -> None:
-        """Relationships section with Family filter."""
+        """
+        Relationships section - NEW SOCIAL RELATIONSHIP SYSTEM.
+        
+        CRITICAL: This section now displays data from the new relationship runtime provider.
+        The legacy friendship dict system is OBSOLETE and NO LONGER USED.
+        """
         section = accordion.add_section("Relationships", self.COLORS["relationships"], is_open=False)
         body = section.get_body()
 
         char = self.character
 
-        if not char.friendship:
-            no_data = tk.Label(body, text="No relationships established yet.",
-                              bg=self.COLORS["relationships"], fg="#1E1E1E")
-            no_data.pack(pady=10)
+        # Initialize relationship runtime adapter
+        # Note: campaign_start_date is not available, so we use current_date as fallback
+        # This will need to be updated when campaign metadata includes start date
+        adapter = RelationshipRuntimeAdapter(
+            current_date=self.current_date,
+            campaign_start_date=self.current_date  # TODO: Use actual campaign start date when available
+        )
+
+        # Get relationships for this character from the runtime provider
+        relationships = adapter.get_relationships_for_character(char.id)
+
+        if not relationships:
+            no_data = tk.Label(body, text="No relationships yet.",
+                              bg=self.COLORS["relationships"], fg="#1E1E1E",
+                              font=("TkDefaultFont", 10))
+            no_data.pack(pady=20)
             return
 
-        # Filter chips: All | Allies | Rivals | Family
-        filter_frame = tk.Frame(body, bg=self.COLORS["relationships"])
-        filter_frame.pack(fill=tk.X, pady=(0, 10))
-
-        filter_var = tk.StringVar(value="All")
-
-        filters = ["All", "Allies", "Rivals", "Family"]
-        for filter_name in filters:
-            rb = tk.Radiobutton(filter_frame, text=filter_name, variable=filter_var,
-                               value=filter_name, bg=self.COLORS["relationships"],
-                               font=("TkDefaultFont", 9), command=lambda: update_relationships())
-            rb.pack(side=tk.LEFT, padx=5)
-
-        # Relationships container
+        # Relationships container (scrollable if many relationships)
         rel_container = tk.Frame(body, bg=self.COLORS["relationships"])
-        rel_container.pack(fill=tk.BOTH, expand=True)
+        rel_container.pack(fill=tk.BOTH, expand=True, pady=5)
 
-        def update_relationships():
-            """Update relationships display based on filter."""
-            # Clear container
-            for widget in rel_container.winfo_children():
-                widget.destroy()
+        # Display each relationship as a compact row
+        for rel in relationships:
+            self._build_relationship_row(rel_container, rel, adapter)
 
-            filter_val = filter_var.get()
-            
-            # Sort by strength (highest first)
-            sorted_rels = sorted(char.friendship.items(), key=lambda x: -x[1])
+    def _build_relationship_row(self, parent: tk.Frame, relationship: Dict[str, Any],
+                                adapter: RelationshipRuntimeAdapter) -> None:
+        """
+        Build a single relationship overview row.
+        Shows: Partner name | Axes indicators | Status | Details button
+        """
+        char = self.character
+        
+        # Get the other character's ID
+        other_id = adapter.get_other_character_id(relationship, char.id)
+        
+        # Resolve partner name
+        if self.character_lookup and other_id in self.character_lookup:
+            other_char = self.character_lookup[other_id]
+            partner_name = other_char.name
+        else:
+            partner_name = f"ID: {other_id[:12]}..."
 
-            for partner_id, strength in sorted_rels:
-                # Apply filter
-                if filter_val == "Allies" and strength <= 0:
-                    continue
-                elif filter_val == "Rivals" and strength >= 0:
-                    continue
-                elif filter_val == "Family":
-                    # TODO: Implement family relationship detection
-                    # For now, skip this filter
-                    continue
+        # Row frame
+        row = tk.Frame(parent, bg=self.COLORS["relationships"], relief=tk.FLAT, borderwidth=1)
+        row.pack(fill=tk.X, pady=3, padx=5)
 
-                rel_row = tk.Frame(rel_container, bg=self.COLORS["relationships"])
-                rel_row.pack(fill=tk.X, pady=2)
+        # Partner name
+        name_label = tk.Label(row, text=partner_name,
+                             bg=self.COLORS["relationships"], fg="#1E1E1E",
+                             font=("TkDefaultFont", 10), width=20, anchor="w")
+        name_label.pack(side=tk.LEFT, padx=(5, 10))
 
-                # Resolve partner name from character lookup
-                if self.character_lookup and partner_id in self.character_lookup:
-                    partner_char = self.character_lookup[partner_id]
-                    partner_name = partner_char.name
-                else:
-                    # Fallback to truncated ID
-                    partner_name = f"ID: {partner_id[:12]}..."
+        # Axes indicators (compact)
+        axes = relationship.get("axes", {})
+        
+        # Friendship indicator
+        friendship = axes.get("friendship", 0)
+        self._create_axis_chip(row, "F", friendship)
+        
+        # Romance indicator
+        romance = axes.get("romance", 0)
+        self._create_axis_chip(row, "R", romance)
+        
+        # Respect indicator
+        respect = axes.get("respect", 0)
+        self._create_axis_chip(row, "E", respect)  # E for Esteem/Respect
 
-                # Partner name/ID
-                partner_label = tk.Label(rel_row, text=partner_name,
-                                        bg=self.COLORS["relationships"], fg="#1E1E1E",
-                                        font=("TkDefaultFont", 9), width=25, anchor="w")
-                partner_label.pack(side=tk.LEFT, padx=(0, 10))
+        # Derived status labels (1-2 most relevant)
+        derived = relationship.get("derived", {})
+        states = derived.get("states", {})
+        
+        if states:
+            # Show friendship state as primary status
+            friendship_state = states.get("friendship", "")
+            if friendship_state and friendship_state != "neutral":
+                status_label = tk.Label(row, text=friendship_state.replace("_", " ").title(),
+                                       bg=self.COLORS["relationships"], fg="#555555",
+                                       font=("TkDefaultFont", 9, "italic"))
+                status_label.pack(side=tk.LEFT, padx=5)
 
-                # Relationship type
-                rel_type = "Ally" if strength > 0 else "Rival" if strength < 0 else "Neutral"
-                type_label = tk.Label(rel_row, text=rel_type, bg=self.COLORS["relationships"],
-                                     fg="#1E1E1E", font=("TkDefaultFont", 9), width=10, anchor="w")
-                type_label.pack(side=tk.LEFT, padx=(0, 10))
+        # Spacer
+        tk.Frame(row, bg=self.COLORS["relationships"]).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-                # Strength value
-                strength_label = tk.Label(rel_row, text=str(strength), bg=self.COLORS["relationships"],
-                                         fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), anchor="w")
-                strength_label.pack(side=tk.LEFT)
+        # Details button
+        def show_details():
+            self._show_relationship_detail(relationship, other_id)
 
-        # Initial display
-        update_relationships()
+        details_btn = tk.Button(row, text="Details...",
+                               command=show_details,
+                               bg="#DDDDDD", relief=tk.FLAT,
+                               font=("TkDefaultFont", 8),
+                               padx=8, pady=2)
+        details_btn.pack(side=tk.RIGHT, padx=5)
+
+    def _create_axis_chip(self, parent: tk.Frame, label: str, value: int) -> None:
+        """
+        Create a compact axis indicator chip.
+        Shows: Label (F/R/E) with color-coded value.
+        """
+        # Determine color based on value
+        if value > 50:
+            bg_color = "#C8E6C9"  # Light green
+            fg_color = "#2E7D32"  # Dark green
+        elif value > 20:
+            bg_color = "#E8F5E9"  # Pale green
+            fg_color = "#66BB6A"  # Medium green
+        elif value > -20:
+            bg_color = "#F5F5F5"  # Gray
+            fg_color = "#757575"  # Gray text
+        elif value > -50:
+            bg_color = "#FFCDD2"  # Pale red
+            fg_color = "#EF5350"  # Medium red
+        else:
+            bg_color = "#FFCDD2"  # Light red
+            fg_color = "#C62828"  # Dark red
+
+        # Format value
+        value_str = f"+{value}" if value > 0 else str(value)
+        
+        chip_text = f"{label}:{value_str}"
+        
+        chip = tk.Label(parent, text=chip_text,
+                       bg=bg_color, fg=fg_color,
+                       font=("TkDefaultFont", 8, "bold"),
+                       padx=4, pady=2, relief=tk.FLAT)
+        chip.pack(side=tk.LEFT, padx=2)
+
+    def _show_relationship_detail(self, relationship: Dict[str, Any], other_id: str) -> None:
+        """
+        Open the relationship detail dialog for a specific relationship.
+        """
+        char = self.character
+        
+        # Get the other character
+        if self.character_lookup and other_id in self.character_lookup:
+            other_char = self.character_lookup[other_id]
+        else:
+            messagebox.showwarning(
+                "Character Not Found",
+                f"Cannot display details: Character {other_id} not in loaded data."
+            )
+            return
+
+        # Open detail dialog
+        RelationshipDetailDialog(self.window, relationship, char, other_char)
 
     def _build_equipment_section(self, accordion: AccordionContainer) -> None:
         """Equipment section (disabled scaffold placeholder)."""
