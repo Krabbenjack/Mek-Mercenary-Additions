@@ -1,0 +1,154 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines acceptance and rejection logic for sensitive interactions (primarily romance). Acceptance rules evaluate axes, states, sentiments, traits, and flags to determine outcomes. Rules never modify axes directly but may emit explicit outcome triggers.",
+
+  /* =====================================================
+     GLOBAL ACCEPTANCE PRINCIPLES
+     ===================================================== */
+  "global_rules": {
+    "acceptance_is_contextual": true,
+    "failed_acceptance_is_not_automatic_rejection": true,
+    "acceptance_must_emit_explicit_outcome": true,
+    "unknown_rule_reference": "error"
+  },
+
+  /* =====================================================
+     ROMANTIC ACCEPTANCE RULES
+     ===================================================== */
+  "romance": {
+    "base_requirements": [
+      "axis:romance>=10",
+      "state:not(discomfort)",
+      "flag:not(ESTRANGED)"
+    ],
+
+    "hard_blocks": [
+      {
+        "condition": "sentiment:BETRAYED>=3",
+        "result": "auto_reject",
+        "emit_trigger": "trigger:ROMANTIC_REJECTION",
+        "note": "Deep betrayal blocks romance entirely."
+      }
+    ],
+
+    "acceptance_score": {
+      "base": 0,
+
+      "axis_contributions": {
+        "romance": 1.0,
+        "friendship": 0.5
+      },
+
+      "state_modifiers": {
+        "curiosity": 2,
+        "romantic_interest": 5,
+        "attraction": 8,
+        "partners": 15,
+        "awkward": -5
+      },
+
+      "sentiment_modifiers": {
+        "HURT": -5,
+        "RESENTFUL": -10,
+        "JEALOUS": -3,
+        "TRUSTING": 4,
+        "ADMIRING": 3,
+        "GRATEFUL": 2
+      },
+
+      "trait_modifiers": {
+        "Social": {
+          "ROMANTIC": 4,
+          "SHY": -2,
+          "CALLOUS": -3
+        },
+        "Aggression": {
+          "IMPULSIVE": 2,
+          "VIOLENT": -4
+        }
+      },
+
+      "flag_modifiers": {
+        "CONFLICT_ACTIVE": -4,
+        "SECRET_RELATIONSHIP": 2
+      }
+    },
+
+    "thresholds": {
+      "accept": 10,
+      "soft_reject": -5
+    },
+
+    "outcomes": {
+      "accept": {
+        "emit_trigger": "trigger:ROMANTIC_ACCEPTANCE"
+      },
+      "soft_reject": {
+        "emit_trigger": null,
+        "note": "Awkward failure without emotional damage."
+      },
+      "hard_reject": {
+        "emit_trigger": "trigger:ROMANTIC_REJECTION"
+      }
+    }
+  },
+
+  /* =====================================================
+     APOLOGY ACCEPTANCE RULES
+     ===================================================== */
+  "apology": {
+    "base_requirements": [
+      "sentiment:HURT>=1"
+    ],
+
+    "acceptance_score": {
+      "base": 0,
+
+      "axis_contributions": {
+        "friendship": 0.5,
+        "respect": 0.5
+      },
+
+      "sentiment_modifiers": {
+        "HURT": -2,
+        "RESENTFUL": -5,
+        "TRUSTING": 3
+      },
+
+      "trait_modifiers": {
+        "Social": {
+          "FORGIVING": 4,
+          "VINDICTIVE": -4
+        }
+      }
+    },
+
+    "thresholds": {
+      "accept": 5
+    },
+
+    "outcomes": {
+      "accept": {
+        "emit_trigger": "trigger:APOLOGY_ACCEPTED"
+      },
+      "reject": {
+        "emit_trigger": null
+      }
+    }
+  },
+
+  /* =====================================================
+     GLOBAL SAFETY RULES
+     ===================================================== */
+  "safety": {
+    "acceptance_rules_may_emit_only": [
+      "trigger:ROMANTIC_ACCEPTANCE",
+      "trigger:ROMANTIC_REJECTION",
+      "trigger:APOLOGY_ACCEPTED"
+    ],
+    "acceptance_rules_may_not_modify_axes": true,
+    "acceptance_rules_may_not_create_sentiments": true
+  }
+}

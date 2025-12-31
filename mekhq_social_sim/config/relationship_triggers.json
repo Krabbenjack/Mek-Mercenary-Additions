@@ -1,0 +1,145 @@
+{
+  "_domain": "relationship",
+  "_type": "trigger_registry",
+  "_authoritative": true,
+  "_status": "final",
+  "_description": "Authoritative registry of all relationship trigger types. Triggers are explicit signals sent by events, interactions, or systems. Triggers are never inferred.",
+
+  "versioning": {
+    "scheme": "semver",
+    "version": "1.0.0",
+    "breaking_change_requires": "major"
+  },
+
+  /* =====================================================
+     TRIGGER DEFINITIONS
+     ===================================================== */
+  "triggers": {
+    "TIME_SKIP": {
+      "category": "time",
+      "description": "Campaign time advances without processing individual interactions.",
+      "source": "campaign_time_system",
+      "payload_schema": {
+        "days_skipped": "integer"
+      },
+      "notes": [
+        "Used for inactivity-based decay processing.",
+        "Never emitted implicitly by relationship rules."
+      ]
+    },
+
+    "LONG_SEPARATION": {
+      "category": "context",
+      "description": "Characters have been separated without meaningful interaction for a prolonged period.",
+      "source": "relationship_context_evaluator",
+      "payload_schema": {
+        "days_without_interaction": "integer"
+      },
+      "conditions": {
+        "minimum_days": 30
+      },
+      "notes": [
+        "Must be explicitly evaluated and emitted by context logic.",
+        "Relationship system does not calculate separation on its own."
+      ]
+    },
+
+    "ROMANTIC_REJECTION": {
+      "category": "interaction_outcome",
+      "description": "A romantic interaction was explicitly rejected by the target.",
+      "source": "relationship_acceptance_engine",
+      "payload_schema": {
+        "initiator": "character_id",
+        "target": "character_id",
+        "context": "string"
+      },
+      "notes": [
+        "Must be emitted explicitly by scripted events or interaction logic.",
+        "A failed roll alone is NOT a rejection.",
+        "Triggers sentiments and romance decay effects."
+      ]
+    },
+
+    "ROMANTIC_ACCEPTANCE": {
+      "category": "interaction_outcome",
+      "description": "A romantic interaction was explicitly accepted.",
+      "source": "relationship_acceptance_engine",
+      "payload_schema": {
+        "initiator": "character_id",
+        "target": "character_id",
+        "context": "string"
+      },
+      "notes": [
+        "Used to reinforce romance axis and suppress early decay.",
+        "Must be explicitly sent by the interaction logic."
+      ]
+    },
+
+    "APOLOGY_ACCEPTED": {
+      "category": "interaction_outcome",
+      "description": "An apology was accepted by the target.",
+      "source": "scripted_event",
+      "payload_schema": {
+        "initiator": "character_id",
+        "target": "character_id"
+      },
+      "notes": [
+        "Commonly used to reduce negative sentiment strength.",
+        "Does not automatically restore friendship."
+      ]
+    },
+
+    "BETRAYAL_EVENT": {
+      "category": "event_outcome",
+      "description": "A betrayal or severe trust violation occurred.",
+      "source": "scripted_event",
+      "payload_schema": {
+        "initiator": "character_id",
+        "target": "character_id",
+        "severity": "integer"
+      },
+      "notes": [
+        "High-impact trigger intended for major relationship shifts.",
+        "Severity is interpreted by sentiment and axis rules."
+      ]
+    },
+
+    "HEROIC_ACTION": {
+      "category": "event_outcome",
+      "description": "A character performed a heroic or selfless action observed by others.",
+      "source": "mission_event",
+      "payload_schema": {
+        "actor": "character_id",
+        "witnesses": "character_id[]"
+      },
+      "notes": [
+        "Commonly used for respect-related mutual effects.",
+        "Does not imply friendship increase by default."
+      ]
+    }
+  },
+
+  /* =====================================================
+     GLOBAL TRIGGER RULES
+     ===================================================== */
+  "global_rules": {
+    "implicit_triggers_forbidden": true,
+    "unknown_trigger_reference": "error",
+    "trigger_without_payload_schema": "error",
+    "trigger_emission_requires_explicit_source": true
+  },
+
+  /* =====================================================
+     AGENT CONSTRAINTS
+     ===================================================== */
+  "agent_constraints": {
+    "may_emit_triggers": [
+      "scripted_event",
+      "interaction_engine",
+      "campaign_time_system",
+      "mission_event"
+    ],
+    "may_not_infer_triggers": true,
+    "must_error_on_violation": true
+  }
+}

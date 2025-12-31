@@ -1,0 +1,222 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_version": "1.1.0",
+  "_description": "Defines primary mutual effects between directly involved participants of an interaction. Effects are asymmetric and may be modified by traits. Mutual effects are always triggered explicitly and never occur in isolation.",
+
+  /* =====================================================
+     GLOBAL RULES
+     ===================================================== */
+  "global_rules": {
+    "primary_mutual_effects_are_mandatory": true,
+    "effects_apply_only_to_participants": true,
+    "effects_do_not_emit_triggers": true,
+    "effects_do_not_assign_roles": true,
+    "unknown_effect_reference": "error"
+  },
+
+  /* =====================================================
+     TRAIT INFLUENCE (GLOBAL)
+     ===================================================== */
+  "trait_influence": {
+    "enabled": true,
+    "application": "modify_axis_flag_and_sentiment_effects",
+    "limits": {
+      "min_total_modifier": -2,
+      "max_total_modifier": 2
+    },
+    "notes": [
+      "Traits never suppress mutual effects.",
+      "Traits only modify magnitude, not causality."
+    ]
+  },
+
+  /* =====================================================
+     PRIMARY MUTUAL EFFECTS
+     ===================================================== */
+  "primary_mutual_effects": {
+
+    /* =========================
+       ROMANTIC REJECTION
+       ========================= */
+    "ROMANTIC_REJECTION_PAIR": {
+      "primary_trigger": "trigger:ROMANTIC_REJECTION",
+
+      "participants": {
+        "initiator": {
+          "axes": [
+            {
+              "axis": "romance",
+              "base_delta": -5,
+              "trait_modifiers": {
+                "Social": {
+                  "EMPATHETIC": -1,
+                  "SENSITIVE": -1,
+                  "CALLOUS": 1,
+                  "CONFIDENT": 1
+                },
+                "Aggression": {
+                  "HOT_HEADED": -1,
+                  "STOIC": 1
+                }
+              },
+              "reason": "Romantic rejection damages attraction."
+            }
+          ],
+          "sentiments": [
+            {
+              "sentiment": "HURT",
+              "base_strength": 2,
+              "trait_modifiers": {
+                "Social": {
+                  "INTROVERTED": 1,
+                  "THICK_SKINNED": -1
+                }
+              }
+            }
+          ]
+        },
+
+        "target": {
+          "axes": [
+            {
+              "axis": "romance",
+              "base_delta": -1,
+              "trait_modifiers": {
+                "Social": {
+                  "SHY": -1,
+                  "CALLOUS": 1
+                }
+              },
+              "reason": "Awkwardness after rejecting someone."
+            }
+          ],
+          "flags": [
+            {
+              "flag": "AWKWARD",
+              "base_duration_days": 3,
+              "trait_modifiers": {
+                "Social": {
+                  "SOCIAL_ANXIOUS": 2,
+                  "OUTGOING": -1
+                }
+              }
+            }
+          ]
+        }
+      },
+
+      "notes": [
+        "Rejection affects both participants asymmetrically.",
+        "Target effects are intentionally weaker and short-lived."
+      ]
+    },
+
+    /* =========================
+       ROMANTIC ACCEPTANCE
+       ========================= */
+    "ROMANTIC_ACCEPTANCE_PAIR": {
+      "primary_trigger": "trigger:ROMANTIC_ACCEPTANCE",
+
+      "participants": {
+        "initiator": {
+          "axes": [
+            {
+              "axis": "romance",
+              "base_delta": 4,
+              "trait_modifiers": {
+                "Social": {
+                  "ROMANTIC": 1,
+                  "SHY": 0
+                }
+              },
+              "reason": "Reciprocated interest reinforces attraction."
+            }
+          ]
+        },
+
+        "target": {
+          "axes": [
+            {
+              "axis": "romance",
+              "base_delta": 3,
+              "trait_modifiers": {
+                "Social": {
+                  "ROMANTIC": 1,
+                  "CAUTIOUS": -1
+                }
+              },
+              "reason": "Positive response strengthens romantic bond."
+            }
+          ],
+          "sentiments": [
+            {
+              "sentiment": "TRUSTING",
+              "base_strength": 1,
+              "trait_modifiers": {
+                "Social": {
+                  "SUSPICIOUS": -1,
+                  "OPEN": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    /* =========================
+       APOLOGY ACCEPTED
+       ========================= */
+    "APOLOGY_ACCEPTED_PAIR": {
+      "primary_trigger": "trigger:APOLOGY_ACCEPTED",
+
+      "participants": {
+        "initiator": {
+          "axes": [
+            {
+              "axis": "friendship",
+              "base_delta": 1,
+              "trait_modifiers": {
+                "Social": {
+                  "HUMBLE": 1,
+                  "ARROGANT": -1
+                }
+              },
+              "reason": "Making amends slightly improves bond."
+            }
+          ]
+        },
+
+        "target": {
+          "axes": [
+            {
+              "axis": "friendship",
+              "base_delta": 2,
+              "trait_modifiers": {
+                "Social": {
+                  "FORGIVING": 1,
+                  "VINDICTIVE": -2
+                }
+              },
+              "reason": "Accepted apology repairs social bond."
+            }
+          ],
+          "sentiments": [
+            {
+              "sentiment": "HURT",
+              "reduce_base": 2,
+              "trait_modifiers": {
+                "Social": {
+                  "FORGIVING": 1,
+                  "STUBBORN": -1
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

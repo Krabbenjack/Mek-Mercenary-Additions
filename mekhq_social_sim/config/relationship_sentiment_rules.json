@@ -1,0 +1,221 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_version": "1.1.0",
+  "_description": "Defines relationship sentiments with explicit triggers and trait-influenced strength modification. Traits modify sentiment impact but never create sentiments on their own.",
+
+  /* =====================================================
+     GLOBAL TRAIT INFLUENCE RULES
+     ===================================================== */
+  "trait_influence": {
+    "enabled": true,
+    "application": "modify_sentiment_strength",
+    "limits": {
+      "min_total_modifier": -2,
+      "max_total_modifier": 2
+    },
+    "notes": [
+      "Traits never create sentiments.",
+      "Traits only modify strength after a valid trigger."
+    ]
+  },
+
+  /* =====================================================
+     SENTIMENT DEFINITIONS
+     ===================================================== */
+  "sentiments": {
+
+    /* =========================
+       NEGATIVE SENTIMENTS
+       ========================= */
+
+    "HURT": {
+      "description": "Emotional pain caused by rejection, humiliation, or conflict.",
+      "category": "negative",
+      "persistent": true,
+
+      "strength": { "min": 1, "max": 5, "default": 2 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:ROMANTIC_REJECTION",
+          "base_strength": 2,
+          "trait_modifiers": {
+            "Social": {
+              "EMPATHETIC": 1,
+              "INTROVERTED": 1,
+              "CALLOUS": -1,
+              "APATHETIC": -2
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "romance_acceptance", "modifier": -10 },
+        { "target": "friendship_delta", "modifier": -1 }
+      ],
+
+      "reduction": [
+        { "trigger": "trigger:APOLOGY_ACCEPTED", "reduce_by": 2 },
+        { "trigger": "trigger:TIME_SKIP", "after_days": 180, "reduce_by": 1 }
+      ]
+    },
+
+    "BETRAYED": {
+      "description": "Deep personal betrayal violating trust or loyalty.",
+      "category": "negative",
+      "persistent": true,
+
+      "strength": { "min": 2, "max": 5, "default": 3 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:BETRAYAL_EVENT",
+          "base_strength": 3,
+          "trait_modifiers": {
+            "Ambition": {
+              "IDEALISTIC": 1,
+              "RUTHLESS": -1
+            },
+            "Greed": {
+              "GENEROUS": 1,
+              "GREEDY": -1
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "friendship_delta", "modifier": -3 },
+        { "target": "romance_acceptance", "modifier": -25 }
+      ],
+
+      "notes": [
+        "BETRAYED is stronger and more personal than HURT.",
+        "Often escalates into RESENTFUL if unresolved."
+      ]
+    },
+
+    "DISRESPECTED": {
+      "description": "Feeling professionally or socially demeaned.",
+      "category": "negative",
+      "persistent": true,
+
+      "strength": { "min": 1, "max": 4, "default": 2 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:PUBLIC_HUMILIATION",
+          "base_strength": 2,
+          "trait_modifiers": {
+            "Social": {
+              "PROUD": 1,
+              "HUMBLE": -1
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "respect_delta", "modifier": -3 }
+      ]
+    },
+
+    /* =========================
+       POSITIVE SENTIMENTS
+       ========================= */
+
+    "GRATEFUL": {
+      "description": "Positive feeling of gratitude after help or sacrifice.",
+      "category": "positive",
+      "persistent": false,
+
+      "strength": { "min": 1, "max": 3, "default": 1 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:HEROIC_ACTION",
+          "base_strength": 2,
+          "trait_modifiers": {
+            "Social": {
+              "EMPATHETIC": 1,
+              "CYNICAL": -1
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "friendship_delta", "modifier": 1 },
+        { "target": "respect_delta", "modifier": 1 }
+      ],
+
+      "expiration": { "after_days": 60 }
+    },
+
+    "TRUSTING": {
+      "description": "Growing trust based on repeated positive experiences.",
+      "category": "positive",
+      "persistent": true,
+
+      "strength": { "min": 1, "max": 4, "default": 1 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:CONSISTENT_SUPPORT",
+          "base_strength": 1,
+          "trait_modifiers": {
+            "Social": {
+              "SUSPICIOUS": -1,
+              "OPEN": 1
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "romance_acceptance", "modifier": 5 },
+        { "target": "friendship_delta", "modifier": 1 }
+      ]
+    },
+
+    "ADMIRING": {
+      "description": "Sustained admiration for competence or leadership.",
+      "category": "positive",
+      "persistent": true,
+
+      "strength": { "min": 1, "max": 4, "default": 1 },
+
+      "triggers": [
+        {
+          "trigger": "trigger:HEROIC_ACTION",
+          "base_strength": 1,
+          "trait_modifiers": {
+            "Reasoning": {
+              "ANALYTICAL": 1,
+              "IMPULSIVE": -1
+            }
+          }
+        }
+      ],
+
+      "effects": [
+        { "target": "respect_delta", "modifier": 2 }
+      ]
+    }
+  },
+
+  /* =====================================================
+     GLOBAL SENTIMENT RULES
+     ===================================================== */
+  "global_rules": {
+    "sentiments_are_not_flags": true,
+    "sentiments_are_not_states": true,
+    "sentiments_do_not_emit_triggers": true,
+    "sentiments_require_explicit_trigger": true,
+    "unknown_sentiment_reference": "error",
+    "multiple_sentiments_allowed": true
+  }
+}

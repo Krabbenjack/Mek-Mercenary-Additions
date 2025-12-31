@@ -1,0 +1,99 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines structural relationship roles. Roles represent factual or institutional relationships and are independent of emotional axes, states, or dynamics.",
+
+  /* =====================================================
+     ROLE DEFINITIONS
+     ===================================================== */
+  "roles": {
+    "NONE": {
+      "description": "No special structural relationship.",
+      "exclusive_with": []
+    },
+
+    "MENTOR": {
+      "description": "One character actively mentors or guides the other.",
+      "exclusive_with": ["PARENT", "CHILD"],
+      "implies": ["APPRENTICE"],
+      "directional": true
+    },
+
+    "APPRENTICE": {
+      "description": "One character is being mentored or trained by the other.",
+      "exclusive_with": ["PARENT", "CHILD"],
+      "directional": true
+    },
+
+    "PARENT": {
+      "description": "Parental relationship.",
+      "exclusive_with": ["MENTOR", "APPRENTICE", "SPOUSE"],
+      "implies": ["CHILD"],
+      "directional": true
+    },
+
+    "CHILD": {
+      "description": "Child in a parental relationship.",
+      "exclusive_with": ["MENTOR", "APPRENTICE"],
+      "directional": true
+    },
+
+    "FAMILY": {
+      "description": "Extended family relationship (siblings, cousins, etc.).",
+      "exclusive_with": [],
+      "directional": false
+    },
+
+    "SPOUSE": {
+      "description": "Formal long-term romantic partnership.",
+      "exclusive_with": ["PARENT", "CHILD"],
+      "directional": false,
+      "locks": {
+        "romance_axis_minimum": 70,
+        "romance_decay_paused": true
+      }
+    }
+  },
+
+  /* =====================================================
+     ROLE BEHAVIOR RULES
+     ===================================================== */
+  "role_rules": {
+    "roles_do_not_modify_axes": true,
+    "roles_do_not_emit_triggers": true,
+    "roles_are_not_derived": true,
+    "roles_must_be_assigned_explicitly": true,
+    "unknown_role_reference": "error"
+  },
+
+  /* =====================================================
+     ROLE INTERACTION CONSTRAINTS
+     ===================================================== */
+  "constraints": {
+    "multiple_roles_allowed": true,
+    "max_roles_per_relationship": 2,
+    "directional_roles_must_be_complementary": true,
+    "invalid_role_combinations": "error"
+  },
+
+  /* =====================================================
+     ROLE LIFECYCLE RULES
+     ===================================================== */
+  "lifecycle": {
+    "creation": {
+      "allowed_sources": [
+        "scripted_event",
+        "manual_assignment",
+        "import"
+      ]
+    },
+    "removal": {
+      "allowed_sources": [
+        "scripted_event",
+        "manual_assignment"
+      ],
+      "note": "Role removal does not automatically alter emotional axes."
+    }
+  }
+}

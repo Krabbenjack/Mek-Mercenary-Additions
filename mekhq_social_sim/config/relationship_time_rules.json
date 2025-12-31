@@ -1,0 +1,132 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_version": "1.0.0",
+  "_description": "Defines how time passage affects relationships in absence of interactions. Time rules handle inactivity decay, sentiment fading, flag expiration, and minimum persistence guarantees.",
+
+  /* =====================================================
+     GLOBAL TIME PRINCIPLES
+     ===================================================== */
+  "global_rules": {
+    "time_only_affects_existing_values": true,
+    "time_never_creates_relationships": true,
+    "time_never_creates_sentiments": true,
+    "time_never_emits_triggers": true,
+    "time_resolution_days": 1,
+    "unknown_time_rule_reference": "error"
+  },
+
+  /* =====================================================
+     AXIS INACTIVITY RULES
+     ===================================================== */
+  "axis_inactivity": {
+    "friendship": {
+      "enabled": true,
+      "grace_period_days": 100,
+      "decay_per_period": -1,
+      "period_days": 30,
+      "min_value": -100,
+      "max_value": 100,
+      "notes": [
+        "Friendship is resilient to inactivity.",
+        "Only decays after long separation."
+      ]
+    },
+
+    "romance": {
+      "enabled": true,
+      "grace_period_days": 14,
+      "decay_per_period": -2,
+      "period_days": 14,
+      "min_value": -100,
+      "max_value": 100,
+      "notes": [
+        "Romance fades quickly without reinforcement.",
+        "Early romance is especially volatile."
+      ]
+    },
+
+    "respect": {
+      "enabled": true,
+      "grace_period_days": 180,
+      "decay_per_period": -1,
+      "period_days": 90,
+      "min_value": -100,
+      "max_value": 100,
+      "notes": [
+        "Respect decays very slowly.",
+        "Professional impressions linger."
+      ]
+    }
+  },
+
+  /* =====================================================
+     SENTIMENT TIME EFFECTS
+     ===================================================== */
+  "sentiment_time": {
+    "HURT": {
+      "decay_enabled": true,
+      "grace_period_days": 90,
+      "reduce_by": 1,
+      "period_days": 180,
+      "notes": [
+        "HURT fades slowly unless reinforced."
+      ]
+    },
+
+    "RESENTFUL": {
+      "decay_enabled": true,
+      "grace_period_days": 365,
+      "reduce_by": 1,
+      "period_days": 365,
+      "notes": [
+        "RESENTFUL is extremely persistent."
+      ]
+    },
+
+    "GRATEFUL": {
+      "decay_enabled": true,
+      "expire_after_days": 60,
+      "notes": [
+        "GRATEFUL is short-lived by design."
+      ]
+    },
+
+    "TRUSTING": {
+      "decay_enabled": true,
+      "grace_period_days": 180,
+      "reduce_by": 1,
+      "period_days": 240,
+      "notes": [
+        "Trust fades slowly without reinforcement."
+      ]
+    }
+  },
+
+  /* =====================================================
+     FLAG TIME HANDLING
+     ===================================================== */
+  "flag_time": {
+    "use_flag_default_durations": true,
+    "force_expire_on_time_skip": [
+      "AWKWARD",
+      "JEALOUS"
+    ],
+    "notes": [
+      "Flags are short-lived contextual states.",
+      "Time rules only enforce expiration, never creation."
+    ]
+  },
+
+  /* =====================================================
+     DYNAMIC PERSISTENCE
+     ===================================================== */
+  "dynamic_time": {
+    "respect_minimum_persistence": true,
+    "notes": [
+      "Dynamics persistence is defined in dynamic rules.",
+      "Time rules only enforce minimum durations."
+    ]
+  }
+}

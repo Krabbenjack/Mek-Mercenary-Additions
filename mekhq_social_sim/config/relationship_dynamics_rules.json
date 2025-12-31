@@ -1,0 +1,145 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines qualitative relationship dynamics derived from states, sentiments, and history. Dynamics describe how a relationship feels and evolves, but do not directly modify axes.",
+
+  /* =====================================================
+     DYNAMIC DEFINITIONS
+     ===================================================== */
+  "dynamics": {
+    "stable": {
+      "description": "A predictable, emotionally steady relationship.",
+      "derived_from": {
+        "states": [
+          "friends",
+          "partners",
+          "esteemed",
+          "respected"
+        ],
+        "sentiments_absent": [
+          "HURT",
+          "RESENTFUL",
+          "JEALOUS"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 60,
+        "decay_resistance": "high"
+      }
+    },
+
+    "unpredictable": {
+      "description": "Fluctuating emotions, mixed signals, and instability.",
+      "derived_from": {
+        "states": [
+          "awkward",
+          "curiosity",
+          "romantic_interest",
+          "tolerated"
+        ],
+        "sentiments_present_any": [
+          "JEALOUS"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 14,
+        "decay_resistance": "low"
+      }
+    },
+
+    "strained": {
+      "description": "Ongoing tension without open hostility.",
+      "derived_from": {
+        "states": [
+          "rivals",
+          "awkward",
+          "disrespected"
+        ],
+        "sentiments_present_any": [
+          "HURT"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 30,
+        "decay_resistance": "medium"
+      }
+    },
+
+    "toxic": {
+      "description": "Actively harmful relationship marked by resentment or hostility.",
+      "derived_from": {
+        "states": [
+          "enemies",
+          "toxic_ex",
+          "contempt"
+        ],
+        "sentiments_present_any": [
+          "HURT",
+          "RESENTFUL"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 90,
+        "decay_resistance": "very_high"
+      }
+    },
+
+    "professional": {
+      "description": "Emotionally neutral, role-driven interaction.",
+      "derived_from": {
+        "states": [
+          "acknowledged",
+          "respected",
+          "neutral"
+        ],
+        "roles_present_any": [
+          "MENTOR",
+          "APPRENTICE"
+        ],
+        "sentiments_absent": [
+          "HURT",
+          "RESENTFUL"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 45,
+        "decay_resistance": "high"
+      }
+    },
+
+    "intimate": {
+      "description": "Strong emotional closeness and trust.",
+      "derived_from": {
+        "states": [
+          "devoted",
+          "close_friends"
+        ],
+        "sentiments_present_any": [
+          "ADMIRING",
+          "GRATEFUL"
+        ]
+      },
+      "persistence": {
+        "minimum_days": 60,
+        "decay_resistance": "high"
+      }
+    }
+  },
+
+  /* =====================================================
+     GLOBAL DYNAMIC RULES
+     ===================================================== */
+  "global_rules": {
+    "single_dynamic_active": true,
+    "dynamic_is_derived_not_stored": true,
+    "dynamics_do_not_modify_axes": true,
+    "dynamics_do_not_emit_triggers": true,
+    "dynamic_recalculation_triggers": [
+      "trigger:TIME_SKIP",
+      "trigger:ROMANTIC_REJECTION",
+      "trigger:ROMANTIC_ACCEPTANCE"
+    ],
+    "unknown_dynamic_reference": "error"
+  }
+}

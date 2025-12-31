@@ -1,0 +1,143 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines temporary and situational relationship flags. Flags represent current contextual states and are explicitly set and removed. Flags are not memories and do not decay automatically.",
+
+  /* =====================================================
+     FLAG DEFINITIONS
+     ===================================================== */
+  "flags": {
+    "CONFLICT_ACTIVE": {
+      "description": "An active conflict or unresolved argument is ongoing.",
+      "category": "conflict",
+      "default_duration_days": 14,
+      "set_sources": [
+        "scripted_event",
+        "interaction_outcome"
+      ],
+      "remove_conditions": [
+        "trigger:APOLOGY_ACCEPTED",
+        "trigger:TIME_SKIP"
+      ],
+      "notes": [
+        "Does not imply hatred.",
+        "Blocks certain friendly interactions."
+      ]
+    },
+
+    "ESTRANGED": {
+      "description": "Relationship is distant or broken off socially.",
+      "category": "separation",
+      "default_duration_days": null,
+      "set_sources": [
+        "scripted_event",
+        "manual_assignment"
+      ],
+      "remove_conditions": [
+        "scripted_event",
+        "manual_assignment"
+      ],
+      "notes": [
+        "Used for long-term social distance.",
+        "Often paired with negative sentiments."
+      ]
+    },
+
+    "SECRET_RELATIONSHIP": {
+      "description": "Romantic relationship is intentionally hidden.",
+      "category": "secrecy",
+      "default_duration_days": null,
+      "set_sources": [
+        "scripted_event"
+      ],
+      "remove_conditions": [
+        "scripted_event",
+        "trigger:BETRAYAL_EVENT"
+      ],
+      "notes": [
+        "Affects witness-based effects.",
+        "Does not alter romance values by itself."
+      ]
+    },
+
+    "JEALOUS": {
+      "description": "Temporary jealousy affecting reactions.",
+      "category": "emotion",
+      "default_duration_days": 7,
+      "set_sources": [
+        "trigger:ROMANTIC_REJECTION",
+        "scripted_event"
+      ],
+      "remove_conditions": [
+        "trigger:TIME_SKIP"
+      ],
+      "notes": [
+        "Temporary state, not a sentiment.",
+        "May bias acceptance checks."
+      ]
+    },
+
+    "AWKWARD": {
+      "description": "Momentary social awkwardness or embarrassment following an uncomfortable interaction.",
+      "category": "emotion",
+      "default_duration_days": 3,
+      "set_sources": [
+        "interaction_outcome",
+        "scripted_event"
+      ],
+      "remove_conditions": [
+        "trigger:TIME_SKIP"
+      ],
+      "notes": [
+        "Represents second-hand embarrassment or discomfort.",
+        "Short-lived and low-intensity.",
+        "May slightly reduce acceptance chances for sensitive interactions."
+      ]
+    },
+
+    "PREGNANT": {
+      "description": "Pregnancy state relevant for narrative events.",
+      "category": "biological",
+      "default_duration_days": 270,
+      "set_sources": [
+        "scripted_event"
+      ],
+      "remove_conditions": [
+        "scripted_event"
+      ],
+      "notes": [
+        "Purely narrative flag.",
+        "No automatic relationship effects."
+      ]
+    },
+
+    "GRIEVING": {
+      "description": "Character is grieving a loss related to this relationship.",
+      "category": "emotional_state",
+      "default_duration_days": 30,
+      "set_sources": [
+        "scripted_event"
+      ],
+      "remove_conditions": [
+        "trigger:TIME_SKIP"
+      ],
+      "notes": [
+        "May reduce positive interaction outcomes.",
+        "Often coexists with HURT or RESENTFUL sentiments."
+      ]
+    }
+  },
+
+  /* =====================================================
+     GLOBAL FLAG RULES
+     ===================================================== */
+  "global_rules": {
+    "flags_are_not_axes": true,
+    "flags_do_not_decay_automatically": true,
+    "flags_do_not_emit_triggers": true,
+    "flags_must_be_set_explicitly": true,
+    "unknown_flag_reference": "error",
+    "multiple_flags_allowed": true
+  }
+}

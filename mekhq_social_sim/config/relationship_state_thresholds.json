@@ -1,0 +1,196 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines derived relationship states based on axis thresholds, cross-axis requirements, and sentiment conditions. States are descriptive labels only and never cause effects.",
+
+  /* =====================================================
+     FRIENDSHIP STATES (INTENTIONALLY COARSER)
+     ===================================================== */
+  "friendship_states": [
+    {
+      "state": "enemies",
+      "axis": "friendship",
+      "max": -60,
+      "description": "Open hostility or deep animosity."
+    },
+    {
+      "state": "rivals",
+      "axis": "friendship",
+      "min": -59,
+      "max": -30,
+      "description": "Competitive or antagonistic relationship."
+    },
+    {
+      "state": "neutral",
+      "axis": "friendship",
+      "min": -29,
+      "max": 29,
+      "description": "No strong positive or negative social bond."
+    },
+    {
+      "state": "friends",
+      "axis": "friendship",
+      "min": 30,
+      "max": 59,
+      "description": "Positive social relationship."
+    },
+    {
+      "state": "close_friends",
+      "axis": "friendship",
+      "min": 60,
+      "description": "Strong emotional friendship."
+    }
+  ],
+
+  /* =====================================================
+     ROMANCE STATES (FINE-GRAINED)
+     ===================================================== */
+  "romance_states": [
+    {
+      "state": "discomfort",
+      "axis": "romance",
+      "max": -60,
+      "description": "Active aversion or discomfort in a romantic context."
+    },
+    {
+      "state": "awkward",
+      "axis": "romance",
+      "min": -59,
+      "max": -30,
+      "description": "Awkwardness, tension, or negative romantic undertone."
+    },
+    {
+      "state": "neutral",
+      "axis": "romance",
+      "min": -29,
+      "max": 9,
+      "description": "No romantic interest."
+    },
+    {
+      "state": "curiosity",
+      "axis": "romance",
+      "min": 10,
+      "max": 29,
+      "description": "Mild curiosity or subconscious romantic interest."
+    },
+    {
+      "state": "romantic_interest",
+      "axis": "romance",
+      "min": 30,
+      "max": 49,
+      "description": "Clear romantic interest."
+    },
+    {
+      "state": "attraction",
+      "axis": "romance",
+      "min": 50,
+      "max": 69,
+      "description": "Strong attraction and emotional pull."
+    },
+    {
+      "state": "partners",
+      "axis": "romance",
+      "min": 70,
+      "requires": [
+        "axis:friendship>=40"
+      ],
+      "description": "Established romantic relationship."
+    },
+    {
+      "state": "devoted",
+      "axis": "romance",
+      "min": 85,
+      "requires": [
+        "axis:friendship>=60"
+      ],
+      "description": "Deep emotional bond and long-term commitment."
+    },
+    {
+      "state": "toxic_ex",
+      "axis": "romance",
+      "max": -30,
+      "requires_sentiments": [
+        "HURT",
+        "RESENTFUL"
+      ],
+      "description": "Former relationship marked by unresolved emotional damage."
+    }
+  ],
+
+  /* =====================================================
+     RESPECT STATES (FINE-GRAINED)
+     ===================================================== */
+  "respect_states": [
+    {
+      "state": "contempt",
+      "axis": "respect",
+      "max": -70,
+      "description": "Active contempt or disdain."
+    },
+    {
+      "state": "disrespected",
+      "axis": "respect",
+      "min": -69,
+      "max": -40,
+      "description": "Loss of professional or personal respect."
+    },
+    {
+      "state": "tolerated",
+      "axis": "respect",
+      "min": -39,
+      "max": -10,
+      "description": "Barely tolerated, not trusted."
+    },
+    {
+      "state": "neutral",
+      "axis": "respect",
+      "min": -9,
+      "max": 19,
+      "description": "No strong opinion regarding competence or authority."
+    },
+    {
+      "state": "acknowledged",
+      "axis": "respect",
+      "min": 20,
+      "max": 39,
+      "description": "Basic professional acknowledgement."
+    },
+    {
+      "state": "respected",
+      "axis": "respect",
+      "min": 40,
+      "max": 59,
+      "description": "Clear professional or personal respect."
+    },
+    {
+      "state": "esteemed",
+      "axis": "respect",
+      "min": 60,
+      "max": 79,
+      "description": "High regard and trust in competence."
+    },
+    {
+      "state": "revered",
+      "axis": "respect",
+      "min": 80,
+      "description": "Exceptional respect bordering on admiration."
+    }
+  ],
+
+  /* =====================================================
+     GLOBAL STATE RULES
+     ===================================================== */
+  "global_rules": {
+    "multiple_states_per_axis": false,
+    "states_are_mutually_exclusive_per_axis": true,
+    "states_do_not_modify_axes": true,
+    "states_do_not_emit_triggers": true,
+    "unknown_state_reference": "error",
+    "state_evaluation_order": [
+      "romance",
+      "friendship",
+      "respect"
+    ]
+  }
+}

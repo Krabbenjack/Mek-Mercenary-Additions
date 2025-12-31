@@ -1,0 +1,134 @@
+{
+  "_domain": "relationship",
+  "_type": "rules",
+  "_authoritative": true,
+  "_description": "Defines all relationship axes behavior, including decay, inactivity handling, bounds and special rules. This file reacts to triggers but never emits them.",
+
+  "axes": {
+    /* =====================================================
+       FRIENDSHIP AXIS
+       ===================================================== */
+    "friendship": {
+      "range": {
+        "min": -100,
+        "max": 100
+      },
+
+      "decay": {
+        "enabled": true,
+        "model": "inactivity_based",
+
+        "inactivity": {
+          "threshold_days": 100,
+          "delta_towards_zero": 1,
+          "cooldown_days": 10,
+          "max_applications_per_timeskip": 5
+        },
+
+        "notes": [
+          "Friendship does not decay daily.",
+          "Decay only applies after prolonged inactivity.",
+          "Decay always moves the value towards zero.",
+          "Large time skips are capped to avoid extreme loss."
+        ]
+      },
+
+      "special_rules": {
+        "no_decay_if": [
+          "roles:family",
+          "roles:spouse"
+        ],
+        "blocked_when": [
+          "context:separation=false"
+        ]
+      }
+    },
+
+    /* =====================================================
+       ROMANCE AXIS
+       ===================================================== */
+    "romance": {
+      "range": {
+        "min": -100,
+        "max": 100
+      },
+
+      "gated": true,
+
+      "decay": {
+        "enabled": true,
+        "model": "contextual_phased",
+
+        "phases": {
+          "early": {
+            "range": [0, 40],
+            "inactivity_days": 14,
+            "delta": -2
+          },
+          "mid": {
+            "range": [41, 70],
+            "inactivity_days": 30,
+            "delta": -1
+          },
+          "established": {
+            "range": [71, 100],
+            "inactivity_days": 60,
+            "delta": 0
+          }
+        },
+
+        "pause_if": [
+          "states:partners",
+          "roles:spouse"
+        ],
+
+        "allowed_triggers": [
+          "trigger:TIME_SKIP",
+          "trigger:LONG_SEPARATION",
+          "trigger:ROMANTIC_REJECTION"
+        ]
+      },
+
+      "special_rules": {
+        "never_auto_start": true,
+        "cannot_increase_without_acceptance": true
+      }
+    },
+
+    /* =====================================================
+       RESPECT AXIS
+       ===================================================== */
+    "respect": {
+      "range": {
+        "min": -100,
+        "max": 100
+      },
+
+      "decay": {
+        "enabled": false
+      },
+
+      "special_rules": {
+        "event_only": true,
+        "witness_effects_preferred": true
+      }
+    }
+  },
+
+  /* =====================================================
+     GLOBAL AXIS RULES
+     ===================================================== */
+  "global_rules": {
+    "clamp_values": true,
+    "rounding": "integer_only",
+    "zero_is_neutral": true,
+
+    "axes_may_emit_triggers": false,
+
+    "forbidden_behaviors": [
+      "daily_decay",
+      "implicit_decay_without_trigger",
+      "axis_value_outside_range"
+    ]
+  }
+}

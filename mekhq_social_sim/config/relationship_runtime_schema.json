@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Relationship Runtime Schema",
+  "type": "object",
+  "required": ["meta", "relationships"],
+
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["current_campaign_day"],
+      "properties": {
+        "current_campaign_day": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["relationship_id", "participants", "axes"],
+        "properties": {
+          "relationship_id": { "type": "string" },
+
+          "participants": {
+            "type": "object",
+            "required": ["a", "b"],
+            "properties": {
+              "a": { "type": "string" },
+              "b": { "type": "string" }
+            }
+          },
+
+          "axes": {
+            "type": "object",
+            "properties": {
+              "friendship": { "type": "integer" },
+              "romance": { "type": "integer" },
+              "respect": { "type": "integer" }
+            }
+          },
+
+          "sentiments": { "type": "object" },
+          "flags": { "type": "object" },
+          "roles": { "type": "object" },
+          "derived": { "type": "object" }
+        }
+      }
+    }
+  }
+}
