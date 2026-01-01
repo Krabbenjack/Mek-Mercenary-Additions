@@ -1157,21 +1157,24 @@ class MekSocialGUI:
         inspector_frame = ttk.Frame(parent, style="Panel.TFrame")
         parent.add(inspector_frame, weight=3)
         
-        # Context Header (fixed height ~24px)
+        # Step 1: Build context header container
         self._build_context_header(inspector_frame)
         
-        # Scrollable content area for Primary and Secondary blocks
+        # Step 2: Build content frame for Primary and Secondary blocks
         content_frame = ttk.Frame(inspector_frame, style="Panel.TFrame")
         content_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
         
-        # Primary Block (focus area)
+        # Step 3: Build primary container (structure only, no content yet)
         self._build_primary_block(content_frame)
         
-        # Secondary Block (optional supplementary info)
+        # Step 4: Build secondary container (structure only, no content yet)
         self._build_secondary_block(content_frame)
         
-        # Utility Strip (fixed height at bottom)
+        # Step 5: Build utility strip (always present at bottom)
         self._build_utility_strip(inspector_frame)
+        
+        # Step 6: NOW that all containers exist, show initial context
+        self._show_campaign_context()
     
     def _build_context_header(self, parent: ttk.Frame) -> None:
         """Build context header: Single line, muted, no buttons."""
@@ -1187,7 +1190,7 @@ class MekSocialGUI:
         self.context_label.pack(side=tk.LEFT, anchor="w")
     
     def _build_primary_block(self, parent: ttk.Frame) -> None:
-        """Build primary block: Character/Unit/Campaign context display."""
+        """Build primary block container (structure only, content added later)."""
         primary_frame = ttk.Frame(parent, style="Raised.TFrame")
         primary_frame.pack(fill=tk.BOTH, expand=False, pady=(8, 4))
         
@@ -1195,19 +1198,17 @@ class MekSocialGUI:
         self.primary_container = ttk.Frame(primary_frame, style="Raised.TFrame")
         self.primary_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
         
-        # Default: Campaign context
-        self._show_campaign_context()
+        # Note: Content will be added by _show_campaign_context() or _show_character_context()
     
     def _build_secondary_block(self, parent: ttk.Frame) -> None:
-        """Build secondary block: Optional supplementary information."""
+        """Build secondary block container (structure only, content added later)."""
         secondary_frame = ttk.Frame(parent, style="Panel.TFrame")
         secondary_frame.pack(fill=tk.BOTH, expand=False, pady=(4, 4))
         
         self.secondary_container = ttk.Frame(secondary_frame, style="Panel.TFrame")
         self.secondary_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
         
-        # Initially empty
-        self._clear_secondary_block()
+        # Note: Content will be added by context-specific methods
     
     def _build_utility_strip(self, parent: ttk.Frame) -> None:
         """Build utility strip: Debug button at bottom."""
