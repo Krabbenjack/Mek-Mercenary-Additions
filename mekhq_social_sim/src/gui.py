@@ -42,9 +42,7 @@ except Exception:
 
 from models import Character
 from data_loading import load_campaign, apply_toe_structure, load_campaign_metadata
-from interaction_pool import reset_daily_pools, has_points
-from roll_engine import perform_random_interaction, perform_manual_interaction
-from social_modifiers import combined_social_modifier
+from interaction_pool import reset_daily_pools
 from trait_synergy_engine import get_character_traits_as_enums
 from rank_resolver import get_rank_resolver
 from collapsible_section import AccordionContainer
@@ -52,6 +50,7 @@ from skill_attribute_mapping import format_skill_support
 import mekhq_personnel_exporter
 from relationship_ui_adapter import RelationshipRuntimeAdapter
 from relationship_detail_dialog import RelationshipDetailDialog
+from ui_theme import init_dark_military_style, THEME
 
 # Try to import PIL for image handling
 try:
@@ -1022,13 +1021,12 @@ class MekSocialGUI:
         self.characters: Dict[str, Character] = {}
         self.current_day: int = 1
         self.selected_character_id: Optional[str] = None
-        self.selected_partner_index: Optional[int] = None
 
         # Real-world date and event manager
         self.current_date: date = date.today()
         self.event_manager = EventManager() if EventManager is not None else None
 
-        # Log popup state
+        # Log popup state (kept for compatibility with import/export logging)
         self.log_window = None
         self.log_text = None
 
@@ -1083,164 +1081,370 @@ class MekSocialGUI:
         file_menu.add_command(label="Exit", command=self.master.quit)
 
     def _build_widgets(self) -> None:
-        # Notebook fÃ¼r Tabs
-        self.notebook = ttk.Notebook(self.master)
-        self.notebook.pack(fill=tk.BOTH, expand=True)
+        """Build the main 4-region layout: Top Bar, Left Nav, Right Inspector, Bottom Feed."""
+        # Main container with dark background
+        main_container = ttk.Frame(self.master, style="Main.TFrame")
+        main_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Configure root background
+        self.master.configure(bg=THEME["bg_main"])
+        
+        # Build 4-region layout
+        self._build_top_bar(main_container)
+        self._build_middle_section(main_container)
+        self._build_bottom_feed(main_container)
 
-        # Tab 1: Hauptansicht
-        self.main_tab = ttk.Frame(self.notebook)
-        self.notebook.add(self.main_tab, text="Hauptansicht")
-
-        # Tab 2: Ereignisse
-        self.events_tab = ttk.Frame(self.notebook)
-        self.notebook.add(self.events_tab, text="Ereignisse")
-
-        self._build_main_tab()
-        self._build_events_tab()
-
-    def _build_main_tab(self) -> None:
-        main_pane = ttk.PanedWindow(self.main_tab, orient=tk.HORIZONTAL)
-        main_pane.pack(fill=tk.BOTH, expand=True)
-
-        # Left: tree
-        left_frame = ttk.Frame(main_pane)
-        main_pane.add(left_frame, weight=1)
-
-        self.tree = ttk.Treeview(left_frame, columns=("type",), show="tree")
-        self.tree.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-
-        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
-        self.tree.bind("<Button-3>", self._on_tree_right_click)  # Right-click handler
-
-        scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.tree.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-
-        self.root_node = self.tree.insert("", "end", text="Personal", open=True)
-        self.no_toe_node = self.tree.insert(self.root_node, "end", text="Ohne TO&E", open=True)
-
-        # Right: info + controls
-        right_frame = ttk.Frame(main_pane)
-        main_pane.add(right_frame, weight=2)
-
-        top_bar = ttk.Frame(right_frame)
-        top_bar.pack(fill=tk.X, pady=4)
-
-        # Replace day label with real date label
-        self.date_label = ttk.Label(top_bar, text="", padding=4, relief="groove")
+    def _build_top_bar(self, parent: ttk.Frame) -> None:
+        """Build top bar: Campaign Day + Calendar access (fixed height ~36px)."""
+        top_bar = ttk.Frame(parent, style="Panel.TFrame", height=36)
+        top_bar.pack(fill=tk.X, side=tk.TOP)
+        top_bar.pack_propagate(False)  # Fixed height
+        
+        # Campaign Day display (clickable for date picker)
+        self.date_label = ttk.Label(
+            top_bar, 
+            text="", 
+            style="Primary.TLabel",
+            padding=(8, 6)
+        )
         self.date_label.pack(side=tk.LEFT, padx=4)
         self.date_label.bind("<Button-1>", self._on_date_left_click)
         self.date_label.bind("<Button-3>", self._on_date_right_click)
         self._update_date_display()
-
-        next_day_btn = ttk.Button(top_bar, text="NÃ¤chster Tag", command=self._next_day)
+        
+        # Next day button
+        next_day_btn = ttk.Button(
+            top_bar, 
+            text="Next Day", 
+            command=self._next_day,
+            style="Primary.TButton"
+        )
         next_day_btn.pack(side=tk.LEFT, padx=4)
-
-        # Old import buttons removed - now in menu bar
-        # import_pers_btn and import_toe_btn removed
-
-        # Day events summary bar (under date label)
-        self.day_events_frame = ttk.Frame(right_frame)
-        self.day_events_frame.pack(fill=tk.X, padx=4, pady=(0, 4))
-
-        self.day_events_label = ttk.Label(self.day_events_frame, text="No events for this day.")
-        self.day_events_label.pack(side=tk.LEFT)
-
-        # Character details
-        details_frame = ttk.LabelFrame(right_frame, text="Charakter")
-        details_frame.pack(fill=tk.X, padx=4, pady=4)
-
-        # Two-column layout: text on left, portrait on right
-        details_inner = ttk.Frame(details_frame)
-        details_inner.pack(fill=tk.BOTH, expand=True)
-
-        # Left column: text details
-        self.details_text = tk.Text(details_inner, height=8, wrap="word")
-        self.details_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        # Right column: portrait area (250x250 to match detail dialog size)
-        self.portrait_frame = ttk.Frame(details_inner, width=250, height=250)
-        self.portrait_frame.pack(side=tk.RIGHT, padx=5, pady=5)
-        self.portrait_frame.pack_propagate(False)  # Fixed size
-
-        self.portrait_label = ttk.Label(self.portrait_frame, anchor="center")
-        self.portrait_label.pack(fill=tk.BOTH, expand=True)
-
-        # Keep reference to portrait image to prevent garbage collection
-        self.main_portrait_image = None
-
-        # Potential partners & manual roll
-        partners_frame = ttk.LabelFrame(right_frame, text="MÃ¶gliche Partner")
-        partners_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
-
-        partner_inner = ttk.Frame(partners_frame)
-        partner_inner.pack(fill=tk.BOTH, expand=True)
-
-        self.partner_list = tk.Listbox(partner_inner, height=8)
-        self.partner_list.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-        self.partner_list.bind("<<ListboxSelect>>", self._on_partner_select)
-
-        partner_scroll = ttk.Scrollbar(partner_inner, orient=tk.VERTICAL, command=self.partner_list.yview)
-        partner_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.partner_list.configure(yscrollcommand=partner_scroll.set)
-
-        # Buttons
-        button_frame = ttk.Frame(right_frame)
-        button_frame.pack(fill=tk.X, padx=4, pady=4)
-
-        self.manual_roll_btn = ttk.Button(
-            button_frame,
-            text="Manueller Wurf mit ausgewÃ¤hltem Partner",
-            command=self._trigger_manual_roll,
+    
+    def _build_middle_section(self, parent: ttk.Frame) -> None:
+        """Build middle section: Left Navigation Pane + Right Inspector Panel."""
+        middle_pane = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
+        middle_pane.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        
+        # Left Navigation Pane (20-25% width, min 220px)
+        self._build_left_navigation(middle_pane)
+        
+        # Right Inspector Panel (75-80% width)
+        self._build_inspector_panel(middle_pane)
+    
+    def _build_left_navigation(self, parent: ttk.PanedWindow) -> None:
+        """Build left navigation pane: TreeView only."""
+        left_frame = ttk.Frame(parent, style="Panel.TFrame", width=250)
+        parent.add(left_frame, weight=1)
+        
+        # TreeView with scrollbar
+        self.tree = ttk.Treeview(left_frame, columns=("type",), show="tree")
+        self.tree.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        
+        self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        self.tree.bind("<Button-3>", self._on_tree_right_click)
+        
+        scrollbar = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Initialize tree nodes
+        self.root_node = self.tree.insert("", "end", text="Personnel", open=True)
+        self.no_toe_node = self.tree.insert(self.root_node, "end", text="No TO&E", open=True)
+    
+    def _build_inspector_panel(self, parent: ttk.PanedWindow) -> None:
+        """Build right inspector panel: Context Header + Primary Block + Secondary Block + Utility Strip."""
+        inspector_frame = ttk.Frame(parent, style="Panel.TFrame")
+        parent.add(inspector_frame, weight=3)
+        
+        # Step 1: Build context header container
+        self._build_context_header(inspector_frame)
+        
+        # Step 2: Build content frame for Primary and Secondary blocks
+        content_frame = ttk.Frame(inspector_frame, style="Panel.TFrame")
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
+        
+        # Step 3: Build primary container (structure only, no content yet)
+        self._build_primary_block(content_frame)
+        
+        # Step 4: Build secondary container (structure only, no content yet)
+        self._build_secondary_block(content_frame)
+        
+        # Step 5: Build utility strip (always present at bottom)
+        self._build_utility_strip(inspector_frame)
+        
+        # Step 6: NOW that all containers exist, show initial context
+        self._show_campaign_context()
+    
+    def _build_context_header(self, parent: ttk.Frame) -> None:
+        """Build context header: Single line, muted, no buttons."""
+        header_frame = ttk.Frame(parent, style="Panel.TFrame", height=24)
+        header_frame.pack(fill=tk.X, side=tk.TOP, padx=8, pady=(4, 0))
+        header_frame.pack_propagate(False)
+        
+        self.context_label = ttk.Label(
+            header_frame,
+            text="CAMPAIGN",
+            style="Context.TLabel"
+        )
+        self.context_label.pack(side=tk.LEFT, anchor="w")
+    
+    def _build_primary_block(self, parent: ttk.Frame) -> None:
+        """Build primary block container (structure only, content added later)."""
+        primary_frame = ttk.Frame(parent, style="Raised.TFrame")
+        primary_frame.pack(fill=tk.BOTH, expand=False, pady=(8, 4))
+        
+        # Container for primary content
+        self.primary_container = ttk.Frame(primary_frame, style="Raised.TFrame")
+        self.primary_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
+        
+        # Note: Content will be added by _show_campaign_context() or _show_character_context()
+    
+    def _build_secondary_block(self, parent: ttk.Frame) -> None:
+        """Build secondary block container (structure only, content added later)."""
+        secondary_frame = ttk.Frame(parent, style="Panel.TFrame")
+        secondary_frame.pack(fill=tk.BOTH, expand=False, pady=(4, 4))
+        
+        self.secondary_container = ttk.Frame(secondary_frame, style="Panel.TFrame")
+        self.secondary_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
+        
+        # Note: Content will be added by context-specific methods
+    
+    def _build_utility_strip(self, parent: ttk.Frame) -> None:
+        """Build utility strip: Debug button at bottom."""
+        utility_frame = ttk.Frame(parent, style="Panel.TFrame", height=32)
+        utility_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=8, pady=8)
+        utility_frame.pack_propagate(False)
+        
+        # Social Director (Debug) button
+        debug_btn = ttk.Button(
+            utility_frame,
+            text="Social Director (Debug)",
+            style="Debug.TButton",
+            command=self._open_social_director
+        )
+        debug_btn.pack(side=tk.LEFT)
+    
+    def _build_bottom_feed(self, parent: ttk.Frame) -> None:
+        """Build bottom system feed: Read-only log (15-20% height, min 100px)."""
+        feed_frame = ttk.Frame(parent, style="Panel.TFrame", height=120)
+        feed_frame.pack(fill=tk.BOTH, side=tk.BOTTOM)
+        
+        # Label
+        feed_label = ttk.Label(
+            feed_frame,
+            text="System Feed",
+            style="Secondary.TLabel",
+            padding=(8, 4)
+        )
+        feed_label.pack(fill=tk.X, side=tk.TOP)
+        
+        # Text widget for feed
+        self.feed_text = tk.Text(
+            feed_frame,
+            wrap="word",
+            height=6,
+            bg=THEME["bg_panel"],
+            fg=THEME["fg_secondary"],
+            font=("TkDefaultFont", 9),
             state=tk.DISABLED
         )
-        self.manual_roll_btn.pack(side=tk.LEFT, padx=2)
-
-        random_roll_btn = ttk.Button(
-            button_frame,
-            text="ZufÃ¤lliger Partner-Wurf",
-            command=self._trigger_random_roll
+        self.feed_text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT, padx=8, pady=(0, 8))
+        
+        feed_scrollbar = ttk.Scrollbar(
+            feed_frame,
+            orient=tk.VERTICAL,
+            command=self.feed_text.yview
         )
-        random_roll_btn.pack(side=tk.LEFT, padx=2)
+        feed_scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=(0, 8), padx=(0, 8))
+        self.feed_text.configure(yscrollcommand=feed_scrollbar.set)
 
-        # Show Log button (log moved to popup)
-        show_log_btn = ttk.Button(button_frame, text="Show Log", command=self._show_log_window)
-        show_log_btn.pack(side=tk.RIGHT, padx=2)
-
-        # Detailed event description area (replaces inline log)
-        events_frame = ttk.LabelFrame(right_frame, text="Events on current day")
-        events_frame.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
-
-        self.day_events_text = tk.Text(events_frame, wrap="word")
-        self.day_events_text.pack(fill=tk.BOTH, expand=True)
-
-        # Initialize event/UI views
-        self._update_day_events_bar()
-        self._update_day_events_description()
-
-    def _build_events_tab(self) -> None:
-        # Frame fÃ¼r Ereignisse
-        events_frame = ttk.Frame(self.events_tab)
-        events_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        # Label
-        label = ttk.Label(events_frame, text="Ereignisse & Fluff-Text", font=("Arial", 14, "bold"))
-        label.pack(pady=5)
-
-        # Text-Widget fÃ¼r Ereignisse
-        text_frame = ttk.Frame(events_frame)
-        text_frame.pack(fill=tk.BOTH, expand=True)
-
-        self.events_text = tk.Text(text_frame, wrap="word", font=("Arial", 10))
-        self.events_text.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
-
-        events_scroll = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=self.events_text.yview)
-        events_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.events_text.configure(yscrollcommand=events_scroll.set)
-
-        # Button zum LÃ¶schen
-        clear_btn = ttk.Button(events_frame, text="Ereignisse lÃ¶schen", command=self._clear_events)
-        clear_btn.pack(pady=5)
+    # --- Inspector Context Helpers -------------------------------------------
+    
+    def _show_campaign_context(self) -> None:
+        """Display campaign-level context in primary block."""
+        self._clear_primary_block()
+        self.context_label.config(text="CAMPAIGN")
+        
+        # Campaign info
+        info_frame = ttk.Frame(self.primary_container, style="Raised.TFrame")
+        info_frame.pack(fill=tk.BOTH, expand=True)
+        
+        day_label = ttk.Label(
+            info_frame,
+            text=f"Campaign Day: {self.current_day}",
+            style="Primary.TLabel",
+            font=("TkDefaultFont", 10)
+        )
+        day_label.pack(anchor="w", pady=2)
+        
+        date_str = self.current_date.strftime("%Y-%m-%d")
+        date_label = ttk.Label(
+            info_frame,
+            text=f"Date: {date_str}",
+            style="Primary.TLabel",
+            font=("TkDefaultFont", 10)
+        )
+        date_label.pack(anchor="w", pady=2)
+        
+        char_count = len(self.characters)
+        chars_label = ttk.Label(
+            info_frame,
+            text=f"Characters Loaded: {char_count}",
+            style="Primary.TLabel",
+            font=("TkDefaultFont", 10)
+        )
+        chars_label.pack(anchor="w", pady=2)
+        
+        # Clear secondary block
+        self._clear_secondary_block()
+    
+    def _show_character_context(self, char: Character) -> None:
+        """Display character context in primary block."""
+        self._clear_primary_block()
+        self.context_label.config(text=f"CHARACTER · {char.name}")
+        
+        # Create content frame
+        content_frame = ttk.Frame(self.primary_container, style="Raised.TFrame")
+        content_frame.pack(fill=tk.BOTH, expand=False)
+        
+        # Portrait (max 96×96px) on left
+        portrait_frame = ttk.Frame(content_frame, style="Raised.TFrame")
+        portrait_frame.pack(side=tk.LEFT, padx=(0, 12), pady=4)
+        
+        self.inspector_portrait_label = ttk.Label(
+            portrait_frame,
+            text="",
+            background=THEME["bg_raised"]
+        )
+        self.inspector_portrait_label.pack()
+        
+        # Keep reference to prevent GC
+        self.inspector_portrait_image = None
+        self._update_inspector_portrait(char)
+        
+        # Info on right
+        info_frame = ttk.Frame(content_frame, style="Raised.TFrame")
+        info_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, pady=4)
+        
+        # Name
+        name_label = ttk.Label(
+            info_frame,
+            text=char.name,
+            style="Primary.TLabel",
+            font=("TkDefaultFont", 11, "bold")
+        )
+        name_label.pack(anchor="w")
+        
+        # Rank
+        rank_display = char.rank_name or char.rank or "—"
+        rank_label = ttk.Label(
+            info_frame,
+            text=f"Rank: {rank_display}",
+            style="Secondary.TLabel",
+            font=("TkDefaultFont", 9)
+        )
+        rank_label.pack(anchor="w")
+        
+        # Unit
+        unit_text = char.unit.unit_name if char.unit else "No assignment"
+        unit_label = ttk.Label(
+            info_frame,
+            text=f"Unit: {unit_text}",
+            style="Secondary.TLabel",
+            font=("TkDefaultFont", 9)
+        )
+        unit_label.pack(anchor="w")
+        
+        # Details button
+        details_btn = ttk.Button(
+            info_frame,
+            text="Details…",
+            style="Primary.TButton",
+            command=lambda: self._open_character_detail(char)
+        )
+        details_btn.pack(anchor="w", pady=(8, 0))
+        
+        # Update secondary block with supplementary info
+        self._show_character_secondary_info(char)
+    
+    def _show_character_secondary_info(self, char: Character) -> None:
+        """Display supplementary character info in secondary block."""
+        self._clear_secondary_block()
+        
+        # Profession
+        prof_text = char.profession or "—"
+        if char.secondary_profession:
+            prof_text += f" / {char.secondary_profession}"
+        
+        prof_label = ttk.Label(
+            self.secondary_container,
+            text=f"Profession: {prof_text}",
+            style="Secondary.TLabel",
+            font=("TkDefaultFont", 9)
+        )
+        prof_label.pack(anchor="w", pady=2)
+        
+        # Age
+        age_label = ttk.Label(
+            self.secondary_container,
+            text=f"Age: {char.age} ({char.age_group})",
+            style="Secondary.TLabel",
+            font=("TkDefaultFont", 9)
+        )
+        age_label.pack(anchor="w", pady=2)
+        
+        # Interaction points
+        points_label = ttk.Label(
+            self.secondary_container,
+            text=f"Interaction Points: {char.daily_interaction_points}",
+            style="Secondary.TLabel",
+            font=("TkDefaultFont", 9)
+        )
+        points_label.pack(anchor="w", pady=2)
+    
+    def _clear_primary_block(self) -> None:
+        """Clear all widgets from primary container."""
+        for widget in self.primary_container.winfo_children():
+            widget.destroy()
+    
+    def _clear_secondary_block(self) -> None:
+        """Clear all widgets from secondary container."""
+        for widget in self.secondary_container.winfo_children():
+            widget.destroy()
+    
+    def _update_inspector_portrait(self, char: Character) -> None:
+        """Load and display portrait in inspector (max 96×96px)."""
+        if not PIL_AVAILABLE:
+            self.inspector_portrait_label.config(text="No PIL")
+            return
+        
+        portrait_path = PortraitHelper.resolve_portrait_path(char, prefer_casual=False)
+        
+        if portrait_path is None:
+            self.inspector_portrait_label.config(text="No portrait")
+            self.inspector_portrait_image = None
+            return
+        
+        photo_image = PortraitHelper.load_portrait_image(portrait_path, (96, 96))
+        if photo_image:
+            self.inspector_portrait_image = photo_image
+            self.inspector_portrait_label.config(image=self.inspector_portrait_image, text="")
+        else:
+            self.inspector_portrait_label.config(text="Error")
+            self.inspector_portrait_image = None
+    
+    def _open_character_detail(self, char: Character) -> None:
+        """Open character detail dialog."""
+        CharacterDetailDialog(self.master, char, self.current_date, self.characters)
+    
+    def _open_social_director(self) -> None:
+        """Open Social Director debug tool (placeholder)."""
+        messagebox.showinfo(
+            "Social Director",
+            "Social Director debug tool not yet implemented.\n\n"
+            "This would open the Social Event Injector for debugging social interactions."
+        )
 
     # --- Helper methods ---------------------------------------------------
 
@@ -1270,39 +1474,17 @@ class MekSocialGUI:
         DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
 
     def _update_day_events_bar(self):
-        if self.event_manager is None:
-            self.day_events_label.config(text="Events disabled")
-            return
-        events = self.event_manager.get_events_for_date(self.current_date)
-        if not events:
-            text = "No events for this day."
-        else:
-            titles = ", ".join(e.title for e in events)
-            text = f"Events today: {titles}"
-        self.day_events_label.config(text=text)
+        """Update system feed with day events (removed - events now in feed only)."""
+        pass
 
     def _update_day_events_description(self):
-        if self.event_manager is None:
-            self.day_events_text.delete("1.0", "end")
-            self.day_events_text.insert("end", "Events disabled")
-            return
-
-        self.day_events_text.delete("1.0", "end")
-        events = self.event_manager.get_events_for_date(self.current_date)
-
-        if not events:
-            self.day_events_text.insert("end", "No events for this day.")
-            return
-
-        for event in events:
-            self.day_events_text.insert("end", f"- {event.title} ({event.recurrence_type.value})\n")
-            desc = self._describe_event(event)
-            if desc:
-                self.day_events_text.insert("end", f"  {desc}\n\n")
+        """Update system feed with event descriptions (removed - events now in feed only)."""
+        pass
 
     def _describe_event(self, event):
+        """Generate event description text."""
         t = event.title.lower()
-        if "simulator" in t or "Ã¼bung" in t:
+        if "simulator" in t or "übung" in t:
             return "The unit performs simulator training focusing on tactics and coordination."
         if "wartung" in t or "maintenance" in t:
             return "The mechs undergo scheduled maintenance and repairs."
@@ -1377,143 +1559,32 @@ class MekSocialGUI:
         self.tree.item(self.root_node, open=True)
         self.tree.item(self.no_toe_node, open=True)
 
-    def _log_simple(self, text: str) -> None:
-        # Internal helper to append to the events tab text (keeps events tab behavior)
-        self.events_text.insert("end", text + "\n\n")
-        self.events_text.see("end")
+    def _log_to_feed(self, text: str) -> None:
+        """Log message to the bottom system feed."""
+        self.feed_text.config(state=tk.NORMAL)
+        self.feed_text.insert("end", text + "\n")
+        self.feed_text.see("end")
+        self.feed_text.config(state=tk.DISABLED)
 
     def _add_event(self, text: str) -> None:
-        """FÃ¼gt einen Ereignis-Text zum Ereignis-Tab hinzu"""
-        self._log_simple(text)
+        """Add event text to system feed."""
+        self._log_to_feed(text)
 
     def _clear_events(self) -> None:
-        self.events_text.delete("1.0", tk.END)
+        """Clear events (no-op, events are in feed now)."""
+        pass
 
-    # ----------------- Portrait handling for main "Charakter" frame -----------------
-    PORTRAIT_SIZE = (250, 250)  # Size for main view portrait
-
-    def _clear_portrait(self) -> None:
-        """Clear the portrait display in the main Charakter frame."""
-        self.main_portrait_image = None
-        self.portrait_label.config(image="", text="")
-
-    def _update_portrait(self, char: Character) -> None:
-        """Load and display the character's portrait in the main Charakter frame (default portrait only)."""
-        if not PIL_AVAILABLE:
-            self.portrait_label.config(text="PIL not available")
-            return
-
-        # Use default portrait only (no casual variant) for main panel
-        portrait_path = PortraitHelper.resolve_portrait_path(char, prefer_casual=False)
-
-        if portrait_path is None:
-            if not char.portrait or not char.portrait.filename:
-                self.portrait_label.config(text="No portrait\navailable", image="")
-            else:
-                category = char.portrait.category or ""
-                filename = char.portrait.filename
-                full_path = f"{category}/{filename}" if category else filename
-                self.portrait_label.config(text=f"Portrait not found:\n{full_path[:30]}", image="")
-            self.main_portrait_image = None
-            return
-
-        self._display_portrait(portrait_path)
-
-    def _display_portrait(self, path: Path) -> None:
-        """Display a portrait image from the given path."""
-        photo_image = PortraitHelper.load_portrait_image(path, self.PORTRAIT_SIZE)
-        if photo_image:
-            self.main_portrait_image = photo_image
-            self.portrait_label.config(image=self.main_portrait_image, text="")
-        else:
-            self.portrait_label.config(text="Error loading\nimage", image="")
-            self.main_portrait_image = None
+    # ----------------- OLD portrait handling (no longer needed) -----------------
 
     def _update_details(self, char: Optional[Character]) -> None:
-        self.details_text.delete("1.0", "end")
-        self.partner_list.delete(0, tk.END)
-        self.selected_partner_index = None
-        self.manual_roll_btn.config(state=tk.DISABLED)
-
+        """Update inspector panel with character or campaign context."""
         if char is None:
-            # Clear portrait
-            self._clear_portrait()
+            # Show campaign context
+            self._show_campaign_context()
             return
-
-        # Update portrait
-        self._update_portrait(char)
-
-        # Make sure details show current birthday and recalculated age
-        birthday_str = char.birthday.strftime("%Y-%m-%d") if char.birthday else "-"
         
-        # Show rank name if available, otherwise fall back to rank ID
-        rank_display = char.rank_name or char.rank or "-"
-        
-        lines = [
-            f"Name: {char.name}",
-            f"Callsign: {char.callsign or '-'}",
-            f"Rank: {rank_display}",
-            f"Age: {char.age} ({char.age_group})",
-            f"Birthday: {birthday_str}",
-            f"Profession: {char.profession or '-'}",
-            f"Interaction Points: {char.daily_interaction_points}",
-        ]
-
-        # TO&E information (MekHQ 5.10)
-        if char.unit:
-            lines.append("")
-            lines.append("--- TO&E Assignment ---")
-            lines.append(f"Unit: {char.unit.unit_name}")
-            lines.append(f"Force: {char.unit.force_name}")
-            lines.append(f"Force Type: {char.unit.force_type}")
-            if char.unit.formation_level:
-                lines.append(f"Formation Level: {char.unit.formation_level}")
-            if char.unit.preferred_role:
-                lines.append(f"Preferred Role: {char.unit.preferred_role}")
-            if char.unit.crew_role:
-                lines.append(f"Crew Role: {char.unit.crew_role}")
-        else:
-            lines.append("")
-            lines.append("Unit: (no TO&E assignment)")
-
-        if char.traits:
-            lines.append("")
-            lines.append("--- Personality Traits ---")
-            trait_enums = get_character_traits_as_enums(char)
-            for category, enum_str in sorted(trait_enums.items()):
-                # Extract just the trait key from "Category:KEY"
-                if ":" in enum_str:
-                    _, trait_key = enum_str.split(":", 1)
-                else:
-                    trait_key = enum_str
-                lines.append(f"  {category}: {trait_key}")
-        
-        if char.quirks:
-            lines.append("")
-            lines.append("--- Personality Quirks ---")
-            for quirk in sorted(char.quirks):
-                quirk_display = quirk.replace("_", " ").title()
-                lines.append(f"  • {quirk_display}")
-
-        # NOTE: Relationships are now shown in the Character Sheet dialog only.
-        # The new relationship system is displayed via CharacterDetailDialog.
-        # Legacy friendship dict is no longer displayed here.
-
-        # Show potential partners (sorted by modifier)
-        self.potential_partners = []
-        partners_with_mods = []
-        for other in self.characters.values():
-            if other.id == char.id:
-                continue
-            mod, _ = combined_social_modifier(char, other)
-            partners_with_mods.append((mod, other))
-
-        partners_with_mods.sort(key=lambda x: -x[0])
-        for mod, other in partners_with_mods[:30]:
-            self.potential_partners.append(other)
-            self.partner_list.insert(tk.END, f"{other.label()} ({mod:+d})")
-
-        self.details_text.insert(tk.END, "\n".join(lines))
+        # Show character context in inspector
+        self._show_character_context(char)
 
     # ----------------- Age calculation helpers -----------------
     def _calculate_age(self, birth_date: date, reference_date: date) -> int:
@@ -1579,23 +1650,6 @@ class MekSocialGUI:
 
         # Open the character detail dialog with character lookup for resolving relationship names
         CharacterDetailDialog(self.master, char, self.current_date, self.characters)
-
-    def _on_partner_select(self, event: object) -> None:
-        selection = self.partner_list.curselection()
-        if not selection:
-            self.selected_partner_index = None
-            self.manual_roll_btn.config(state=tk.DISABLED)
-            return
-
-        self.selected_partner_index = selection[0]
-
-        # Aktiviere Button nur wenn Charakter Punkte hat
-        if self.selected_character_id:
-            actor = self.characters.get(self.selected_character_id)
-            if actor and has_points(actor):
-                self.manual_roll_btn.config(state=tk.NORMAL)
-            else:
-                self.manual_roll_btn.config(state=tk.DISABLED)
 
     def _export_campaign_data(self) -> None:
         """Export campaign data (personnel, TO&E, metadata) from a .cpnx file."""
@@ -1807,7 +1861,7 @@ class MekSocialGUI:
 
     def _next_day(self) -> None:
         if not self.characters:
-            messagebox.showinfo("Hinweis", "Keine Charaktere geladen.")
+            messagebox.showinfo("Notice", "No characters loaded.")
             return
 
         # campaign day counter remains
@@ -1816,150 +1870,30 @@ class MekSocialGUI:
         # advance the real date, update displays
         self.current_date += timedelta(days=1)
         self._update_date_display()
-        self._update_day_events_bar()
-        self._update_day_events_description()
 
         # Update ages when the day advances
         self._update_character_ages()
 
         reset_daily_pools(self.characters)
-        self._log(f"--- Tag {self.current_day} ---")
-        self._log(f"Interaktionspunkte zurÃ¼ckgesetzt.")
+        self._log_to_feed(f"--- Day {self.current_day} ---")
+        self._log_to_feed(f"Interaction points reset.")
+
+        # Log day events to feed
+        if self.event_manager:
+            events = self.event_manager.get_events_for_date(self.current_date)
+            if events:
+                for event in events:
+                    self._log_to_feed(f"Event: {event.title}")
 
         # Update details of the currently selected character
         if self.selected_character_id and self.selected_character_id in self.characters:
             self._update_details(self.characters[self.selected_character_id])
 
-    def _trigger_manual_roll(self) -> None:
-        if not self.characters:
-            messagebox.showinfo("Hinweis", "Keine Charaktere geladen.")
-            return
-
-        if not self.selected_character_id:
-            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter auswÃ¤hlen.")
-            return
-
-        if self.selected_partner_index is None:
-            messagebox.showinfo("Hinweis", "Bitte einen Partner aus der Liste auswÃ¤hlen.")
-            return
-
-        actor = self.characters.get(self.selected_character_id)
-        if actor is None:
-            return
-
-        if not has_points(actor):
-            messagebox.showinfo(
-                "Keine Punkte",
-                f"{actor.label()} hat heute keine Interaktionspunkte mehr.",
-            )
-            return
-
-        # Hole den ausgewÃ¤hlten Partner
-        if self.selected_partner_index >= len(self.potential_partners):
-            messagebox.showinfo("Fehler", "UngÃ¼ltiger Partner-Index.")
-            return
-
-        partner = self.potential_partners[self.selected_partner_index]
-
-        result = perform_manual_interaction(actor, partner)
-        if result is None:
-            messagebox.showinfo("Fehler", "Interaktion konnte nicht durchgefÃ¼hrt werden.")
-            return
-
-        # Log the interaction
-        for line in result.log_lines:
-            self._log(line)
-
-        # Generate and display fluff text
-        fluff = self._generate_fluff(result)
-        self._add_event(fluff)
-
-        # Refresh details
-        self._update_details(actor)
-
-    def _trigger_random_roll(self) -> None:
-        if not self.characters:
-            messagebox.showinfo("Hinweis", "Keine Charaktere geladen.")
-            return
-
-        if not self.selected_character_id:
-            messagebox.showinfo("Hinweis", "Bitte zuerst einen Charakter im Baum auswÃ¤hlen.")
-            return
-
-        actor = self.characters.get(self.selected_character_id)
-        if actor is None:
-            return
-
-        if not has_points(actor):
-            messagebox.showinfo(
-                "Keine Punkte",
-                f"{actor.label()} hat heute keine Interaktionspunkte mehr.",
-            )
-            return
-
-        result = perform_random_interaction(actor, self.characters.values())
-        if result is None:
-            messagebox.showinfo("Keine Partner", "Es konnten keine passenden Partner gefunden werden.")
-            return
-
-        for line in result.log_lines:
-            self._log(line)
-
-        # Generate and display fluff text
-        fluff = self._generate_fluff(result)
-        self._add_event(fluff)
-
-        # Refresh details
-        self._update_details(actor)
-
-    def _generate_fluff(self, result) -> str:
-        """Generiert einen Fluff-Text basierend auf dem WÃ¼rfelergebnis"""
-        actor_name = result.actor.callsign or result.actor.name
-        partner_name = result.partner.callsign or result.partner.name
-
-        fluff_lines = [
-            f"=== Tag {self.current_day} ===",
-            f"Begegnung: {actor_name} und {partner_name}",
-            ""
-        ]
-
-        if result.success:
-            # Positive Interaktion
-            if result.roll >= 10:
-                fluff_lines.append(
-                    f"Ein auÃŸergewÃ¶hnlich gutes GesprÃ¤ch entwickelt sich zwischen {actor_name} "
-                    f"und {partner_name}. Die beiden finden gemeinsame Interessen und verstehen "
-                    f"sich auf Anhieb prÃ¤chtig."
-                )
-            else:
-                fluff_lines.append(
-                    f"{actor_name} und {partner_name} verbringen einige Zeit miteinander. "
-                    f"Die Unterhaltung verlÃ¤uft angenehm und beide fÃ¼hlen sich danach "
-                    f"ein wenig besser verbunden."
-                )
-        else:
-            # Negative Interaktion
-            if result.roll <= 4:
-                fluff_lines.append(
-                    f"Die Begegnung zwischen {actor_name} und {partner_name} verlÃ¤uft katastrophal. "
-                    f"Ein hitziger Streit bricht aus, und beide gehen mit einem schlechten "
-                    f"GefÃ¼hl auseinander."
-                )
-            else:
-                fluff_lines.append(
-                    f"{actor_name} und {partner_name} geraten aneinander. Die AtmosphÃ¤re "
-                    f"ist angespannt, und das GesprÃ¤ch endet mit gegenseitiger Verstimmung."
-                )
-
-        fluff_lines.append("")
-        fluff_lines.append(f"WÃ¼rfelwurf: {result.roll} gegen Ziel {result.target}")
-        fluff_lines.append(f"Beziehung: {result.new_friendship}")
-
-        return "\n".join(fluff_lines)
-
 
 def main() -> None:
     root = tk.Tk()
+    # Initialize dark military theme before building UI
+    init_dark_military_style(root)
     app = MekSocialGUI(root)
     root.mainloop()
 
