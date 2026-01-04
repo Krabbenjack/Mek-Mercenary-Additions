@@ -1,0 +1,32 @@
+{
+  "very_easy": {
+    "modifier": 3,
+    "label": "Very Easy",
+    "description": "Minimal challenge, routine action."
+  },
+  "easy": {
+    "modifier": 1,
+    "label": "Easy",
+    "description": "Favorable conditions, little pressure."
+  },
+  "average": {
+    "modifier": 0,
+    "label": "Average",
+    "description": "Standard conditions, no advantage or disadvantage."
+  },
+  "hard": {
+    "modifier": -1,
+    "label": "Hard",
+    "description": "Stressful or unfavorable conditions."
+  },
+  "very_hard": {
+    "modifier": -3,
+    "label": "Very Hard",
+    "description": "Severe difficulty, high pressure."
+  },
+  "extreme": {
+    "modifier": -5,
+    "label": "Extreme",
+    "description": "Near-impossible conditions, exceptional effort required."
+  }
+}
