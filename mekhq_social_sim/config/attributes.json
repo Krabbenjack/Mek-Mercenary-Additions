@@ -1,0 +1,42 @@
+{
+  "STR": {
+    "name": "Strength",
+    "category": "physical",
+    "description": "Raw physical power, lifting, striking, swimming."
+  },
+  "BOD": {
+    "name": "Body",
+    "category": "physical",
+    "description": "Health, endurance, resistance to fatigue and injury."
+  },
+  "RFL": {
+    "name": "Reflexes",
+    "category": "physical",
+    "description": "Reaction speed, coordination, balance, agility."
+  },
+  "DEX": {
+    "name": "Dexterity",
+    "category": "physical",
+    "description": "Fine motor control, precision, manual skill."
+  },
+  "INT": {
+    "name": "Intelligence",
+    "category": "mental",
+    "description": "Reasoning, memory, learning, problem-solving."
+  },
+  "WIL": {
+    "name": "Willpower",
+    "category": "mental",
+    "description": "Mental endurance, focus, emotional control."
+  },
+  "CHA": {
+    "name": "Charisma",
+    "category": "social",
+    "description": "Presence, persuasion, leadership, interpersonal influence."
+  },
+  "EDG": {
+    "name": "Edge",
+    "category": "meta",
+    "description": "Luck and narrative influence. Never used as a linked attribute."
+  }
+}
