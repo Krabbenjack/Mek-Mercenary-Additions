@@ -1,0 +1,379 @@
+{
+  "Acrobatics": {
+    "linked_attributes": ["RFL"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Acting": {
+    "linked_attributes": ["CHA"],
+    "tn": 8,
+    "complexity": "CB"
+  },
+
+  "Administration": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Animal Handling": {
+    "linked_attributes": ["WIL"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Appraisal": {
+    "linked_attributes": ["INT"],
+    "tn": 8,
+    "complexity": "CB"
+  },
+
+  "Archery": {
+    "linked_attributes": ["DEX"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Art": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["DEX"],
+        "tn": 8,
+        "complexity": "CB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["DEX", "INT"],
+        "tn": 9,
+        "complexity": "CA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "Artillery": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Career": {
+    "linked_attributes": ["INT"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Climbing": {
+    "linked_attributes": ["DEX"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Communications": {
+    "linked_attributes": ["INT"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Computers": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["INT"],
+        "tn": 8,
+        "complexity": "CB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["DEX", "INT"],
+        "tn": 9,
+        "complexity": "CA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "Cryptography": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Demolitions": {
+    "linked_attributes": ["DEX", "INT"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Disguise": {
+    "linked_attributes": ["CHA"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Driving": {
+    "linked_attributes": ["RFL", "DEX"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Escape Artist": {
+    "linked_attributes": ["STR", "DEX"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Forgery": {
+    "linked_attributes": ["DEX", "INT"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Gunnery": {
+    "linked_attributes": ["RFL", "DEX"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Interest": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["INT"],
+        "tn": 8,
+        "complexity": "CB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["INT", "WIL"],
+        "tn": 9,
+        "complexity": "CA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "Interrogation": {
+    "linked_attributes": ["WIL", "CHA"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Investigation": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Language": {
+    "linked_attributes": ["INT", "CHA"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Leadership": {
+    "linked_attributes": ["WIL", "CHA"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Martial Arts": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["RFL"],
+        "tn": 7,
+        "complexity": "SB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["RFL", "DEX"],
+        "tn": 8,
+        "complexity": "SA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "MedTech": {
+    "linked_attributes": ["INT"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Melee Weapons": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["DEX"],
+        "tn": 7,
+        "complexity": "SB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["RFL", "DEX"],
+        "tn": 8,
+        "complexity": "SA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "Navigation": {
+    "linked_attributes": ["INT"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Negotiation": {
+    "linked_attributes": ["CHA"],
+    "tn": 8,
+    "complexity": "CB"
+  },
+
+  "Perception": {
+    "linked_attributes": ["INT"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Piloting": {
+    "linked_attributes": ["RFL", "DEX"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Prestidigitation": {
+    "tiered": true,
+    "tiers": {
+      "basic": {
+        "linked_attributes": ["DEX"],
+        "tn": 7,
+        "complexity": "SB",
+        "max_level": 3
+      },
+      "advanced": {
+        "linked_attributes": ["RFL", "DEX"],
+        "tn": 8,
+        "complexity": "SA",
+        "min_level": 4
+      }
+    }
+  },
+
+  "Protocol": {
+    "linked_attributes": ["WIL", "CHA"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Running": {
+    "linked_attributes": ["RFL"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Science": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Security Systems": {
+    "linked_attributes": ["DEX", "INT"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Sensor Operations": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Small Arms": {
+    "linked_attributes": ["DEX"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Stealth": {
+    "linked_attributes": ["RFL", "INT"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Strategy": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Streetwise": {
+    "linked_attributes": ["CHA"],
+    "tn": 8,
+    "complexity": "CB"
+  },
+
+  "Support Weapons": {
+    "linked_attributes": ["DEX"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Surgery": {
+    "linked_attributes": ["DEX", "INT"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Survival": {
+    "linked_attributes": ["BOD", "INT"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Swimming": {
+    "linked_attributes": ["STR"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Tactics": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Technician": {
+    "linked_attributes": ["DEX", "INT"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Thrown Weapons": {
+    "linked_attributes": ["DEX"],
+    "tn": 7,
+    "complexity": "SB"
+  },
+
+  "Tracking": {
+    "linked_attributes": ["INT", "WIL"],
+    "tn": 8,
+    "complexity": "SA"
+  },
+
+  "Training": {
+    "linked_attributes": ["INT", "CHA"],
+    "tn": 9,
+    "complexity": "CA"
+  },
+
+  "Zero-G Operations": {
+    "linked_attributes": ["RFL"],
+    "tn": 7,
+    "complexity": "SB"
+  }
+}
