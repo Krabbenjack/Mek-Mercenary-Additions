@@ -1,0 +1,312 @@
+{
+  "interaction_domain": "social",
+  "version": "0.2",
+  "interactions": {
+
+    "casual_talk": {
+      "roll_type": "group_mutual",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": null,
+        "grouping": "subgroups",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "HIGH",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Locker-flockiger sozialer Austausch ohne klare Agenda."
+    },
+
+    "small_talk": {
+      "roll_type": "pair_mutual",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": 2,
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "MEDIUM",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Höfliche, oberflächliche Interaktion mit geringem emotionalem Risiko."
+    },
+
+    "speech": {
+      "roll_type": "group_directed",
+      "participants": {
+        "selection_type": "directed_group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": null,
+        "grouping": "all",
+        "selection_mode": "deterministic",
+        "targeting": {
+          "has_target": true,
+          "target_selection": {
+            "type": "group",
+            "source_pool": "event_participants"
+          }
+        }
+      },
+      "description": "Eine Person spricht zu einer Gruppe mit implizitem oder explizitem Statusgefälle."
+    },
+
+    "discussion": {
+      "roll_type": "group_mutual",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": null,
+        "grouping": "all",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "MEDIUM",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Strukturierter Austausch unterschiedlicher Meinungen ohne zwingenden Konflikt."
+    },
+
+    "instruction": {
+      "roll_type": "group_directed",
+      "participants": {
+        "selection_type": "directed_group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": null,
+        "grouping": "all",
+        "selection_mode": "deterministic",
+        "targeting": {
+          "has_target": true,
+          "target_selection": {
+            "type": "group",
+            "source_pool": "event_participants"
+          }
+        }
+      },
+      "description": "Klare Anweisung mit Erwartung der Befolgung."
+    },
+
+    "evaluation": {
+      "roll_type": "pair_directed",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic",
+        "targeting": {
+          "has_target": true,
+          "target_selection": {
+            "type": "single",
+            "role_relation": "evaluator_to_subject"
+          }
+        }
+      },
+      "description": "Bewertung oder Einschätzung einer Person durch eine andere."
+    },
+
+    "compliance_check": {
+      "roll_type": "pair_directed",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic",
+        "targeting": {
+          "has_target": true,
+          "target_selection": {
+            "type": "single",
+            "role_relation": "authority_to_subject"
+          }
+        }
+      },
+      "description": "Überprüfung von Regelkonformität oder Verhalten."
+    },
+
+    "flirt": {
+      "roll_type": "pair_mutual",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "LOW",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Spielerische romantische Annäherung mit unklarem Ausgang."
+    },
+
+    "confide": {
+      "roll_type": "pair_mutual",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "LOW",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Persönliches Anvertrauen sensibler Informationen."
+    },
+
+    "bonding_activity": {
+      "roll_type": "group_mutual",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "grouping": "all",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "MEDIUM",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Gemeinsame Aktivität mit potenziell verbindender Wirkung."
+    },
+
+    "gossip": {
+      "roll_type": "pair_or_group",
+      "participants": {
+        "selection_type": "pair_or_group",
+        "source_pool": "event_participants",
+        "min": 2,
+        "max": 4,
+        "grouping": "subgroups",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "MEDIUM",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": {
+          "has_target": true,
+          "target_selection": {
+            "source_pool": "event_participants",
+            "exclude_participants": true,
+            "selection_mode": "probabilistic",
+            "modifiers": ["relationship_synergy", "traits"]
+          }
+        }
+      },
+      "description": "Informeller Austausch über abwesende Dritte mit ambivalenter Wirkung."
+    },
+
+    "argument": {
+      "roll_type": "pair_mutual",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "LOW",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Offener verbaler Konflikt zwischen zwei Personen."
+    },
+
+    "accusation": {
+      "roll_type": "pair_directed",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "VERY_LOW",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": true }
+      },
+      "description": "Direkter Vorwurf oder Anschuldigung gegenüber einer Person."
+    },
+
+    "social_tension": {
+      "roll_type": "group_state",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "LOW",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Unausgesprochene, spürbare soziale Spannung."
+    },
+
+    "exclusion": {
+      "roll_type": "group_directed",
+      "participants": {
+        "selection_type": "directed_group",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "VERY_LOW",
+          "modifiers": ["relationship_synergy", "traits", "tone"]
+        },
+        "targeting": { "has_target": true }
+      },
+      "description": "Soziale Ausgrenzung einer Person durch eine Gruppe."
+    },
+
+    "play_interaction": {
+      "roll_type": "group_mutual",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "HIGH",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Spielerische soziale Interaktion, primär bei Kindern."
+    },
+
+    "authority_challenge": {
+      "roll_type": "pair_directed",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "LOW",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": true }
+      },
+      "description": "Infragestellen von Autorität oder Regeln."
+    },
+
+    "mentorship_exchange": {
+      "roll_type": "pair_mutual",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "probabilistic",
+        "probability_driver": {
+          "base_chance": "MEDIUM",
+          "modifiers": ["traits", "tone"]
+        },
+        "targeting": { "has_target": false }
+      },
+      "description": "Austausch von Wissen oder Erfahrung mit impliziter Hierarchie."
+    }
+
+  }
+}
