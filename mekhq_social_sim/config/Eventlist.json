@@ -1,0 +1,109 @@
+{
+  "TextEventType": {
+
+    /* =======================================================
+       1000 – Training, Operations & Mandatory Activities
+       ======================================================= */
+    "TRAINING_AND_OPERATIONS": {
+      "SIMULATOR_TRAINING_MECHWARRIOR": 1001,
+      "INFANTRY_FIELD_EXERCISE": 1002,
+      "TECHNICAL_MAINTENANCE": 1003,
+      "EMERGENCY_EVACUATION_DRILL": 1004,
+      "SAFETY_BRIEFING": 1005,
+      "PERFORMANCE_EVALUATION": 1006
+    },
+
+    /* =======================================================
+       2000 – Administration & Command
+       ======================================================= */
+    "ADMINISTRATION_AND_COMMAND": {
+      "PERSONNEL_MEETING": 2001,
+      "HR_ADMINISTRATION": 2002,
+      "COMMAND_ADMINISTRATION": 2003,
+      "LOGISTICS_ADMINISTRATION": 2004,
+      "TRANSPORT_ADMINISTRATION": 2005
+    },
+
+    /* =======================================================
+       3000 – Social & Cultural Events (Adults)
+       ======================================================= */
+    "SOCIAL_AND_CULTURAL": {
+      "BIRTHDAY_CELEBRATION": 3001,
+      "CHRISTMAS_CELEBRATION": 3002,
+      "NEW_YEAR_CELEBRATION": 3003,
+
+      "SOCIAL_CONFLICT": 3101,
+      "SOCIAL_RECONCILIATION": 3102,
+
+      "FLIRTATION": 3110,
+      "ROMANTIC_INVOLVEMENT": 3111,
+      "AFFAIR": 3112,
+      "RELATIONSHIP_START": 3113,
+      "RELATIONSHIP_CRISIS": 3114,
+      "BREAKUP": 3115,
+
+      "MARRIAGE": 3120,
+
+      "PREGNANCY_ANNOUNCEMENT": 3130,
+      "CHILDBIRTH": 3131,
+      "PARENTHOOD_EVENT": 3132,
+
+      "RUMOR_GOSSIP": 3140,
+      "JEALOUSY_EVENT": 3141,
+      "TRUST_BREACH": 3142,
+      "SOCIAL_EXCLUSION": 3143
+    },
+
+    /* =======================================================
+       3200 – Youth & First Relationships
+       ======================================================= */
+    "YOUTH_SOCIAL_EVENTS": {
+      "EARLY_TEEN_CRUSH": 3201,
+      "EARLY_TEEN_REJECTION": 3202,
+      "EARLY_TEEN_EMBARRASSMENT": 3203,
+
+      "TEEN_FIRST_LOVE": 3210,
+      "TEEN_SECRET_RELATIONSHIP": 3211,
+      "TEEN_AUTHORITY_CONFLICT_OVER_RELATIONSHIP": 3212,
+
+      "LATE_TEEN_SERIOUS_RELATIONSHIP": 3220,
+      "LATE_TEEN_BREAKUP": 3221
+    },
+
+    /* =======================================================
+       4000 – Children & Youth Daily Life (Age-Dependent)
+       ======================================================= */
+    "CHILDREN_AND_YOUTH": {
+
+      /* 0–3 years */
+      "TODDLER_DAILY_EVENT": 4001,
+      "TODDLER_CARE_ISSUE": 4002,
+      "TODDLER_HEALTH_EVENT": 4003,
+
+      /* 4–5 years */
+      "PRESCHOOL_PLAY_EVENT": 4101,
+      "PRESCHOOL_SOCIAL_CONFLICT": 4102,
+      "PRESCHOOL_LEARNING_EVENT": 4103,
+
+      /* 6–9 years */
+      "SCHOOL_ACADEMIC_EVENT": 4201,
+      "SCHOOL_FRIENDSHIP_EVENT": 4202,
+      "SCHOOL_DISCIPLINE_EVENT": 4203,
+
+      /* 10–13 years */
+      "EARLY_TEEN_IDENTITY_EVENT": 4301,
+      "EARLY_TEEN_AUTHORITY_CONFLICT": 4302,
+      "EARLY_TEEN_PERFORMANCE_PRESSURE": 4303,
+
+      /* 14–15 years (Apprentice) */
+      "APPRENTICE_TRAINING_EVENT": 4401,
+      "APPRENTICE_MENTOR_CONFLICT": 4402,
+      "APPRENTICE_ERROR_WITH_CONSEQUENCE": 4403,
+
+      /* 16–17 years */
+      "LATE_TEEN_RESPONSIBILITY_EVENT": 4501,
+      "LATE_TEEN_RULE_VIOLATION": 4502,
+      "LATE_TEEN_PERFORMANCE_BREAKTHROUGH": 4503
+    }
+  }
+}
