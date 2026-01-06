@@ -1120,6 +1120,16 @@ class MekSocialGUI:
             style="Primary.TButton"
         )
         next_day_btn.pack(side=tk.LEFT, padx=4)
+        
+        # Calendar button
+        if DetailedCalendarWindow is not None:
+            calendar_btn = ttk.Button(
+                top_bar,
+                text="📅 Calendar",
+                command=self._open_calendar,
+                style="Primary.TButton"
+            )
+            calendar_btn.pack(side=tk.LEFT, padx=4)
     
     def _build_middle_section(self, parent: ttk.Frame) -> None:
         """Build middle section: Left Navigation Pane + Right Inspector Panel."""
@@ -1469,6 +1479,12 @@ class MekSocialGUI:
                 self._update_details(self.characters[self.selected_character_id])
 
     def _on_date_right_click(self, event):
+        if DetailedCalendarWindow is None:
+            return
+        DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
+    
+    def _open_calendar(self):
+        """Open the calendar window."""
         if DetailedCalendarWindow is None:
             return
         DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
