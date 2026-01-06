@@ -1,0 +1,81 @@
+{
+  "2001": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 2,
+      "max": 6
+    },
+    "derived_participants": []
+  },
+
+  "2002": {
+    "availability": {
+      "requires": {
+        "role": "HR",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "exclude_roles": ["HR"]
+    },
+    "derived_participants": [
+      {
+        "relation": "HR_REPRESENTATIVE"
+      }
+    ]
+  },
+
+  "2003": {
+    "availability": {
+      "requires": {
+        "role": "COMMAND",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "exclude_roles": ["COMMAND"]
+    },
+    "derived_participants": [
+      {
+        "relation": "COMMAND_SUPERVISOR_OF",
+        "source": "primary"
+      }
+    ]
+  },
+
+  "2004": {
+    "availability": {
+      "requires": {
+        "role": "LOGISTICS",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "role": "LOGISTICS"
+    },
+    "derived_participants": []
+  },
+
+  "2005": {
+    "availability": {
+      "requires": {
+        "role": "TRANSPORT",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "role": "TRANSPORT"
+    },
+    "derived_participants": []
+  }
+}
