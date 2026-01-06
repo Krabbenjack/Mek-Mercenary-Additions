@@ -1,26 +1,187 @@
 {
-  "environments": [
-    "SIMULATION_ENVIRONMENT",
-    "FIELD_OPERATION",
-    "LIVE_COMBAT_ZONE",
+  "version": "2.0",
+  "scope": "event_environment",
+  "description": "Event Environments define hard, numeric modifiers for interactions, checks and outcomes. Environments are objective contexts and contain no probabilistic logic themselves.",
 
-    "FORWARD_OPERATING_BASE",
-    "COMMAND_CENTER",
-    "BRIEFING_ROOM",
+  "notes": {
+    "interaction_weight_modifiers": "Additive modifiers applied to Injector base weights.",
+    "check_modifiers": "Difficulty deltas applied after Tone modifiers.",
+    "outcome_modifiers": "Numeric multipliers or bonuses applied during outcome resolution.",
+    "domains": "Defines which interaction domains are allowed in this environment."
+  },
 
-    "MAINTENANCE_BAY",
-    "TRAINING_FACILITY",
-    "EDUCATIONAL_FACILITY",
+  "environments": {
 
-    "ADMINISTRATIVE_OFFICE",
+    "SIMULATION": {
+      "description": "Training or simulated environment without real-world consequences.",
+      "domains": ["operational", "social"],
 
-    "MESS_HALL",
-    "PUBLIC_SOCIAL_SPACE",
-    "PRIVATE_QUARTERS",
+      "interaction_weight_modifiers": {
+        "mech_combat": 0.20,
+        "vehicle_combat": 0.15,
+        "infantry_combat": 0.10,
+        "training_drill": 0.25,
 
-    "JUMPSHIP_QUARTERS",
+        "disciplinary_action": -0.30
+      },
 
-    "CHILDCARE_FACILITY",
-    "FAMILY_QUARTERS"
-  ]
+      "check_modifiers": {
+        "operational": { "difficulty": -1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 0.5,
+        "xp_multiplier": 1.2,
+        "confidence_multiplier": 1.2,
+        "reputation_pool_multiplier": 0.0
+      }
+    },
+
+    "LIVE_COMBAT": {
+      "description": "Real combat situation with full consequences.",
+      "domains": ["operational"],
+
+      "interaction_weight_modifiers": {
+        "mech_combat": 0.30,
+        "vehicle_combat": 0.25,
+        "infantry_combat": 0.20,
+        "emergency_response": 0.15
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": 1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 1.5,
+        "xp_multiplier": 1.5,
+        "confidence_multiplier": 1.0,
+        "reputation_pool_multiplier": 1.0
+      }
+    },
+
+    "FOB": {
+      "description": "Forward Operating Base under active or recent operational pressure.",
+      "domains": ["operational", "social"],
+
+      "interaction_weight_modifiers": {
+        "administrative_processing": 0.10,
+        "technical_maintenance": 0.15,
+        "casual_talk": 0.10,
+
+        "bonding_activity": -0.10
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": 0 },
+        "social": { "difficulty": 1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 1.2,
+        "xp_multiplier": 1.0,
+        "confidence_multiplier": 1.0,
+        "reputation_pool_multiplier": 0.5
+      }
+    },
+
+    "JUMPSHIP_QUARTERS": {
+      "description": "Private or semi-private living quarters aboard a jumpship.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "casual_talk": 0.25,
+        "bonding_activity": 0.20,
+        "confide": 0.20,
+        "flirt": 0.15,
+
+        "instruction": -0.25,
+        "evaluation": -0.20
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": -1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 0.8,
+        "confidence_multiplier": 1.1,
+        "reputation_pool_multiplier": 0.0
+      }
+    },
+
+    "MESSHALL": {
+      "description": "Communal eating and social space.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "casual_talk": 0.25,
+        "small_talk": 0.20,
+        "gossip": 0.20,
+        "bonding_activity": 0.15,
+
+        "instruction": -0.20
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": -1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 0.9,
+        "confidence_multiplier": 1.0,
+        "reputation_pool_multiplier": 0.5
+      }
+    },
+
+    "ADMINISTRATIVE_OFFICE": {
+      "description": "Formal administrative or command office.",
+      "domains": ["operational", "social"],
+
+      "interaction_weight_modifiers": {
+        "administrative_processing": 0.30,
+        "instruction": 0.20,
+        "evaluation": 0.15,
+        "compliance_check": 0.15,
+
+        "casual_talk": -0.20,
+        "gossip": -0.30,
+        "flirt": -0.30
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": 1 },
+        "operational": { "difficulty": 0 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 1.0,
+        "confidence_multiplier": 1.0,
+        "reputation_pool_multiplier": 1.0
+      }
+    },
+
+    "TRAINING_GROUNDS": {
+      "description": "Physical training area outside of simulation systems.",
+      "domains": ["operational"],
+
+      "interaction_weight_modifiers": {
+        "training_drill": 0.30,
+        "infantry_combat": 0.15,
+
+        "administrative_processing": -0.20
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": 0 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 1.2,
+        "xp_multiplier": 1.2,
+        "confidence_multiplier": 1.1,
+        "reputation_pool_multiplier": 0.0
+      }
+    }
+  }
 }
