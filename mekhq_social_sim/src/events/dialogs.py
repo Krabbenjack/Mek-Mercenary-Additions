@@ -31,11 +31,14 @@ class EventCreationDialog:
 
         # Event Type dropdown
         tk.Label(self.window, text="Event Type:").pack(anchor=tk.W, padx=10, pady=(8, 0))
-        self.event_type_var = tk.StringVar(value=EventType.FIELD_TRAINING.value)
+        # Use first available event type as default
+        first_event = list(EventType)[0]
+        self.event_type_var = tk.StringVar(value=first_event.name)
+        # Display event names (human readable) instead of numeric IDs
         event_type_combo = ttk.Combobox(
             self.window,
             textvariable=self.event_type_var,
-            values=[et.value for et in EventType],
+            values=[et.name for et in EventType],
             state="readonly",
             width=35
         )
@@ -62,10 +65,11 @@ class EventCreationDialog:
         self.window.focus()
 
     def _on_create(self):
-        event_type_value = self.event_type_var.get()
+        event_type_name = self.event_type_var.get()
         recurrence_value = self.recurrence_var.get().lower()
         
-        event_type = EventType(event_type_value)
+        # Get EventType by name
+        event_type = EventType[event_type_name]
         recurrence_type = RecurrenceType(recurrence_value)
         
         self.result = (event_type, recurrence_type)
@@ -91,11 +95,11 @@ class EventEditDialog:
 
         # Event Type dropdown
         tk.Label(self.window, text="Event Type:").pack(anchor=tk.W, padx=10, pady=(8, 0))
-        self.event_type_var = tk.StringVar(value=event.event_type.value)
+        self.event_type_var = tk.StringVar(value=event.event_type.name)
         event_type_combo = ttk.Combobox(
             self.window,
             textvariable=self.event_type_var,
-            values=[et.value for et in EventType],
+            values=[et.name for et in EventType],
             state="readonly",
             width=35
         )
@@ -122,10 +126,10 @@ class EventEditDialog:
         self.window.focus()
 
     def _on_save(self):
-        event_type_value = self.event_type_var.get()
+        event_type_name = self.event_type_var.get()
         recurrence_value = self.recurrence_var.get().lower()
         
-        event_type = EventType(event_type_value)
+        event_type = EventType[event_type_name]
         recurrence_type = RecurrenceType(recurrence_value)
         
         self.result = (event_type, self.event.start_date, recurrence_type)
