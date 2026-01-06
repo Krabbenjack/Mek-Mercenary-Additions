@@ -179,6 +179,31 @@ class EventManager:
     def get_all_events(self) -> List[Event]:
         """Return all stored events (shallow copy)."""
         return self.events.copy()
+    
+    def execute_events_for_date(self, target_date: date, characters: Optional[dict] = None):
+        """
+        Execute all events scheduled for a specific date.
+        
+        This integrates with the EventInjector to actually run event mechanics.
+        
+        Args:
+            target_date: Date to execute events for
+            characters: Optional character roster for event execution
+            
+        Returns:
+            List of EventExecutionLog objects
+        """
+        from .injector import get_event_injector
+        
+        events = self.get_events_for_date(target_date)
+        injector = get_event_injector()
+        
+        logs = []
+        for event in events:
+            log = injector.execute_event(event.event_id, target_date, characters)
+            logs.append(log)
+        
+        return logs
 
     def save(self) -> bool:
         """
