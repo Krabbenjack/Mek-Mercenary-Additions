@@ -1095,7 +1095,7 @@ class MekSocialGUI:
         self._build_bottom_feed(main_container)
 
     def _build_top_bar(self, parent: ttk.Frame) -> None:
-        """Build top bar: Campaign Day + Calendar access (fixed height ~36px)."""
+        """Build top bar: Campaign Day + Calendar access + Calendar Widget (fixed height ~36px)."""
         top_bar = ttk.Frame(parent, style="Panel.TFrame", height=36)
         top_bar.pack(fill=tk.X, side=tk.TOP)
         top_bar.pack_propagate(False)  # Fixed height
@@ -1130,6 +1130,56 @@ class MekSocialGUI:
                 style="Primary.TButton"
             )
             calendar_btn.pack(side=tk.LEFT, padx=4)
+        
+        # Calendar Widget (compact, right-aligned)
+        # This makes the calendar visibly accessible in the UI
+        if EventManager is not None:
+            try:
+                from merk_calendar.widget import CalendarWidget
+                
+                self.calendar_widget = CalendarWidget(
+                    top_bar,
+                    event_manager=self.event_manager,
+                    initial_date=self.current_date,
+                    on_date_change=self._on_calendar_date_change,
+                    bg=THEME["bg_panel"]
+                )
+                self.calendar_widget.pack(side=tk.RIGHT, padx=8, pady=2)
+            except Exception as e:
+                print(f"[WARNING] Could not create calendar widget: {e}")
+    
+    def _on_calendar_date_change(self, new_date: date) -> None:
+        """
+        Handle date change from calendar widget.
+        
+        Args:
+            new_date: New date selected in calendar widget
+        """
+        # Update current date
+        self.current_date = new_date
+        
+        # Update day counter (calculate days from some baseline)
+        # For now, we'll just keep the current day and update the date display
+        self._update_date_display()
+        
+        # Update character ages
+        self._update_character_ages()
+        
+        # Execute any events scheduled for this date
+        if self.event_manager and self.characters:
+            logs = self.event_manager.execute_events_for_date(new_date, self.characters)
+            if logs:
+                self._log_to_feed(f"Executed {len(logs)} event(s) for {new_date.strftime('%Y-%m-%d')}")
+                for log in logs:
+                    self._log_to_feed(f"  • {log.event_name} (ID:{log.event_id})")
+        
+        # Update displays
+        self._update_day_events_bar()
+        self._update_day_events_description()
+        
+        # Refresh details if a character is selected
+        if self.selected_character_id and self.selected_character_id in self.characters:
+            self._update_details(self.characters[self.selected_character_id])
     
     def _build_middle_section(self, parent: ttk.Frame) -> None:
         """Build middle section: Left Navigation Pane + Right Inspector Panel."""
@@ -1449,12 +1499,18 @@ class MekSocialGUI:
         CharacterDetailDialog(self.master, char, self.current_date, self.characters)
     
     def _open_social_director(self) -> None:
-        """Open Social Director debug tool (placeholder)."""
-        messagebox.showinfo(
-            "Social Director",
-            "Social Director debug tool not yet implemented.\n\n"
-            "This would open the Social Event Injector for debugging social interactions."
-        )
+        """Open Social Director debug tool."""
+        from social_director import SocialDirectorWindow
+        
+        try:
+            # Create Social Director window with event manager
+            SocialDirectorWindow(self.master, self.event_manager)
+        except Exception as e:
+            messagebox.showerror(
+                "Error Opening Social Director",
+                f"Failed to open Social Director:\n{e}"
+            )
+            traceback.print_exc()
 
     # --- Helper methods ---------------------------------------------------
 
@@ -1886,6 +1942,11 @@ class MekSocialGUI:
         # advance the real date, update displays
         self.current_date += timedelta(days=1)
         self._update_date_display()
+        
+        # Update calendar widget date if it exists
+        if hasattr(self, 'calendar_widget'):
+            self.calendar_widget.current_date = self.current_date
+            self.calendar_widget._update_display()
 
         # Update ages when the day advances
         self._update_character_ages()
@@ -1894,12 +1955,14 @@ class MekSocialGUI:
         self._log_to_feed(f"--- Day {self.current_day} ---")
         self._log_to_feed(f"Interaction points reset.")
 
-        # Log day events to feed
+        # Execute scheduled events for this date
         if self.event_manager:
             events = self.event_manager.get_events_for_date(self.current_date)
             if events:
-                for event in events:
-                    self._log_to_feed(f"Event: {event.title}")
+                self._log_to_feed(f"Executing {len(events)} scheduled event(s)...")
+                logs = self.event_manager.execute_events_for_date(self.current_date, self.characters)
+                for log in logs:
+                    self._log_to_feed(f"  • {log.event_name} (ID:{log.event_id})")
 
         # Update details of the currently selected character
         if self.selected_character_id and self.selected_character_id in self.characters:
