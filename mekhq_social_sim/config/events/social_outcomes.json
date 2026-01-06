@@ -1,0 +1,281 @@
+{
+  "version": "2.0",
+  "domain": "social",
+  "description": "Ebene 4 – Contract-konforme soziale Outcomes. Nutzt ausschließlich erlaubte Axes, Flags und Trigger.",
+
+  "interaction_outcomes": {
+
+    "casual_talk": {
+      "stage_outcomes": {
+        "conversation_flow": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 1, "respect": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "friendship": 2, "respect": 2 }
+          }
+        }
+      }
+    },
+
+    "small_talk": {
+      "stage_outcomes": {
+        "exchange": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 1 }
+          }
+        }
+      }
+    },
+
+    "discussion": {
+      "stage_outcomes": {
+        "engagement": {
+          "on_failure": {
+            "axis_delta": { "respect": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "respect": 2, "friendship": 1 }
+          }
+        }
+      }
+    },
+
+    "speech": {
+      "stage_outcomes": {
+        "delivery": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 },
+            "reputation_pool_delta": -1
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "respect": 2 },
+            "reputation_pool_delta": 2
+          }
+        }
+      }
+    },
+
+    "instruction": {
+      "stage_outcomes": {
+        "authority_assertion": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 }
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 }
+          }
+        }
+      }
+    },
+
+    "evaluation": {
+      "stage_outcomes": {
+        "assessment": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 }
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "respect": 2 }
+          }
+        }
+      }
+    },
+
+    "compliance_check": {
+      "stage_outcomes": {
+        "compliance_pressure": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 },
+            "reputation_pool_delta": -1
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 },
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    },
+
+    "argument": {
+      "stage_outcomes": {
+        "escalation": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 },
+            "set_flags": ["CONFLICT_ACTIVE"],
+            "reputation_pool_delta": -1
+          },
+          "on_success": {
+            "axis_delta": { "respect": 0 }
+          },
+          "on_great_success": {
+            "axis_delta": { "respect": 1 },
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    },
+
+    "accusation": {
+      "stage_outcomes": {
+        "confrontation": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 },
+            "set_flags": ["CONFLICT_ACTIVE"],
+            "reputation_pool_delta": -2
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 },
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    },
+
+    "bonding_activity": {
+      "stage_outcomes": {
+        "shared_experience": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 2 }
+          },
+          "on_great_success": {
+            "axis_delta": { "friendship": 3, "respect": 1 }
+          }
+        }
+      }
+    },
+
+    "gossip": {
+      "stage_outcomes": {
+        "exchange": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "friendship": 2 },
+            "emit_triggers": ["RUMOR_SPREAD"]
+          }
+        }
+      }
+    },
+
+    "flirt": {
+      "stage_outcomes": {
+        "chemistry": {
+          "on_failure": {
+            "axis_delta": { "romance": -1 }
+          },
+          "on_success": {
+            "axis_delta": { "romance": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "romance": 2 }
+          }
+        }
+      }
+    },
+
+    "confide": {
+      "stage_outcomes": {
+        "disclosure": {
+          "on_failure": {
+            "set_flags": ["EMOTIONAL_DISTANCE"]
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 1, "respect": 1 }
+          },
+          "on_great_success": {
+            "axis_delta": { "friendship": 2, "respect": 2 }
+          }
+        }
+      }
+    },
+
+    "social_tension": {
+      "stage_outcomes": {
+        "latent_pressure": {
+          "on_failure": {
+            "axis_delta": { "respect": 0 }
+          },
+          "on_success": {
+            "set_flags": ["SOCIAL_TENSION"]
+          }
+        }
+      }
+    },
+
+    "exclusion": {
+      "stage_outcomes": {
+        "group_decision": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": -2, "respect": -1 },
+            "set_flags": ["SOCIAL_EXCLUSION"]
+          }
+        }
+      }
+    },
+
+    "authority_challenge": {
+      "stage_outcomes": {
+        "challenge": {
+          "on_failure": {
+            "axis_delta": { "respect": -1 }
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1 }
+          }
+        }
+      }
+    },
+
+    "mentorship_exchange": {
+      "stage_outcomes": {
+        "guidance": {
+          "on_failure": {
+            "axis_delta": { "respect": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "respect": 1, "friendship": 1 }
+          }
+        }
+      }
+    },
+
+    "play_interaction": {
+      "stage_outcomes": {
+        "play_flow": {
+          "on_failure": {
+            "axis_delta": { "friendship": 0 }
+          },
+          "on_success": {
+            "axis_delta": { "friendship": 2 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "version": "1.1",
+  "domain": "operational",
+  "description": "Schlanke operative Outcomes. Enthält ausschließlich erlaubte Effekte gemäß Design-Snapshot.",
+
+  "interaction_outcomes": {
+
+    "mech_combat": {
+      "stage_outcomes": {
+        "engagement": {
+          "on_failure": {
+            "fatigue_delta": 1,
+            "confidence_delta": -1
+          },
+          "on_success": {
+            "xp_delta": 1,
+            "confidence_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 2,
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    },
+
+    "vehicle_combat": {
+      "stage_outcomes": {
+        "engagement": {
+          "on_failure": {
+            "fatigue_delta": 1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1
+          }
+        }
+      }
+    },
+
+    "infantry_combat": {
+      "stage_outcomes": {
+        "fire_and_movement": {
+          "on_failure": {
+            "fatigue_delta": 1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1
+          }
+        }
+      }
+    },
+
+    "tactical_maneuvering": {
+      "stage_outcomes": {
+        "maneuver": {
+          "on_failure": {
+            "confidence_delta": -1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1
+          }
+        }
+      }
+    },
+
+    "sensor_operation": {
+      "stage_outcomes": {
+        "scan": {
+          "on_failure": {},
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2
+          }
+        }
+      }
+    },
+
+    "command_and_control": {
+      "stage_outcomes": {
+        "command_decision": {
+          "on_failure": {
+            "confidence_delta": -1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1,
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    },
+
+    "training_drill": {
+      "stage_outcomes": {
+        "exercise_execution": {
+          "on_failure": {
+            "fatigue_delta": 1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1
+          }
+        }
+      }
+    },
+
+    "performance_execution": {
+      "stage_outcomes": {
+        "task_performance": {
+          "on_failure": {
+            "confidence_delta": -1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1
+          }
+        }
+      }
+    },
+
+    "emergency_response": {
+      "stage_outcomes": {
+        "immediate_action": {
+          "on_failure": {
+            "fatigue_delta": 1
+          },
+          "on_success": {
+            "xp_delta": 1
+          },
+          "on_great_success": {
+            "xp_delta": 2,
+            "confidence_delta": 1,
+            "reputation_pool_delta": 1
+          }
+        }
+      }
+    }
+  }
+}
