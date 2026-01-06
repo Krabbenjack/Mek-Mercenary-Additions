@@ -429,6 +429,7 @@ class CharacterDetailDialog:
 
         # Add sections in order
         self._build_overview_section(accordion)
+        self._build_progress_section(accordion)  # Phase 3: Event-driven state
         self._build_attributes_section(accordion)
         self._build_skills_section(accordion)
         self._build_personality_section(accordion)
@@ -519,6 +520,90 @@ class CharacterDetailDialog:
                                      bg=self.COLORS["overview"], fg="#1E1E1E",
                                      font=("TkDefaultFont", 9))
                 quirk_line.pack(anchor="w", padx=(10, 0))
+
+    def _build_progress_section(self, accordion: AccordionContainer) -> None:
+        """
+        Progress section - Event-driven character state (Phase 3).
+        
+        Displays:
+        - XP (numeric)
+        - Confidence (bar, amber #FFB300)
+        - Fatigue (bar, orange #FB8C00)
+        - Reputation Pool (bar, violet #8E24AA)
+        
+        All values are READ-ONLY and modified only by event outcomes.
+        """
+        # Use a light yellow/cream background for progress
+        progress_color = "#FFFAF0"
+        section = accordion.add_section("Progress", progress_color, is_open=False)
+        body = section.get_body()
+        
+        char = self.character
+        
+        # Title
+        title_label = tk.Label(body, text="Event-Driven Progress",
+                              bg=progress_color, fg="#1E1E1E",
+                              font=("TkDefaultFont", 10, "bold"))
+        title_label.pack(anchor="w", pady=(0, 8))
+        
+        # XP (numeric only, no bar)
+        xp_frame = tk.Frame(body, bg=progress_color)
+        xp_frame.pack(fill=tk.X, pady=4)
+        
+        xp_label = tk.Label(xp_frame, text="XP:", bg=progress_color, fg="#1E1E1E",
+                           font=("TkDefaultFont", 9, "bold"), anchor="w", width=16)
+        xp_label.pack(side=tk.LEFT)
+        
+        xp_value = tk.Label(xp_frame, text=str(char.xp), bg=progress_color, fg="#1E1E1E",
+                           font=("TkDefaultFont", 9), anchor="w")
+        xp_value.pack(side=tk.LEFT)
+        
+        # Helper function to create progress bars
+        def create_progress_bar(parent, label_text: str, value: int, max_value: int, color: str):
+            """Create a labeled progress bar."""
+            frame = tk.Frame(parent, bg=progress_color)
+            frame.pack(fill=tk.X, pady=4)
+            
+            # Label
+            label = tk.Label(frame, text=label_text, bg=progress_color, fg="#1E1E1E",
+                           font=("TkDefaultFont", 9, "bold"), anchor="w", width=16)
+            label.pack(side=tk.LEFT)
+            
+            # Bar container
+            bar_container = tk.Frame(frame, bg=progress_color)
+            bar_container.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+            
+            # Progress bar (canvas-based)
+            canvas = tk.Canvas(bar_container, height=16, bg="#E0E0E0", 
+                             highlightthickness=0, relief=tk.FLAT)
+            canvas.pack(fill=tk.X)
+            
+            # Draw filled portion
+            canvas_width = 200  # Fixed width for consistency
+            filled_width = int((value / max_value) * canvas_width)
+            canvas.config(width=canvas_width)
+            canvas.create_rectangle(0, 0, filled_width, 16, fill=color, outline="")
+            
+            # Value text
+            value_text = tk.Label(frame, text=f"{value}/{max_value}", bg=progress_color,
+                                fg="#1E1E1E", font=("TkDefaultFont", 8), width=8)
+            value_text.pack(side=tk.LEFT)
+        
+        # Confidence bar (Amber/Gold #FFB300)
+        create_progress_bar(body, "Confidence:", char.confidence, 100, "#FFB300")
+        
+        # Fatigue bar (Orange #FB8C00)
+        create_progress_bar(body, "Fatigue:", char.fatigue, 100, "#FB8C00")
+        
+        # Reputation Pool bar (Violet #8E24AA)
+        create_progress_bar(body, "Reputation Pool:", char.reputation_pool, 100, "#8E24AA")
+        
+        # Info note
+        info_label = tk.Label(body, 
+                             text="ℹ️ These values are modified by event outcomes only.",
+                             bg=progress_color, fg="#666666",
+                             font=("TkDefaultFont", 8, "italic"), anchor="w")
+        info_label.pack(anchor="w", pady=(8, 0))
 
     def _build_attributes_section(self, accordion: AccordionContainer) -> None:
         """Attributes section (numeric values only) with multi-column layout."""

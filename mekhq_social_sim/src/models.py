@@ -62,6 +62,13 @@ class Character:
     
     # Special Abilities / SPAs (name -> description)
     abilities: Dict[str, str] = field(default_factory=dict)
+    
+    # Event-driven character state (Phase 3)
+    # These values are modified by event outcomes and displayed read-only in UI
+    xp: int = 0  # Experience points (numeric, no upper limit)
+    confidence: int = 50  # Operational confidence (0-100)
+    fatigue: int = 0  # Fatigue level (0-100)
+    reputation_pool: int = 50  # Social reputation (0-100)
 
     def label(self) -> str:
         """Short label for GUI/logs."""
