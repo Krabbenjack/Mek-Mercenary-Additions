@@ -1,0 +1,269 @@
+{
+  "version": "1.0",
+  "domain": "operational",
+  "description": "Ebene 3 – Mechanische Auflösung operativer Interaktionen (AToW-basiert, stage-orientiert).",
+
+  "resolution_profiles": {
+
+    "single_execution_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "single",
+      "opposed": false,
+      "uses_margin_of_success": true
+    },
+
+    "group_execution_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "group",
+      "opposed": false,
+      "aggregation": "lowest_margin",
+      "uses_margin_of_success": true,
+      "notes": "Schwächstes Glied bestimmt das Gesamtergebnis."
+    },
+
+    "group_vs_abstract_opponent": {
+      "check_type": "skill_or_attribute",
+      "participants": "group",
+      "opposed": true,
+      "opponent_type": "abstract",
+      "uses_margin_of_success": true,
+      "notes": "Gegnerprofil kommt aus Event/Environment."
+    },
+
+    "group_opposed_execution": {
+      "check_type": "skill_or_attribute",
+      "participants": "group_vs_group",
+      "opposed": true,
+      "uses_margin_of_success": true,
+      "winner_by_margin": true
+    },
+
+    "pair_execution_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "pair",
+      "opposed": false,
+      "uses_margin_of_success": true
+    }
+  },
+
+  "interaction_resolutions": {
+
+    "mech_combat": {
+      "stages": [
+        {
+          "id": "engagement",
+          "profile": "group_vs_abstract_opponent",
+          "primary_skill": "Gunnery",
+          "secondary_skill": "Piloting",
+          "difficulty_source": "environment",
+          "notes": "Simulation oder Live Combat abhängig vom Environment."
+        }
+      ]
+    },
+
+    "vehicle_combat": {
+      "stages": [
+        {
+          "id": "engagement",
+          "profile": "group_vs_abstract_opponent",
+          "primary_skill": "Gunnery",
+          "secondary_skill": "Driving",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "infantry_combat": {
+      "stages": [
+        {
+          "id": "fire_and_movement",
+          "profile": "group_vs_abstract_opponent",
+          "primary_skill": "Small Arms",
+          "secondary_skill": "Tactics",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "tactical_maneuvering": {
+      "stages": [
+        {
+          "id": "maneuver",
+          "profile": "group_execution_check",
+          "primary_skill": "Tactics",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "sensor_operation": {
+      "stages": [
+        {
+          "id": "scan",
+          "profile": "group_execution_check",
+          "primary_skill": "Sensor Operations",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "target_acquisition": {
+      "stages": [
+        {
+          "id": "lock_on",
+          "profile": "pair_execution_check",
+          "primary_skill": "Sensor Operations",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "command_and_control": {
+      "stages": [
+        {
+          "id": "command_decision",
+          "profile": "group_execution_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "WIL",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "technical_maintenance": {
+      "stages": [
+        {
+          "id": "repair_or_service",
+          "profile": "group_execution_check",
+          "primary_skill": "Technician",
+          "fallback_attribute": "DEX",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "diagnostics_and_testing": {
+      "stages": [
+        {
+          "id": "diagnostics",
+          "profile": "pair_execution_check",
+          "primary_skill": "Technician",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "logistics_handling": {
+      "stages": [
+        {
+          "id": "logistics_flow",
+          "profile": "group_execution_check",
+          "primary_skill": "Administration",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "administrative_processing": {
+      "stages": [
+        {
+          "id": "paperwork",
+          "profile": "pair_execution_check",
+          "primary_skill": "Administration",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "training_drill": {
+      "stages": [
+        {
+          "id": "exercise_execution",
+          "profile": "group_execution_check",
+          "primary_skill": "Training",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "performance_execution": {
+      "stages": [
+        {
+          "id": "task_performance",
+          "profile": "single_execution_check",
+          "primary_skill": null,
+          "fallback_attribute": "WIL",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "emergency_response": {
+      "stages": [
+        {
+          "id": "immediate_action",
+          "profile": "group_execution_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "WIL",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "safety_procedure": {
+      "stages": [
+        {
+          "id": "procedure_compliance",
+          "profile": "group_execution_check",
+          "primary_skill": "Administration",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "disciplinary_action": {
+      "stages": [
+        {
+          "id": "discipline_enforcement",
+          "profile": "pair_execution_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "WIL",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "childcare_activity": {
+      "stages": [
+        {
+          "id": "care_routine",
+          "profile": "group_execution_check",
+          "primary_skill": null,
+          "fallback_attribute": "WIL",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "learning_activity": {
+      "stages": [
+        {
+          "id": "learning_process",
+          "profile": "group_execution_check",
+          "primary_skill": "Training",
+          "fallback_attribute": "INT",
+          "difficulty_source": "environment"
+        }
+      ]
+    }
+
+  }
+}

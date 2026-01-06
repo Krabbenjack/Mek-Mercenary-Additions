@@ -1,0 +1,286 @@
+{
+  "version": "1.0",
+  "domain": "social",
+  "description": "Ebene 3 – Mechanische Auflösung sozialer Interaktionen (AToW-basiert, stage-orientiert).",
+
+  "resolution_profiles": {
+
+    "attribute_gate": {
+      "check_type": "attribute",
+      "participants": "single",
+      "opposed": false,
+      "uses_margin_of_success": false,
+      "purpose": "gating_or_activation"
+    },
+
+    "single_social_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "single",
+      "opposed": false,
+      "uses_margin_of_success": true
+    },
+
+    "pair_opposed_social_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "pair",
+      "opposed": true,
+      "uses_margin_of_success": true,
+      "winner_by_margin": true
+    },
+
+    "group_social_check": {
+      "check_type": "skill_or_attribute",
+      "participants": "group",
+      "opposed": false,
+      "aggregation": "average_margin",
+      "uses_margin_of_success": true
+    }
+  },
+
+  "interaction_resolutions": {
+
+    "casual_talk": {
+      "stages": [
+        {
+          "id": "initiation",
+          "profile": "attribute_gate",
+          "attribute": "CHA",
+          "difficulty_source": "tone",
+          "on_failure": "no_interaction"
+        },
+        {
+          "id": "conversation_flow",
+          "profile": "group_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone_and_environment"
+        }
+      ]
+    },
+
+    "small_talk": {
+      "stages": [
+        {
+          "id": "exchange",
+          "profile": "single_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "speech": {
+      "stages": [
+        {
+          "id": "delivery",
+          "profile": "single_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "discussion": {
+      "stages": [
+        {
+          "id": "engagement",
+          "profile": "group_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "instruction": {
+      "stages": [
+        {
+          "id": "authority_assertion",
+          "profile": "single_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "evaluation": {
+      "stages": [
+        {
+          "id": "assessment",
+          "profile": "single_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "compliance_check": {
+      "stages": [
+        {
+          "id": "compliance_pressure",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "environment"
+        }
+      ]
+    },
+
+    "flirt": {
+      "stages": [
+        {
+          "id": "approach",
+          "profile": "attribute_gate",
+          "attribute": "CHA",
+          "difficulty_source": "tone",
+          "on_failure": "awkward_outcome"
+        },
+        {
+          "id": "chemistry",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "confide": {
+      "stages": [
+        {
+          "id": "trust_gate",
+          "profile": "attribute_gate",
+          "attribute": "CHA",
+          "difficulty_source": "tone",
+          "on_failure": "no_disclosure"
+        },
+        {
+          "id": "disclosure",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "bonding_activity": {
+      "stages": [
+        {
+          "id": "shared_experience",
+          "profile": "group_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone_and_environment"
+        }
+      ]
+    },
+
+    "gossip": {
+      "stages": [
+        {
+          "id": "formation",
+          "profile": "attribute_gate",
+          "attribute": "CHA",
+          "difficulty_source": "tone",
+          "on_failure": "no_gossip"
+        },
+        {
+          "id": "exchange",
+          "profile": "group_social_check",
+          "primary_skill": "Streetwise",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "argument": {
+      "stages": [
+        {
+          "id": "escalation",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "accusation": {
+      "stages": [
+        {
+          "id": "confrontation",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Negotiation",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "social_tension": {
+      "stages": [
+        {
+          "id": "latent_pressure",
+          "profile": "group_social_check",
+          "primary_skill": null,
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "exclusion": {
+      "stages": [
+        {
+          "id": "group_decision",
+          "profile": "group_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "play_interaction": {
+      "stages": [
+        {
+          "id": "play_flow",
+          "profile": "group_social_check",
+          "primary_skill": null,
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "authority_challenge": {
+      "stages": [
+        {
+          "id": "challenge",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    },
+
+    "mentorship_exchange": {
+      "stages": [
+        {
+          "id": "guidance",
+          "profile": "pair_opposed_social_check",
+          "primary_skill": "Leadership",
+          "fallback_attribute": "CHA",
+          "difficulty_source": "tone"
+        }
+      ]
+    }
+  }
+}
