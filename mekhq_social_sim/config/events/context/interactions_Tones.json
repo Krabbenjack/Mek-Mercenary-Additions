@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "tones": {
+
+    "formal": {
+      "description": "Regelkonforme, hierarchische und kontrollierte Atmosphäre.",
+      "domains": ["social", "operational"]
+    },
+
+    "informal": {
+      "description": "Lockere, ungezwungene Atmosphäre mit geringer formaler Distanz.",
+      "domains": ["social"]
+    },
+
+    "cheerful": {
+      "description": "Positive, ausgelassene Grundstimmung mit hoher sozialer Offenheit.",
+      "domains": ["social"]
+    },
+
+    "tense": {
+      "description": "Angespannte Atmosphäre mit erhöhter Reizbarkeit und Eskalationsneigung.",
+      "domains": ["social", "operational"]
+    },
+
+    "focused": {
+      "description": "Sachliche, zielgerichtete Konzentration auf Aufgabe oder Leistung.",
+      "domains": ["operational"]
+    },
+
+    "stressful": {
+      "description": "Hoher Druck durch Zeitmangel, Gefahr oder Erwartungshaltung.",
+      "domains": ["operational", "social"]
+    },
+
+    "awkward": {
+      "description": "Sozial unangenehme, unsichere Atmosphäre mit Hemmungen.",
+      "domains": ["social"]
+    },
+
+    "somber": {
+      "description": "Gedämpfte, ernste Stimmung ohne Offenheit für Leichtigkeit.",
+      "domains": ["social"]
+    },
+
+    "celebratory": {
+      "description": "Anlassbezogen positive Stimmung mit Fokus auf Gemeinschaft.",
+      "domains": ["social"]
+    }
+  }
+}

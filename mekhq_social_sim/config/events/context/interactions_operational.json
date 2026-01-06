@@ -1,0 +1,308 @@
+{
+  "interaction_domain": "operational",
+  "version": "1.1",
+  "interactions": {
+
+    "mech_combat": {
+      "roll_type": "group_execution_or_opposed",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "by_unit",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "opposing_group",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Kampfhandlungen mit BattleMechs gegen reale oder abstrakte Gegner (z. B. Simulation)."
+    },
+
+    "vehicle_combat": {
+      "roll_type": "group_execution_or_opposed",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "by_vehicle_type",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "opposing_group",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Gefechte mit nicht-mechbasierten Fahrzeugen."
+    },
+
+    "infantry_combat": {
+      "roll_type": "group_execution_or_opposed",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "by_squad",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "opposing_group",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Bodenkampf zu Fuß oder mit persönlicher Ausrüstung."
+    },
+
+    "tactical_maneuvering": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "by_unit",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": false
+      },
+      "description": "Bewegung, Positionierung und Manöver mit taktischer Zielsetzung."
+    },
+
+    "sensor_operation": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "by_role",
+        "required_role": "sensor_operator",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "abstract_opponent",
+          "environment_object",
+          "enemy_unit"
+        ]
+      },
+      "description": "Aktive Nutzung von Sensorik zur Aufklärung oder Zielerfassung."
+    },
+
+    "target_acquisition": {
+      "roll_type": "pair_execution",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "enemy_unit",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Erfassung, Identifikation oder Priorisierung eines Ziels."
+    },
+
+    "command_and_control": {
+      "roll_type": "group_directed",
+      "participants": {
+        "selection_type": "directed_group",
+        "source_pool": "event_participants",
+        "grouping": "command_structure",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "subordinate_group",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Führung, Koordination und taktische Entscheidungslenkung."
+    },
+
+    "technical_maintenance": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "work_team",
+        "required_role": "technician",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "equipment",
+          "system"
+        ]
+      },
+      "description": "Wartung, Reparatur oder technische Arbeiten an Geräten oder Einheiten."
+    },
+
+    "diagnostics_and_testing": {
+      "roll_type": "pair_execution",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "required_role": "technician",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "system",
+          "equipment"
+        ]
+      },
+      "description": "Analyse, Prüfung oder Test von Systemen und Ausrüstung."
+    },
+
+    "logistics_handling": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "logistics_team",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "resources"
+        ]
+      },
+      "description": "Organisation, Bewegung oder Verteilung von Material und Ressourcen."
+    },
+
+    "administrative_processing": {
+      "roll_type": "pair_execution",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "records",
+          "requests"
+        ]
+      },
+      "description": "Bearbeitung formaler administrativer Vorgänge."
+    },
+
+    "training_drill": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "training_unit",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": false
+      },
+      "description": "Strukturierte Ausbildungs- oder Übungseinheiten."
+    },
+
+    "performance_execution": {
+      "roll_type": "pair_or_group_execution",
+      "participants": {
+        "selection_type": "pair_or_group",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "task",
+          "objective",
+          "abstract_opponent"
+        ]
+      },
+      "description": "Ausführung einer Aufgabe unter Leistungs- oder Prüfungsbedingungen."
+    },
+
+    "emergency_response": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "response_team",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "emergency_situation"
+        ]
+      },
+      "description": "Reaktion auf akute Notfälle oder Gefahrenlagen."
+    },
+
+    "safety_procedure": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "all_present",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": false
+      },
+      "description": "Durchführung oder Einhaltung sicherheitsrelevanter Maßnahmen."
+    },
+
+    "disciplinary_action": {
+      "roll_type": "pair_directed",
+      "participants": {
+        "selection_type": "pair",
+        "source_pool": "event_participants",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": true,
+        "allowed_target_types": [
+          "subordinate"
+        ]
+      },
+      "description": "Durchsetzung von Regeln oder Konsequenzen bei Regelverstößen."
+    },
+
+    "childcare_activity": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "caregivers_and_children",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": false
+      },
+      "description": "Praktische Betreuung oder Versorgung von Kindern."
+    },
+
+    "learning_activity": {
+      "roll_type": "group_execution",
+      "participants": {
+        "selection_type": "group",
+        "source_pool": "event_participants",
+        "grouping": "learning_group",
+        "selection_mode": "deterministic"
+      },
+      "targeting": {
+        "has_target": false
+      },
+      "description": "Aktive Lern- oder Bildungsaktivität."
+    }
+
+  }
+}
