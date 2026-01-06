@@ -1,50 +1,280 @@
 {
-  "version": "1.0",
+  "version": "2.1",
+  "scope": "event_tones",
+  "description": "Tones modifizieren Injector-Basisgewichte (als additive Weight-Mods), Check-Schwierigkeit sowie Eskalationsneigung. Sie erzeugen keine Interactions, sondern verändern nur Wahrscheinlichkeiten/Schwierigkeiten deklarativ.",
+
+  "notes": {
+    "interaction_weight_modifiers": "Additive Modifikatoren auf bestehende Injector-Gewichte. Interpretation (additiv vs. multiplikativ) liegt in der Runtime, aber diese Werte sind bewusst als 'Delta' gedacht.",
+    "escalation_modifiers": "Numerische Eskalationsneigung pro Konfliktinteraction (positiv = eskaliert leichter).",
+    "check_modifiers": "Difficulty-Delta auf Skill/Attribute-Checks nach Domain.",
+    "outcome_modifiers": "Reine Deklaration: Multiplikatoren/Bonis, die Outcomes/Applier optional berücksichtigen."
+  },
+
   "tones": {
 
     "formal": {
-      "description": "Regelkonforme, hierarchische und kontrollierte Atmosphäre.",
-      "domains": ["social", "operational"]
+      "description": "Strenge, regelkonforme und hierarchische Atmosphäre.",
+      "domains": ["social", "operational"],
+
+      "interaction_weight_modifiers": {
+        "speech": 0.25,
+        "instruction": 0.25,
+        "evaluation": 0.20,
+        "compliance_check": 0.15,
+
+        "casual_talk": -0.15,
+        "small_talk": -0.05,
+        "gossip": -0.25,
+        "flirt": -0.30,
+        "play_interaction": -0.30
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": 1 }
+      },
+
+      "escalation_modifiers": {
+        "argument": -1,
+        "accusation": -1
+      }
     },
 
     "informal": {
-      "description": "Lockere, ungezwungene Atmosphäre mit geringer formaler Distanz.",
-      "domains": ["social"]
+      "description": "Lockere, ungezwungene Atmosphäre ohne strikte Regeln.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "casual_talk": 0.20,
+        "small_talk": 0.10,
+        "bonding_activity": 0.15,
+        "gossip": 0.15,
+        "play_interaction": 0.10,
+
+        "instruction": -0.20,
+        "evaluation": -0.15,
+        "compliance_check": -0.15
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": -1 }
+      },
+
+      "escalation_modifiers": {
+        "argument": 1
+      }
     },
 
     "cheerful": {
-      "description": "Positive, ausgelassene Grundstimmung mit hoher sozialer Offenheit.",
-      "domains": ["social"]
+      "description": "Positive, optimistische Grundstimmung.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "casual_talk": 0.20,
+        "bonding_activity": 0.20,
+        "speech": 0.10,
+        "flirt": 0.10,
+        "play_interaction": 0.15,
+
+        "argument": -0.25,
+        "accusation": -0.25,
+        "exclusion": -0.15,
+        "social_tension": -0.10
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": -1 }
+      },
+
+      "escalation_modifiers": {
+        "argument": -2,
+        "accusation": -1,
+        "social_tension": -1
+      },
+
+      "outcome_modifiers": {
+        "positive_outcome_bias": 1
+      }
     },
 
     "tense": {
-      "description": "Angespannte Atmosphäre mit erhöhter Reizbarkeit und Eskalationsneigung.",
-      "domains": ["social", "operational"]
+      "description": "Angespannte Atmosphäre mit latenter Konfliktbereitschaft.",
+      "domains": ["social", "operational"],
+
+      "interaction_weight_modifiers": {
+        "social_tension": 0.25,
+        "argument": 0.15,
+        "accusation": 0.10,
+
+        "confide": -0.15,
+        "bonding_activity": -0.10,
+        "flirt": -0.10
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": 1 },
+        "operational": { "difficulty": 0 }
+      },
+
+      "escalation_modifiers": {
+        "argument": 2,
+        "accusation": 1,
+        "exclusion": 1
+      }
     },
 
-    "focused": {
-      "description": "Sachliche, zielgerichtete Konzentration auf Aufgabe oder Leistung.",
-      "domains": ["operational"]
+    "hostile": {
+      "description": "Offen feindselige Atmosphäre mit hoher Konfliktwahrscheinlichkeit.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "argument": 0.35,
+        "accusation": 0.25,
+        "exclusion": 0.15,
+        "social_tension": 0.20,
+
+        "bonding_activity": -0.30,
+        "confide": -0.25,
+        "flirt": -0.30,
+        "gossip": -0.10,
+        "casual_talk": -0.15
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": 2 }
+      },
+
+      "escalation_modifiers": {
+        "argument": 3,
+        "accusation": 2,
+        "exclusion": 1
+      }
+    },
+
+    "professional": {
+      "description": "Sachliche, leistungsorientierte Arbeitsatmosphäre.",
+      "domains": ["operational"],
+
+      "interaction_weight_modifiers": {
+        "training_drill": 0.15,
+        "command_and_control": 0.15,
+        "technical_maintenance": 0.10,
+        "administrative_processing": 0.10,
+        "sensor_operation": 0.10,
+        "tactical_maneuvering": 0.10,
+
+        "casual_talk": -0.20,
+        "gossip": -0.30
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": -1 }
+      },
+
+      "escalation_modifiers": {}
+    },
+
+    "training_focused": {
+      "description": "Lern- und Übungsorientierung mit Fehlertoleranz.",
+      "domains": ["operational"],
+
+      "interaction_weight_modifiers": {
+        "training_drill": 0.25,
+        "tactical_maneuvering": 0.10,
+        "sensor_operation": 0.10,
+        "mech_combat": 0.10,
+
+        "disciplinary_action": -0.10
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": -1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 0.5,
+        "xp_bonus": 1
+      },
+
+      "escalation_modifiers": {}
     },
 
     "stressful": {
-      "description": "Hoher Druck durch Zeitmangel, Gefahr oder Erwartungshaltung.",
-      "domains": ["operational", "social"]
-    },
+      "description": "Zeitdruck/Überforderung/hohe Verantwortung dominieren.",
+      "domains": ["operational"],
 
-    "awkward": {
-      "description": "Sozial unangenehme, unsichere Atmosphäre mit Hemmungen.",
-      "domains": ["social"]
-    },
+      "interaction_weight_modifiers": {
+        "emergency_response": 0.25,
+        "command_and_control": 0.20,
+        "tactical_maneuvering": 0.10,
 
-    "somber": {
-      "description": "Gedämpfte, ernste Stimmung ohne Offenheit für Leichtigkeit.",
-      "domains": ["social"]
+        "training_drill": -0.10,
+        "administrative_processing": -0.05
+      },
+
+      "check_modifiers": {
+        "operational": { "difficulty": 1 }
+      },
+
+      "outcome_modifiers": {
+        "fatigue_multiplier": 1.5,
+        "confidence_failure_penalty_bonus": 1
+      },
+
+      "escalation_modifiers": {}
     },
 
     "celebratory": {
-      "description": "Anlassbezogen positive Stimmung mit Fokus auf Gemeinschaft.",
-      "domains": ["social"]
+      "description": "Festliche, positive Atmosphäre mit sozialem Fokus.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "speech": 0.20,
+        "bonding_activity": 0.25,
+        "casual_talk": 0.20,
+        "small_talk": 0.10,
+        "flirt": 0.10,
+        "gossip": 0.05,
+
+        "argument": -0.20,
+        "accusation": -0.20,
+        "exclusion": -0.10
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": -1 }
+      },
+
+      "outcome_modifiers": {
+        "positive_outcome_bias": 1
+      },
+
+      "escalation_modifiers": {
+        "argument": -1,
+        "accusation": -1
+      }
+    },
+
+    "somber": {
+      "description": "Gedämpfte, ernste Stimmung.",
+      "domains": ["social"],
+
+      "interaction_weight_modifiers": {
+        "confide": 0.20,
+        "discussion": 0.10,
+        "small_talk": -0.10,
+        "play_interaction": -0.35,
+        "gossip": -0.15,
+        "flirt": -0.15
+      },
+
+      "check_modifiers": {
+        "social": { "difficulty": 1 }
+      },
+
+      "escalation_modifiers": {
+        "argument": -1,
+        "accusation": -1
+      }
     }
   }
 }
