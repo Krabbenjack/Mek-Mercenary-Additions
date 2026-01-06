@@ -1,0 +1,408 @@
+{
+  "meta": {
+    "ruleset": "injector_selection_rules_social",
+    "version": 1,
+    "notes": [
+      "Selection-only rules for social/cultural events (3000–3143).",
+      "No outcome logic here. Only availability + primary selection + derived participants.",
+      "Relationship hooks are intentionally minimal and meant to be tweaked."
+    ]
+  },
+
+  /* =======================================================
+     3000 – Social & Cultural Events (Adults)
+     ======================================================= */
+
+  /* --- Celebrations (group) --- */
+  "3001": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 8,
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": []
+  },
+
+  "3002": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 10,
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": []
+  },
+
+  "3003": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 10,
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": []
+  },
+
+  /* --- Conflict / Reconciliation (pair) --- */
+  "3101": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3102": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "preferred_existing_relation": true,
+        "preferred_relation_types": ["RIVALRY", "DISLIKE", "CONFLICT", "ANY_NEGATIVE"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  /* --- Romance track (pair) --- */
+  "3110": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "forbidden_relation_types": ["MARRIED", "RELATIONSHIP_ACTIVE"],
+        "allow_if_unknown": true
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3111": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "allow_existing_relation": true,
+        "allow_new_relation": true
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3112": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "allow_even_if_committed_elsewhere": true,
+        "notes": "Affair can be used to test jealousy/trust systems later. Exact constraints TBD."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3113": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "NONE_OR_NOT_ACTIVE",
+        "forbidden_flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER", "MARRIED_WITH_EACH_OTHER"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3114": {
+    "availability": {
+      "requires": {
+        "relationship_exists": true
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_OR_MARRIED",
+        "required_flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3115": {
+    "availability": {
+      "requires": {
+        "relationship_exists": true
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_OR_MARRIED",
+        "required_flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  /* --- Marriage (pair) --- */
+  "3120": {
+    "availability": {
+      "requires": {
+        "relationship_exists": true
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE",
+        "required_flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER"],
+        "forbidden_flags": ["MARRIED_WITH_EACH_OTHER"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  /* --- Parenthood / pregnancy (announcement-ish) --- */
+  "3130": {
+    "availability": {
+      "requires": {
+        "person_state": "PREGNANT",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "state": "PREGNANT",
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARTNER_OF",
+        "source": "primary",
+        "filters": ["present", "alive"],
+        "optional": true
+      }
+    ]
+  },
+
+  "3131": {
+    "availability": {
+      "requires": {
+        "person_state": "EXPECTING_CHILDBIRTH",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "state": "EXPECTING_CHILDBIRTH",
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARTNER_OF",
+        "source": "primary",
+        "filters": ["present", "alive"],
+        "optional": true
+      }
+    ]
+  },
+
+  "3132": {
+    "availability": {
+      "requires": {
+        "person_state": "HAS_CHILD",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "state": "HAS_CHILD",
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": [
+      {
+        "relation": "CHILDREN_OF",
+        "source": "primary",
+        "filters": ["present", "alive"],
+        "optional": true
+      },
+      {
+        "relation": "PARTNER_OF",
+        "source": "primary",
+        "filters": ["present", "alive"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- Rumors / jealousy / trust / exclusion (group) --- */
+  "3140": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 6,
+      "filters": ["present", "alive"],
+      "group_constraints": {
+        "distinct_persons": true
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3141": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 6,
+      "filters": ["present", "alive"],
+      "group_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "notes": "Later: allow selecting jealous person + target pair. For now only group selection."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3142": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "preferred_existing_relation": true,
+        "preferred_relation_types": ["FRIENDSHIP", "TRUST", "RELATIONSHIP_ACTIVE", "ANY_POSITIVE"]
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3143": {
+    "availability": {
+      "requires": {
+        "any_person": true,
+        "min_count": 3
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "min": 3,
+      "max": 7,
+      "filters": ["present", "alive"],
+      "group_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "notes": "Later: explicit target selection could be added (excluded target + excluding group). For now: group-only."
+      }
+    },
+    "derived_participants": []
+  }
+}

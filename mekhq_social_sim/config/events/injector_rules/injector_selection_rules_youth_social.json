@@ -1,0 +1,198 @@
+{
+  "meta": {
+    "ruleset": "injector_selection_rules_youth_social",
+    "version": 1,
+    "notes": [
+      "Selection-only rules for youth and early relationship events (3200–3221).",
+      "No story, no outcome logic.",
+      "Age, maturity and authority are modeled only via selection constraints."
+    ]
+  },
+
+  /* =======================================================
+     3200 – Youth & First Relationships
+     ======================================================= */
+
+  /* --- Early Teen (approx. 10–13) --- */
+
+  "3201": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "EARLY_TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "NONE",
+        "notes": "Crush without established relationship."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3202": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "EARLY_TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "preferred_existing_relation": false,
+        "notes": "Rejection following a crush or attempt."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3203": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "EARLY_TEEN",
+      "filters": ["present", "alive"]
+    },
+    "derived_participants": []
+  },
+
+  /* --- Teen First Relationships (approx. 14–15) --- */
+
+  "3210": {
+    "availability": {
+      "requires": {
+        "age_group": "TEEN",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "NONE_OR_NOT_ACTIVE",
+        "notes": "First emotionally relevant relationship."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3211": {
+    "availability": {
+      "requires": {
+        "age_group": "TEEN",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER",
+        "notes": "Relationship exists but is hidden."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3212": {
+    "availability": {
+      "requires": {
+        "age_group": "TEEN",
+        "min_count": 2,
+        "authority_present": true
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER"
+      }
+    },
+    "derived_participants": [
+      {
+        "relation": "AUTHORITY_OVER",
+        "source": "primary",
+        "filters": ["present", "alive"],
+        "notes": "Parent, guardian, or mentor."
+      }
+    ]
+  },
+
+  /* --- Late Teen (approx. 16–17) --- */
+
+  "3220": {
+    "availability": {
+      "requires": {
+        "age_group": "LATE_TEEN",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "LATE_TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER",
+        "notes": "More mature, longer-term relationship."
+      }
+    },
+    "derived_participants": []
+  },
+
+  "3221": {
+    "availability": {
+      "requires": {
+        "age_group": "LATE_TEEN",
+        "min_count": 2,
+        "relationship_exists": true
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "LATE_TEEN",
+      "filters": ["present", "alive"],
+      "pair_constraints": {
+        "distinct_persons": true
+      },
+      "relationship_context": {
+        "required_relation": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER",
+        "notes": "Breakup of a serious late-teen relationship."
+      }
+    },
+    "derived_participants": []
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "1001": {
+    "availability": {
+      "requires": {
+        "role": "MECHWARRIOR",
+        "min_count": 4
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "role": "MECHWARRIOR",
+      "count": 4
+    },
+    "derived_participants": []
+  },
+
+  "1002": {
+    "availability": {
+      "requires": {
+        "unit_type": "INFANTRY",
+        "min_units": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "role": "INFANTRY_SOLDIER"
+    },
+    "derived_participants": [
+      {
+        "relation": "UNIT_OF",
+        "source": "primary",
+        "include": "ALL_MEMBERS"
+      }
+    ]
+  },
+
+  "1003": {
+    "availability": {
+      "requires": {
+        "role": "TECHNICIAN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "multiple_persons",
+      "role": "TECHNICIAN",
+      "min": 1,
+      "max": 3
+    },
+    "derived_participants": []
+  },
+
+  "1004": {
+    "availability": {
+      "requires": {
+        "any_person": true
+      }
+    },
+    "primary_selection": {
+      "type": "none"
+    },
+    "derived_participants": [
+      {
+        "relation": "ALL_PRESENT_PERSONS"
+      }
+    ]
+  },
+
+  "1005": {
+    "availability": {
+      "requires": {
+        "any_person": true
+      }
+    },
+    "primary_selection": {
+      "type": "none"
+    },
+    "derived_participants": [
+      {
+        "relation": "ALL_PRESENT_PERSONS"
+      }
+    ]
+  },
+
+  "1006": {
+    "availability": {
+      "requires": {
+        "role": "COMMAND_OR_SUPERVISOR",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "exclude_roles": ["COMMAND_OR_SUPERVISOR"]
+    },
+    "derived_participants": [
+      {
+        "relation": "SUPERVISOR_OF",
+        "source": "primary"
+      }
+    ]
+  }
+}

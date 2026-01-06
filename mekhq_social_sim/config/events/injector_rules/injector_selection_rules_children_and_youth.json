@@ -1,0 +1,417 @@
+{
+  "meta": {
+    "ruleset": "injector_selection_rules_children_and_youth",
+    "version": 1,
+    "notes": [
+      "Selection-only rules for children and youth daily life events (4000–4503).",
+      "Children are always the primary selection.",
+      "Parents / guardians are always derived participants.",
+      "No outcome or story logic included."
+    ]
+  },
+
+  /* =======================================================
+     4000 – Children & Youth Daily Life (Age-Dependent)
+     ======================================================= */
+
+  /* --- 0–3 years: Toddlers --- */
+
+  "4001": {
+    "availability": {
+      "requires": {
+        "age_group": "TODDLER",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "TODDLER",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4002": {
+    "availability": {
+      "requires": {
+        "age_group": "TODDLER",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "TODDLER",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4003": {
+    "availability": {
+      "requires": {
+        "age_group": "TODDLER",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "TODDLER",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- 4–5 years: Preschool --- */
+
+  "4101": {
+    "availability": {
+      "requires": {
+        "age_group": "PRESCHOOL",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "PRESCHOOL",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4102": {
+    "availability": {
+      "requires": {
+        "age_group": "PRESCHOOL",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "PRESCHOOL",
+      "filters": ["alive", "present"],
+      "pair_constraints": {
+        "distinct_persons": true
+      }
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4103": {
+    "availability": {
+      "requires": {
+        "age_group": "PRESCHOOL",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "PRESCHOOL",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- 6–9 years: School age --- */
+
+  "4201": {
+    "availability": {
+      "requires": {
+        "age_group": "SCHOOL_AGE",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "SCHOOL_AGE",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4202": {
+    "availability": {
+      "requires": {
+        "age_group": "SCHOOL_AGE",
+        "min_count": 2
+      }
+    },
+    "primary_selection": {
+      "type": "pair",
+      "age_group": "SCHOOL_AGE",
+      "filters": ["alive", "present"],
+      "pair_constraints": {
+        "distinct_persons": true
+      }
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4203": {
+    "availability": {
+      "requires": {
+        "age_group": "SCHOOL_AGE",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "SCHOOL_AGE",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- 10–13 years: Early Teen --- */
+
+  "4301": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "EARLY_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4302": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 1,
+        "authority_present": true
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "EARLY_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "AUTHORITY_OVER",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "notes": "Parent, guardian, or mentor."
+      }
+    ]
+  },
+
+  "4303": {
+    "availability": {
+      "requires": {
+        "age_group": "EARLY_TEEN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "EARLY_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "PARENT_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- 14–15 years: Apprentice --- */
+
+  "4401": {
+    "availability": {
+      "requires": {
+        "age_group": "APPRENTICE",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "APPRENTICE",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "MENTOR_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  "4402": {
+    "availability": {
+      "requires": {
+        "age_group": "APPRENTICE",
+        "min_count": 1,
+        "mentor_present": true
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "APPRENTICE",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "MENTOR_OF",
+        "source": "primary",
+        "filters": ["alive", "present"]
+      }
+    ]
+  },
+
+  "4403": {
+    "availability": {
+      "requires": {
+        "age_group": "APPRENTICE",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "APPRENTICE",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "MENTOR_OF",
+        "source": "primary",
+        "filters": ["alive", "present"],
+        "optional": true
+      }
+    ]
+  },
+
+  /* --- 16–17 years: Late Teen --- */
+
+  "4501": {
+    "availability": {
+      "requires": {
+        "age_group": "LATE_TEEN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "LATE_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": []
+  },
+
+  "4502": {
+    "availability": {
+      "requires": {
+        "age_group": "LATE_TEEN",
+        "min_count": 1,
+        "authority_present": true
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "LATE_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": [
+      {
+        "relation": "AUTHORITY_OVER",
+        "source": "primary",
+        "filters": ["alive", "present"]
+      }
+    ]
+  },
+
+  "4503": {
+    "availability": {
+      "requires": {
+        "age_group": "LATE_TEEN",
+        "min_count": 1
+      }
+    },
+    "primary_selection": {
+      "type": "single_person",
+      "age_group": "LATE_TEEN",
+      "filters": ["alive", "present"]
+    },
+    "derived_participants": []
+  }
+}
