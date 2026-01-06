@@ -1,0 +1,51 @@
+{
+  "age_groups": {
+    "TODDLER": {
+      "min_age": 0,
+      "max_age": 3,
+      "notes": "Infants and toddlers. Fully dependent on parents or guardians."
+    },
+
+    "PRESCHOOL": {
+      "min_age": 4,
+      "max_age": 5,
+      "notes": "Preschool-aged children."
+    },
+
+    "SCHOOL_AGE": {
+      "min_age": 6,
+      "max_age": 9,
+      "notes": "Early school-aged children."
+    },
+
+    "EARLY_TEEN": {
+      "min_age": 10,
+      "max_age": 13,
+      "notes": "Early adolescence."
+    },
+
+    "APPRENTICE": {
+      "min_age": 14,
+      "max_age": 15,
+      "notes": "Apprentices / trainees."
+    },
+
+    "TEEN": {
+      "min_age": 14,
+      "max_age": 15,
+      "notes": "Alias for APPRENTICE, kept for semantic clarity in social events."
+    },
+
+    "LATE_TEEN": {
+      "min_age": 16,
+      "max_age": 17,
+      "notes": "Late adolescence, near-adult responsibility."
+    },
+
+    "ADULT": {
+      "min_age": 18,
+      "max_age": null,
+      "notes": "Legally adult characters."
+    }
+  }
+}
