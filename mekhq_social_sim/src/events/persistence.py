@@ -38,7 +38,8 @@ def _load_eventlist() -> Dict[int, str]:
         Dict mapping event IDs (int) to event names (str)
     """
     # Find eventlist.json relative to this file
-    module_dir = Path(__file__).parent
+    # Use resolve() to get absolute path and handle symlinks/nested paths
+    module_dir = Path(__file__).resolve().parent
     config_dir = module_dir.parent.parent / "config" / "events"
     eventlist_path = config_dir / "eventlist.json"
     

@@ -61,7 +61,8 @@ class EventInjector:
             config_dir: Path to config/events directory. If None, uses default.
         """
         if config_dir is None:
-            module_dir = Path(__file__).parent
+            # Use resolve() to get absolute path and handle symlinks/nested paths
+            module_dir = Path(__file__).resolve().parent
             self.config_dir = module_dir.parent.parent / "config" / "events"
         else:
             self.config_dir = Path(config_dir)
