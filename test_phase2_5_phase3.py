@@ -47,7 +47,7 @@ def test_event_creation():
     
     # Create event with event type from eventlist
     event = Event(
-        EventType.SIMULATOR_TRAINING_MECHWARRIOR,
+        EventType.SIMULATOR_TRAINING_MEKWARRIOR,
         date(2025, 1, 15),
         RecurrenceType.ONCE
     )
@@ -100,7 +100,7 @@ def test_character_state_fields():
         name="Test Pilot",
         callsign="Ghost",
         age=28,
-        profession="MechWarrior"
+        profession="MekWarrior"
     )
     
     print(f"✓ Created character: {char.name} ({char.callsign})")
@@ -174,7 +174,7 @@ def test_event_manager_integration():
     
     # Add event
     event = manager.add_event(
-        EventType.SIMULATOR_TRAINING_MECHWARRIOR,
+        EventType.SIMULATOR_TRAINING_MEKWARRIOR,
         date.today(),
         RecurrenceType.ONCE
     )
@@ -182,7 +182,7 @@ def test_event_manager_integration():
     
     # Create test character roster
     characters = {
-        "char1": Character(id="char1", name="Pilot 1", callsign="Alpha", age=25, profession="MechWarrior")
+        "char1": Character(id="char1", name="Pilot 1", callsign="Alpha", age=25, profession="MekWarrior")
     }
     
     # Execute events for date

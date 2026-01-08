@@ -91,7 +91,7 @@ class ParticipantSelector:
         required_role = requires.get("role")
         if required_role:
             min_count = requires.get("min_count", 1)
-            # Normalize role name for comparison (handle MECHWARRIOR/MEKWARRIOR)
+            # Normalize role name for comparison (handle MEKWARRIOR/MECHWARRIOR for backward compatibility)
             matching_chars = [
                 char for char in characters.values()
                 if char.profession and self._normalize_role(char.profession) == self._normalize_role(required_role)
@@ -110,13 +110,17 @@ class ParticipantSelector:
         """
         Normalize role names for comparison.
         
-        Handles variations like MECHWARRIOR vs MEKWARRIOR.
-        MekHQ uses MEKWARRIOR as the canonical form.
+        Handles variations like MEKWARRIOR (current standard) vs MECHWARRIOR (legacy).
+        MekHQ uses MEKWARRIOR as the canonical form, but MECHWARRIOR is still accepted
+        for backward compatibility with older data files and configurations.
+        
+        All role names are normalized to MEKWARRIOR for consistent internal processing.
         """
         # Convert to uppercase and handle common variations
         role = role.upper().strip()
         
         # MECHWARRIOR and MEKWARRIOR are the same, normalize to MEKWARRIOR (MekHQ standard)
+        # Keep MECHWARRIOR support for backward compatibility with old data
         if role in ("MECHWARRIOR", "MEKWARRIOR", "MW"):
             return "MEKWARRIOR"
         

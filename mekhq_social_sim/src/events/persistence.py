@@ -85,7 +85,7 @@ def _create_event_type_enum() -> type:
         # Fallback to minimal set if eventlist.json can't be loaded
         print("[WARNING] Using fallback event types", file=sys.stderr)
         return Enum('EventType', {
-            'SIMULATOR_TRAINING_MECHWARRIOR': 1001,
+            'SIMULATOR_TRAINING_MEKWARRIOR': 1001,
             'INFANTRY_FIELD_EXERCISE': 1002,
             'TECHNICAL_MAINTENANCE': 1003,
         })

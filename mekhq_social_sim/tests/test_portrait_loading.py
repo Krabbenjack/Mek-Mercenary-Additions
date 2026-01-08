@@ -99,7 +99,7 @@ class TestPortraitCharacterIntegration(unittest.TestCase):
             name="Test Pilot",
             callsign="Test",
             age=30,
-            profession="MechWarrior",
+            profession="MekWarrior",
             portrait=portrait
         )
         
