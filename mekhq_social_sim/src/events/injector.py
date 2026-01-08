@@ -147,7 +147,8 @@ class EventInjector:
         return (event_name is not None, event_name)
     
     def execute_event(self, event_id: int, execution_date: date, 
-                     characters: Optional[Dict[str, Any]] = None) -> EventExecutionLog:
+                     characters: Optional[Dict[str, Any]] = None,
+                     override_participants: Optional[List[Any]] = None) -> EventExecutionLog:
         """
         Execute an event with the given ID.
         
@@ -155,6 +156,7 @@ class EventInjector:
             event_id: Event ID from eventlist.json
             execution_date: Date of execution
             characters: Optional character roster for participant selection
+            override_participants: Optional list of pre-selected participants (from UI)
             
         Returns:
             EventExecutionLog with execution details
@@ -170,11 +172,27 @@ class EventInjector:
             self._notify_observers(log)
             return log
         
+        # Select participants
+        if override_participants is not None:
+            # Use provided participants from execution window
+            participants = override_participants
+            log.participants = [c.id for c in participants]
+            print(f"[INFO] Using {len(participants)} override participants for event {event_id}")
+        elif characters:
+            # Use selection engine to resolve participants
+            from .injector_selection_engine import get_selection_engine
+            selection_engine = get_selection_engine()
+            result = selection_engine.resolve(event_id, characters)
+            participants = result["all"]
+            log.participants = [c.id for c in participants]
+            print(f"[INFO] Selection engine resolved {len(participants)} participants for event {event_id}")
+        else:
+            participants = []
+            log.participants = []
+        
         # Phase 2.5: Minimal execution for observability
         # Full implementation will follow in later phases
         
-        # TODO: Load injector rules for this event
-        # TODO: Select participants
         # TODO: Select interactions
         # TODO: Resolve interactions (skill checks)
         # TODO: Apply outcomes
@@ -183,7 +201,7 @@ class EventInjector:
         # For now, just log that the event was executed
         log.interactions.append({
             "type": "placeholder",
-            "description": f"Event {event_name} (ID:{event_id}) was triggered but full execution not yet implemented"
+            "description": f"Event {event_name} (ID:{event_id}) was triggered with {len(participants)} participant(s)"
         })
         
         # Store in history

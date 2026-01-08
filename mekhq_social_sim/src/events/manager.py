@@ -180,7 +180,8 @@ class EventManager:
         """Return all stored events (shallow copy)."""
         return self.events.copy()
     
-    def execute_events_for_date(self, target_date: date, characters: Optional[dict] = None):
+    def execute_events_for_date(self, target_date: date, characters: Optional[dict] = None,
+                               override_participants: Optional[dict] = None):
         """
         Execute all events scheduled for a specific date.
         
@@ -189,6 +190,7 @@ class EventManager:
         Args:
             target_date: Date to execute events for
             characters: Optional character roster for event execution
+            override_participants: Optional dict mapping event_id to list of participants
             
         Returns:
             List of EventExecutionLog objects
@@ -200,7 +202,12 @@ class EventManager:
         
         logs = []
         for event in events:
-            log = injector.execute_event(event.event_id, target_date, characters)
+            # Get override participants for this specific event if provided
+            event_override = None
+            if override_participants and event.event_id in override_participants:
+                event_override = override_participants[event.event_id]
+            
+            log = injector.execute_event(event.event_id, target_date, characters, event_override)
             logs.append(log)
         
         return logs
