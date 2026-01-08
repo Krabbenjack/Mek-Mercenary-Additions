@@ -1334,7 +1334,8 @@ class MekSocialGUI:
             available = list(self.characters.values())
             
             # Track whether Start Event was clicked and selected participants
-            event_started = [False]  # Use list to allow modification in nested function
+            # Note: Using list to allow modification in nested function (Python closure limitation)
+            event_started = [False]
             selected_participants = []
             
             def on_start(participants):
@@ -1381,7 +1382,10 @@ class MekSocialGUI:
                         self._log_to_feed(f"  Participants: {', '.join(event_log.participants)}")
         
         except Exception as e:
-            self._log_to_feed(f"Error executing event: {e}")
+            error_msg = f"Error executing event: {e}"
+            self._log_to_feed(error_msg)
+            # Print full traceback to console for debugging
+            import traceback
             traceback.print_exc()
             messagebox.showerror("Event Execution Error", f"Failed to execute event:\n{e}")
     

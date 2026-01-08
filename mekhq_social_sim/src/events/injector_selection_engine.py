@@ -33,12 +33,13 @@ class SelectionEngine:
     Loads rules from JSON files and resolves participants based on event ID.
     """
     
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Optional[Path] = None, random_seed: Optional[int] = None):
         """
         Initialize the selection engine.
         
         Args:
             config_dir: Path to config/events/injector_rules directory. If None, uses default.
+            random_seed: Optional seed for random number generator (for testing/deterministic behavior)
         """
         if config_dir is None:
             # Use resolve() to get absolute path and handle symlinks/nested paths
@@ -49,6 +50,9 @@ class SelectionEngine:
         
         # Cache for loaded rules
         self._rules_cache: Dict[str, Dict[str, Any]] = {}
+        
+        # Random number generator (can be seeded for deterministic behavior)
+        self._rng = random.Random(random_seed)
         
         # Load all selection rule files
         self._load_all_rules()
@@ -233,12 +237,12 @@ class SelectionEngine:
         # Select based on type
         if selection_type == "single_person":
             count = primary_selection.get("count", 1)
-            return random.sample(candidates, min(count, len(candidates)))
+            return self._rng.sample(candidates, min(count, len(candidates)))
         
         elif selection_type == "pair":
             if len(candidates) < 2:
                 return []
-            return random.sample(candidates, 2)
+            return self._rng.sample(candidates, 2)
         
         elif selection_type == "multiple_persons":
             min_count = primary_selection.get("min", 1)
@@ -250,9 +254,9 @@ class SelectionEngine:
                 actual_count = min(count, len(candidates))
             else:
                 # Random count between min and max
-                actual_count = random.randint(min_count, min(max_count, len(candidates)))
+                actual_count = self._rng.randint(min_count, min(max_count, len(candidates)))
             
-            return random.sample(candidates, actual_count)
+            return self._rng.sample(candidates, actual_count)
         
         return []
     
@@ -306,10 +310,10 @@ class SelectionEngine:
         
         for filter_name in filters:
             if filter_name == "alive":
-                # For now, assume all characters are alive (no death tracking yet)
+                # Assume all characters are alive (no death tracking in Phase 2.5)
                 pass
             elif filter_name == "present":
-                # For now, assume all characters are present (no deployment tracking yet)
+                # Assume all characters are present (no deployment tracking in Phase 2.5)
                 pass
         
         return result
