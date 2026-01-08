@@ -53,8 +53,13 @@ class ParticipantSelector:
                 
                 # Rules are keyed by event ID (as strings in JSON)
                 for event_id_str, rule in rules_data.items():
-                    event_id = int(event_id_str)
-                    self.injector_rules[event_id] = rule
+                    # Skip non-numeric keys (like "meta")
+                    try:
+                        event_id = int(event_id_str)
+                        self.injector_rules[event_id] = rule
+                    except ValueError:
+                        # Skip metadata or non-event entries
+                        continue
             
             except Exception as e:
                 print(f"[ERROR] Failed to load {rules_file}: {e}")
