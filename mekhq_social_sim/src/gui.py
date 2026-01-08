@@ -1306,6 +1306,8 @@ class MekSocialGUI:
         """
         Manually trigger an event from the Today's Events panel.
         
+        Opens execution window for participant selection, then executes event.
+        
         Args:
             event: Event object to execute
         """
@@ -1316,18 +1318,60 @@ class MekSocialGUI:
             )
             return
         
-        # Execute the specific event
         try:
-            logs = self.event_manager.execute_events_for_date(self.current_date, self.characters)
+            # Import selection engine and execution window
+            from events.injector_selection_engine import get_selection_engine
+            from events.event_execution_window import EventExecutionWindow
             
-            # Find the log for this specific event
-            event_log = None
-            for log in logs:
-                if log.event_id == event.event_id:
-                    event_log = log
-                    break
+            # Get selection engine
+            selection_engine = get_selection_engine()
             
-            if event_log:
+            # Resolve suggested participants
+            result = selection_engine.resolve(event.event_id, self.characters)
+            suggested = result["all"]
+            
+            # Get all available characters
+            available = list(self.characters.values())
+            
+            # Track whether Start Event was clicked and selected participants
+            # Note: Using list to allow modification in nested function (Python closure limitation)
+            event_started = [False]
+            selected_participants = []
+            
+            def on_start(participants):
+                """Callback when Start Event is clicked in execution window."""
+                nonlocal selected_participants
+                event_started[0] = True
+                selected_participants = participants
+            
+            # Open execution window
+            execution_window = EventExecutionWindow(
+                parent=self.root,
+                event_id=event.event_id,
+                event_name=event.title,
+                execution_date=self.current_date,
+                available_characters=available,
+                suggested_participants=suggested,
+                on_start=on_start
+            )
+            
+            # Wait for window to close
+            self.root.wait_window(execution_window.window)
+            
+            # If user clicked Start Event, execute with selected participants
+            if event_started[0]:
+                # Execute event with override participants
+                from events.injector import get_event_injector
+                injector = get_event_injector()
+                
+                event_log = injector.execute_event(
+                    event.event_id,
+                    self.current_date,
+                    self.characters,
+                    selected_participants
+                )
+                
+                # Log results
                 self._log_to_feed(f"Manually started event: {event.title} (ID:{event.event_id})")
                 if event_log.errors:
                     for error in event_log.errors:
@@ -1336,11 +1380,13 @@ class MekSocialGUI:
                     self._log_to_feed(f"  ✓ Event executed successfully")
                     if event_log.participants:
                         self._log_to_feed(f"  Participants: {', '.join(event_log.participants)}")
-            else:
-                self._log_to_feed(f"Started event: {event.title} (ID:{event.event_id})")
         
         except Exception as e:
-            self._log_to_feed(f"Error executing event: {e}")
+            error_msg = f"Error executing event: {e}"
+            self._log_to_feed(error_msg)
+            # Print full traceback to console for debugging
+            import traceback
+            traceback.print_exc()
             messagebox.showerror("Event Execution Error", f"Failed to execute event:\n{e}")
     
     def _build_middle_section(self, parent: ttk.Frame) -> None:
