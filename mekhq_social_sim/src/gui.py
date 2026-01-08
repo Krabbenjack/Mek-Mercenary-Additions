@@ -1333,12 +1333,14 @@ class MekSocialGUI:
             # Get all available characters
             available = list(self.characters.values())
             
-            # Track selected participants
+            # Track whether Start Event was clicked and selected participants
+            event_started = [False]  # Use list to allow modification in nested function
             selected_participants = []
             
             def on_start(participants):
                 """Callback when Start Event is clicked in execution window."""
                 nonlocal selected_participants
+                event_started[0] = True
                 selected_participants = participants
             
             # Open execution window
@@ -1356,7 +1358,7 @@ class MekSocialGUI:
             self.root.wait_window(execution_window.window)
             
             # If user clicked Start Event, execute with selected participants
-            if selected_participants is not None:
+            if event_started[0]:
                 # Execute event with override participants
                 from events.injector import get_event_injector
                 injector = get_event_injector()
