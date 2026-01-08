@@ -2,13 +2,13 @@
   "1001": {
     "availability": {
       "requires": {
-        "role": "MECHWARRIOR",
+        "role": "MEKWARRIOR",
         "min_count": 4
       }
     },
     "primary_selection": {
       "type": "multiple_persons",
-      "role": "MECHWARRIOR",
+      "role": "MEKWARRIOR",
       "count": 4
     },
     "derived_participants": []
@@ -101,3 +101,4 @@
     ]
   }
 }
+
