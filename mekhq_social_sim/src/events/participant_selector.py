@@ -111,7 +111,10 @@ class ParticipantSelector:
         Normalize role names for comparison.
         
         Handles variations like MEKWARRIOR (current standard) vs MECHWARRIOR (legacy).
-        MekHQ uses MEKWARRIOR as the canonical form.
+        MekHQ uses MEKWARRIOR as the canonical form, but MECHWARRIOR is still accepted
+        for backward compatibility with older data files and configurations.
+        
+        All role names are normalized to MEKWARRIOR for consistent internal processing.
         """
         # Convert to uppercase and handle common variations
         role = role.upper().strip()
