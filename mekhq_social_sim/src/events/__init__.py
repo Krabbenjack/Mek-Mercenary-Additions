@@ -7,10 +7,12 @@ This package provides:
 - RecurrenceType: Enum for event recurrence patterns
 - Event dialogs: GUI components for creating/editing/managing events
 - EventInjector: Executes event mechanics when calendar events trigger
+- ParticipantSelector: Selects participants based on injector rules
 """
 
 from .manager import EventManager, Event, EventType, RecurrenceType
 from .injector import EventInjector, EventExecutionLog, get_event_injector
+from .participant_selector import ParticipantSelector, get_participant_selector
 
 __all__ = [
     "EventManager",
@@ -20,4 +22,6 @@ __all__ = [
     "EventInjector",
     "EventExecutionLog",
     "get_event_injector",
+    "ParticipantSelector",
+    "get_participant_selector",
 ]

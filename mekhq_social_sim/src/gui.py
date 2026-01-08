@@ -21,6 +21,7 @@ EXPORT_DIR = repo_root / "mekhq_social_sim" / "exports"
 # Calendar system imports (required by the full integration)
 try:
     from events import EventManager, RecurrenceType
+    from events.dialogs import EventExecutionWindow
     from merk_calendar.calendar_system import DetailedCalendarWindow, DatePickerDialog
     EVENTS_PACKAGE_AVAILABLE = True
 except Exception:
@@ -31,6 +32,7 @@ except Exception:
             DetailedCalendarWindow,
             DatePickerDialog,
         )
+        EventExecutionWindow = None
         EVENTS_PACKAGE_AVAILABLE = False
     except Exception:
         # If calendar package is missing the GUI still runs, calendar features are disabled.
@@ -38,6 +40,7 @@ except Exception:
         RecurrenceType = None
         DetailedCalendarWindow = None
         DatePickerDialog = None
+        EventExecutionWindow = None
         EVENTS_PACKAGE_AVAILABLE = False
 
 from models import Character
@@ -1305,6 +1308,7 @@ class MekSocialGUI:
     def _start_event_manually(self, event) -> None:
         """
         Manually trigger an event from the Today's Events panel.
+        Opens the Event Execution Window to show participants and execute.
         
         Args:
             event: Event object to execute
@@ -1316,32 +1320,36 @@ class MekSocialGUI:
             )
             return
         
-        # Execute the specific event
-        try:
-            logs = self.event_manager.execute_events_for_date(self.current_date, self.characters)
-            
-            # Find the log for this specific event
-            event_log = None
-            for log in logs:
-                if log.event_id == event.event_id:
-                    event_log = log
-                    break
-            
-            if event_log:
-                self._log_to_feed(f"Manually started event: {event.title} (ID:{event.event_id})")
-                if event_log.errors:
-                    for error in event_log.errors:
-                        self._log_to_feed(f"  ⚠ {error}")
-                else:
-                    self._log_to_feed(f"  ✓ Event executed successfully")
-                    if event_log.participants:
-                        self._log_to_feed(f"  Participants: {', '.join(event_log.participants)}")
-            else:
-                self._log_to_feed(f"Started event: {event.title} (ID:{event.event_id})")
+        if EventExecutionWindow is None:
+            messagebox.showerror(
+                "Feature Not Available",
+                "Event execution window is not available."
+            )
+            return
         
+        # Open Event Execution Window with correct parent (self.master, not self.root)
+        def on_execute_callback(log):
+            """Callback after event execution to log results."""
+            self._log_to_feed(f"Executed event: {event.title} (ID:{event.event_id})")
+            if log.errors:
+                for error in log.errors:
+                    self._log_to_feed(f"  ⚠ {error}")
+            else:
+                self._log_to_feed(f"  ✓ Event executed successfully")
+                if log.participants:
+                    self._log_to_feed(f"  Participants: {', '.join(log.participants)}")
+        
+        try:
+            EventExecutionWindow(
+                parent=self.master,  # Use self.master, not self.root
+                event=event,
+                execution_date=self.current_date,
+                characters=self.characters,
+                on_execute=on_execute_callback
+            )
         except Exception as e:
-            self._log_to_feed(f"Error executing event: {e}")
-            messagebox.showerror("Event Execution Error", f"Failed to execute event:\n{e}")
+            self._log_to_feed(f"Error opening event window: {e}")
+            messagebox.showerror("Event Window Error", f"Failed to open event window:\n{e}")
     
     def _build_middle_section(self, parent: ttk.Frame) -> None:
         """Build middle section: Left Navigation Pane + Right Inspector Panel."""
