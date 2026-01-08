@@ -1166,7 +1166,7 @@ class MekSocialGUI:
         file_menu.add_command(label="Exit", command=self.master.quit)
 
     def _build_widgets(self) -> None:
-        """Build the main 4-region layout: Top Bar, Left Nav, Right Inspector, Bottom Feed."""
+        """Build the main 4-region layout: Top Bar, Today's Events, Left Nav, Right Inspector, Bottom Feed."""
         # Main container with dark background
         main_container = ttk.Frame(self.master, style="Main.TFrame")
         main_container.pack(fill=tk.BOTH, expand=True)
@@ -1174,18 +1174,21 @@ class MekSocialGUI:
         # Configure root background
         self.master.configure(bg=THEME["bg_main"])
         
-        # Build 4-region layout
+        # Build layout regions
         self._build_top_bar(main_container)
+        self._build_todays_events_panel(main_container)
         self._build_middle_section(main_container)
         self._build_bottom_feed(main_container)
 
     def _build_top_bar(self, parent: ttk.Frame) -> None:
-        """Build top bar: Campaign Day + Calendar access + Calendar Widget (fixed height ~36px)."""
+        """Build top bar: Campaign Day + Calendar access (via date label clicks) (fixed height ~36px)."""
         top_bar = ttk.Frame(parent, style="Panel.TFrame", height=36)
         top_bar.pack(fill=tk.X, side=tk.TOP)
         top_bar.pack_propagate(False)  # Fixed height
         
-        # Campaign Day display (clickable for date picker)
+        # Campaign Day display (clickable for date picker and calendar)
+        # Left-click: Date picker
+        # Right-click: Detailed calendar window
         self.date_label = ttk.Label(
             top_bar, 
             text="", 
@@ -1205,66 +1208,140 @@ class MekSocialGUI:
             style="Primary.TButton"
         )
         next_day_btn.pack(side=tk.LEFT, padx=4)
+    
+    def _build_todays_events_panel(self, parent: ttk.Frame) -> None:
+        """Build Today's Events panel: Shows events scheduled for current date."""
+        # Container frame for the events panel
+        events_panel = ttk.Frame(parent, style="Panel.TFrame")
+        events_panel.pack(fill=tk.X, side=tk.TOP, padx=4, pady=4)
         
-        # Calendar button
-        if DetailedCalendarWindow is not None:
-            calendar_btn = ttk.Button(
-                top_bar,
-                text="📅 Calendar",
-                command=self._open_calendar,
+        # Header label
+        header_label = ttk.Label(
+            events_panel,
+            text="📅 Today's Events",
+            style="Primary.TLabel",
+            font=("Segoe UI", 10, "bold")
+        )
+        header_label.pack(side=tk.TOP, anchor="w", padx=8, pady=(4, 2))
+        
+        # Scrollable frame for event list
+        events_container = ttk.Frame(events_panel, style="Panel.TFrame")
+        events_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 4))
+        
+        # Store reference for updates
+        self.todays_events_container = events_container
+        
+        # Initial update
+        self._update_todays_events_panel()
+    
+    def _update_todays_events_panel(self) -> None:
+        """Update the Today's Events panel with current date's events."""
+        # Clear existing widgets
+        for widget in self.todays_events_container.winfo_children():
+            widget.destroy()
+        
+        if not self.event_manager:
+            no_events_label = ttk.Label(
+                self.todays_events_container,
+                text="No event system available",
+                style="TLabel",
+                foreground=THEME.get("fg_dim", "gray")
+            )
+            no_events_label.pack(anchor="w")
+            return
+        
+        # Get events for current date
+        events = self.event_manager.get_events_for_date(self.current_date)
+        
+        if not events:
+            no_events_label = ttk.Label(
+                self.todays_events_container,
+                text="No events scheduled for today",
+                style="TLabel",
+                foreground=THEME.get("fg_dim", "gray")
+            )
+            no_events_label.pack(anchor="w")
+            return
+        
+        # Display each event
+        for event in events:
+            event_frame = ttk.Frame(self.todays_events_container, style="Panel.TFrame")
+            event_frame.pack(fill=tk.X, pady=2)
+            
+            # Event details frame (left side)
+            details_frame = ttk.Frame(event_frame, style="Panel.TFrame")
+            details_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            
+            # Event name
+            event_name = event.title.replace("_", " ").title()
+            name_label = ttk.Label(
+                details_frame,
+                text=f"• {event_name}",
+                style="TLabel",
+                font=("Segoe UI", 9, "bold")
+            )
+            name_label.pack(anchor="w")
+            
+            # Event info (ID and recurrence)
+            info_text = f"  ID: {event.event_id} | Recurrence: {event.recurrence_type.value.capitalize()}"
+            info_label = ttk.Label(
+                details_frame,
+                text=info_text,
+                style="TLabel",
+                foreground=THEME.get("fg_dim", "gray"),
+                font=("Segoe UI", 8)
+            )
+            info_label.pack(anchor="w")
+            
+            # Start Event button (right side)
+            start_btn = ttk.Button(
+                event_frame,
+                text="Start Event",
+                command=lambda e=event: self._start_event_manually(e),
                 style="Primary.TButton"
             )
-            calendar_btn.pack(side=tk.LEFT, padx=4)
-        
-        # Calendar Widget (compact, right-aligned)
-        # This makes the calendar visibly accessible in the UI
-        if EventManager is not None:
-            try:
-                from merk_calendar.widget import CalendarWidget
-                
-                self.calendar_widget = CalendarWidget(
-                    top_bar,
-                    event_manager=self.event_manager,
-                    initial_date=self.current_date,
-                    on_date_change=self._on_calendar_date_change,
-                    bg=THEME["bg_panel"]
-                )
-                self.calendar_widget.pack(side=tk.RIGHT, padx=8, pady=2)
-            except Exception as e:
-                print(f"[WARNING] Could not create calendar widget: {e}")
+            start_btn.pack(side=tk.RIGHT, padx=4)
     
-    def _on_calendar_date_change(self, new_date: date) -> None:
+    def _start_event_manually(self, event) -> None:
         """
-        Handle date change from calendar widget.
+        Manually trigger an event from the Today's Events panel.
         
         Args:
-            new_date: New date selected in calendar widget
+            event: Event object to execute
         """
-        # Update current date
-        self.current_date = new_date
+        if not self.event_manager or not self.characters:
+            messagebox.showwarning(
+                "Cannot Start Event",
+                "Event system or characters not available."
+            )
+            return
         
-        # Update day counter (calculate days from some baseline)
-        # For now, we'll just keep the current day and update the date display
-        self._update_date_display()
+        # Execute the specific event
+        try:
+            logs = self.event_manager.execute_events_for_date(self.current_date, self.characters)
+            
+            # Find the log for this specific event
+            event_log = None
+            for log in logs:
+                if log.event_id == event.event_id:
+                    event_log = log
+                    break
+            
+            if event_log:
+                self._log_to_feed(f"Manually started event: {event.title} (ID:{event.event_id})")
+                if event_log.errors:
+                    for error in event_log.errors:
+                        self._log_to_feed(f"  ⚠ {error}")
+                else:
+                    self._log_to_feed(f"  ✓ Event executed successfully")
+                    if event_log.participants:
+                        self._log_to_feed(f"  Participants: {', '.join(event_log.participants)}")
+            else:
+                self._log_to_feed(f"Started event: {event.title} (ID:{event.event_id})")
         
-        # Update character ages
-        self._update_character_ages()
-        
-        # Execute any events scheduled for this date
-        if self.event_manager and self.characters:
-            logs = self.event_manager.execute_events_for_date(new_date, self.characters)
-            if logs:
-                self._log_to_feed(f"Executed {len(logs)} event(s) for {new_date.strftime('%Y-%m-%d')}")
-                for log in logs:
-                    self._log_to_feed(f"  • {log.event_name} (ID:{log.event_id})")
-        
-        # Update displays
-        self._update_day_events_bar()
-        self._update_day_events_description()
-        
-        # Refresh details if a character is selected
-        if self.selected_character_id and self.selected_character_id in self.characters:
-            self._update_details(self.characters[self.selected_character_id])
+        except Exception as e:
+            self._log_to_feed(f"Error executing event: {e}")
+            messagebox.showerror("Event Execution Error", f"Failed to execute event:\n{e}")
     
     def _build_middle_section(self, parent: ttk.Frame) -> None:
         """Build middle section: Left Navigation Pane + Right Inspector Panel."""
@@ -1611,6 +1688,7 @@ class MekSocialGUI:
         if getattr(picker, "result", None):
             self.current_date = picker.result
             self._update_date_display()
+            self._update_todays_events_panel()
             self._update_day_events_bar()
             self._update_day_events_description()
             # Recalculate ages whenever the GUI date changes
@@ -1620,12 +1698,6 @@ class MekSocialGUI:
                 self._update_details(self.characters[self.selected_character_id])
 
     def _on_date_right_click(self, event):
-        if DetailedCalendarWindow is None:
-            return
-        DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
-    
-    def _open_calendar(self):
-        """Open the calendar window."""
         if DetailedCalendarWindow is None:
             return
         DetailedCalendarWindow(self.master, self.event_manager, self.current_date)
@@ -2027,11 +2099,7 @@ class MekSocialGUI:
         # advance the real date, update displays
         self.current_date += timedelta(days=1)
         self._update_date_display()
-        
-        # Update calendar widget date if it exists
-        if hasattr(self, 'calendar_widget'):
-            self.calendar_widget.current_date = self.current_date
-            self.calendar_widget._update_display()
+        self._update_todays_events_panel()
 
         # Update ages when the day advances
         self._update_character_ages()
