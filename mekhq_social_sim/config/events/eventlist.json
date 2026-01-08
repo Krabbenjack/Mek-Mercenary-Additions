@@ -5,7 +5,7 @@
        1000 – Training, Operations & Mandatory Activities
        ======================================================= */
     "TRAINING_AND_OPERATIONS": {
-      "SIMULATOR_TRAINING_MECHWARRIOR": 1001,
+      "SIMULATOR_TRAINING_MEKWARRIOR": 1001,
       "INFANTRY_FIELD_EXERCISE": 1002,
       "TECHNICAL_MAINTENANCE": 1003,
       "EMERGENCY_EVACUATION_DRILL": 1004,

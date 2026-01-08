@@ -25,8 +25,8 @@ This document provides manual testing instructions for the Event Execution Windo
    - Import personnel and TO&E into the GUI
 
 2. **Required Characters**
-   - For Event 1001 (Mech Simulator Training): Need at least 4 characters with profession "MEKWARRIOR"
-   - Check in your MekHQ data that you have sufficient MechWarriors
+   - For Event 1001 (Mek Simulator Training): Need at least 4 characters with profession "MEKWARRIOR"
+   - Check in your MekHQ data that you have sufficient MekWarriors
 
 ## Test Cases
 
