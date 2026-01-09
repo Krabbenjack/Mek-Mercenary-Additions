@@ -1,5 +1,8 @@
 # Phase 2 Implementation Complete
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Summary
 
 Phase 2 of the Event ↔ Relationship Integration has been successfully implemented. This phase builds upon Phase 1 (Headless Event Mechanics System) by adding integration layers that allow events and relationship systems to communicate through explicit triggers and read-only state queries.

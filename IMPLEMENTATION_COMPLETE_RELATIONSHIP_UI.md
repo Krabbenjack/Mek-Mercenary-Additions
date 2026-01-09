@@ -1,5 +1,8 @@
 # MekHQ Social Relationship System - IMPLEMENTATION COMPLETE ✅
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 **Branch**: `copilot/integrate-social-relationship-ui`  
 **Status**: ✅ **READY FOR REVIEW AND TESTING**  
 **Date**: 2025-12-31

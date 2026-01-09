@@ -1,5 +1,8 @@
 # Phase 3 Implementation Complete
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Overview
 
 Phase 3 (UI & Calendar Integration Cleanup) has been successfully completed. This phase addressed three critical issues in the calendar and event system integration:

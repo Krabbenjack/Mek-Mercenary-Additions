@@ -60,8 +60,8 @@ All critical issues have been fixed and the Event Execution Window feature is no
 ### New Files (3)
 ```
 mekhq_social_sim/src/events/participant_selector.py
-EVENT_EXECUTION_TESTING_GUIDE.md
-EVENT_EXECUTION_IMPLEMENTATION.md
+mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md
+  (consolidates EVENT_EXECUTION_TESTING_GUIDE.md and EVENT_EXECUTION_IMPLEMENTATION.md)
 ```
 
 ### Modified Files (3)
@@ -116,12 +116,16 @@ Complete manual testing instructions including:
 - Known limitations
 - Troubleshooting guide
 
-### 📄 EVENT_EXECUTION_IMPLEMENTATION.md
-Technical implementation details including:
+### 📄 EVENT_EXECUTION_DOCUMENTATION.md
+Consolidated documentation including:
+- Technical implementation details
 - Architecture overview
 - Code flow diagrams
 - Configuration file formats
 - Design patterns used
+- Regression test checklist
+- Known limitations
+- Troubleshooting guide
 - Future enhancement notes
 
 ## How to Verify

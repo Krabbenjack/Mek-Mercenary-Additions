@@ -1,5 +1,8 @@
 # Main UI Redesign - IMPLEMENTATION COMPLETE ✅
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Status: Ready for User Testing
 
 All code changes have been implemented, validated, and documented. The Main UI has been successfully restructured from a gameplay-focused interface to a calm, inspector-style operational hub.

@@ -1,5 +1,8 @@
 # Phase 2.5 + Phase 3 - Implementation Complete ✅
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 This document confirms the successful completion of Phase 2.5 (System Activation) and Phase 3 (Minimal UI Integration) as specified in issue requirements.
 
 ## Executive Summary

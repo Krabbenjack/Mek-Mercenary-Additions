@@ -1,5 +1,8 @@
 # Character Detail Window Redesign - Implementation Summary
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/CHARACTER_SHEET_DOCUMENTATION.md](mekhq_social_sim/docs/CHARACTER_SHEET_DOCUMENTATION.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Overview
 
 This document summarizes the complete redesign of the Character Detail Window into a clean "character sheet" UI inspired by BattleTech record sheets.

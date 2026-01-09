@@ -1,5 +1,8 @@
 # Event Execution Window - Testing Guide
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md](mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Overview
 This document provides manual testing instructions for the Event Execution Window feature.
 

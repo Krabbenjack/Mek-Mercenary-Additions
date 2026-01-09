@@ -1,5 +1,8 @@
 # Character Detail Window Redesign - IMPLEMENTATION COMPLETE ✅
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Executive Summary
 
 The Character Detail Window has been successfully redesigned into a professional "character sheet" UI inspired by BattleTech record sheets. All requirements have been met, all tests pass, and the implementation is production-ready.

@@ -1,5 +1,8 @@
 # Implementation Complete: TTK-Compliant Bookkeeping Application
 
+> **⚠️ DEPRECATED**: This file has been migrated to [mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md](mekhq_social_sim/docs/IMPLEMENTATION_COMPLETE_SUMMARY.md)  
+> Please refer to the consolidated documentation file for the most up-to-date information.
+
 ## Summary
 
 This document confirms the successful implementation of both required tasks for the Python Tkinter bookkeeping application with keyboard-first design and ttk widgets.
