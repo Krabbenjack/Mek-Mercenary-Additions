@@ -8,6 +8,12 @@ This version removes backward compatibility with MekHQ 5.7 and older formats to 
 
 ---
 
+## 📝 Additional Applications
+
+This repository also includes a **[TTK-Compliant Bookkeeping Application](BOOKKEEPING_APP_README.md)** demonstrating production-safe keyboard-first UI patterns with proper focus highlighting and 4-column account search. See the separate documentation for details.
+
+---
+
 ## 🚀 Features
 
 ### Personnel Export
