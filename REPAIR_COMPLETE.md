@@ -108,21 +108,15 @@ OK (skipped=46)
 
 ## Documentation Provided
 
-### 📄 EVENT_EXECUTION_TESTING_GUIDE.md
-Complete manual testing instructions including:
-- Prerequisites for testing
-- 6 detailed test cases with expected results
-- Regression test checklist
-- Known limitations
-- Troubleshooting guide
-
-### 📄 EVENT_EXECUTION_DOCUMENTATION.md
+### 📄 mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md
 Consolidated documentation including:
 - Technical implementation details
 - Architecture overview
 - Code flow diagrams
 - Configuration file formats
 - Design patterns used
+- Complete manual testing instructions
+- 6 detailed test cases with expected results
 - Regression test checklist
 - Known limitations
 - Troubleshooting guide
@@ -145,7 +139,7 @@ python3 -m unittest discover -s mekhq_social_sim/tests
 cd mekhq_social_sim/src
 python3 gui.py
 
-# Then follow EVENT_EXECUTION_TESTING_GUIDE.md
+# Then follow mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md
 ```
 
 ### Test Scenario (Happy Path)
@@ -191,7 +185,7 @@ f745412 Initial plan
 4. ✅ Review test coverage
 
 ### For Manual Tester
-1. ✅ Follow EVENT_EXECUTION_TESTING_GUIDE.md
+1. ✅ Follow mekhq_social_sim/docs/EVENT_EXECUTION_DOCUMENTATION.md
 2. ✅ Run all 6 test cases
 3. ✅ Verify regression tests
 4. ✅ Report any issues found
