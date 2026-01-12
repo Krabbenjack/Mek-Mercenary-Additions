@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "name": "participant_resolution_map",
+    "version": 3,
+    "intent": "Resolve abstract participant selectors (roles, filters, person_sets) into concrete checks against personnel export fields."
+  },
+
+  "includes": {
+    "age_groups": {
+      "path": "mekhq_social_sim/config/events/meta/age_groups.json",
+      "json_pointer": "/age_groups",
+      "note": "Reuse existing age group resolver file."
+    }
+  },
+
+  "roles": {
+    "MEKWARRIOR": ["MEKWARRIOR"],
+    "MECHWARRIOR": ["MEKWARRIOR"],
+
+    "TECHNICIAN": ["MEK_TECH", "MECHANIC"],
+    "INFANTRY_SOLDIER": ["SOLDIER"],
+
+    "HR": ["ADMINISTRATOR_HR"],
+    "COMMAND": ["ADMINISTRATOR_COMMAND"],
+    "LOGISTICS": ["ADMINISTRATOR_LOGISTICS"],
+
+    "TRANSPORT": [
+      "VEHICLE_CREW_GROUND",
+      "VESSEL_CREW",
+      "VESSEL_PILOT",
+      "VESSEL_GUNNER"
+    ],
+
+    "COMMAND_OR_SUPERVISOR": [
+      "ADMINISTRATOR_COMMAND",
+      "ADMINISTRATOR_LOGISTICS",
+      "ADMINISTRATOR_HR"
+    ]
+  },
+
+  "filters": {
+    "present": {
+      "type": "status_in",
+      "field": "status",
+      "values": ["ACTIVE"],
+      "note": "Phase-1 definition: present == status ACTIVE. Rules use this heavily. (e.g. youth selections)."
+    },
+
+    "alive": {
+      "type": "alias_of",
+      "alias": "present",
+      "note": "Legacy token still used in rules; keep as synonym for present."
+    }
+  },
+
+  "person_sets": {
+    "any_person": {
+      "filters": ["present"],
+      "note": "Used in availability.requires.any_person (e.g. training 1004/1005, admin 2001)."
+    },
+
+    "ALL_PRESENT_PERSONS": {
+      "filters": ["present"],
+      "note": "Used as derived relation in training 1004/1005."
+    }
+  },
+
+  "unit": {
+    "unit_type": {
+      "INFANTRY": {
+        "status": "unsupported",
+        "reason": "Requires unit membership graph / TO&E linkage (rules use unit_type INFANTRY + UNIT_OF + ALL_MEMBERS)."
+      }
+    },
+    "include": {
+      "ALL_MEMBERS": {
+        "status": "unsupported",
+        "reason": "Requires unit membership enumeration."
+      }
+    }
+  },
+
+  "debug": {
+    "unknown_role_policy": "warn_and_fail",
+    "unknown_filter_policy": "warn_and_fail",
+    "unknown_person_set_policy": "warn_and_fail"
+  }
+}

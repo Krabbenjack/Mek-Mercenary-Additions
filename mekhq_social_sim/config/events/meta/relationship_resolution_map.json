@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "name": "relationship_resolution_map",
+    "version": 3,
+    "intent": "Resolve abstract relationship requirements and derived relations into concrete predicates/queries."
+  },
+
+  "pair_predicates": {
+    "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER": {
+      "type": "has_flag",
+      "flag": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER",
+      "note": "Used as required_relation in youth events (e.g. 3211/3212/3220/3221)."
+    },
+
+    "MARRIED_WITH_EACH_OTHER": {
+      "type": "has_flag",
+      "flag": "MARRIED_WITH_EACH_OTHER"
+    },
+
+    "NONE": {
+      "type": "not",
+      "expr": { "type": "relationship_exists" },
+      "note": "Used as required_relation in youth crush (3201)."
+    },
+
+    "NONE_OR_NOT_ACTIVE": {
+      "type": "and",
+      "all": [
+        {
+          "type": "not",
+          "expr": {
+            "type": "has_any_flag",
+            "flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER", "MARRIED_WITH_EACH_OTHER"]
+          }
+        }
+      ],
+      "note": "Used as required_relation in youth 3210."
+    },
+
+    "RELATIONSHIP_ACTIVE": {
+      "type": "has_flag",
+      "flag": "RELATIONSHIP_ACTIVE_WITH_EACH_OTHER"
+    },
+
+    "RELATIONSHIP_ACTIVE_OR_MARRIED": {
+      "type": "has_any_flag",
+      "flags": ["RELATIONSHIP_ACTIVE_WITH_EACH_OTHER", "MARRIED_WITH_EACH_OTHER"]
+    }
+  },
+
+  "availability_requires": {
+    "relationship_exists": {
+      "type": "relationship_exists",
+      "note": "Used in availability.requires.relationship_exists (youth 3221)."
+    },
+
+    "authority_present": {
+      "type": "derived_relation_exists",
+      "relation": "AUTHORITY_OVER",
+      "note": "Used in availability.requires.authority_present (youth 3212)."
+    }
+  },
+
+  "relationship_exists": {
+    "type": "backend_capability",
+    "capability": "relationship_exists",
+    "note": "Implemented by RelationshipStateQuery/Engine: returns whether any relationship record exists for a pair."
+  },
+
+  "derived_relations": {
+    "ALL_PRESENT_PERSONS": {
+      "type": "person_set",
+      "person_set": "ALL_PRESENT_PERSONS",
+      "note": "Delegates to participant_resolution_map person_sets."
+    },
+
+    "HR_REPRESENTATIVE": {
+      "type": "role_group_pick",
+      "role": "HR",
+      "pick": "one",
+      "note": "Admin 2002."
+    },
+
+    "COMMAND_SUPERVISOR_OF": {
+      "type": "unsupported",
+      "reason": "Requires org/hierarchy model. Admin 2003 references this."
+    },
+
+    "SUPERVISOR_OF": {
+      "type": "unsupported",
+      "reason": "Requires org/hierarchy model. Training 1006 references this."
+    },
+
+    "UNIT_OF": {
+      "type": "unsupported",
+      "reason": "Requires unit membership graph. Training 1002 references this (+ ALL_MEMBERS)."
+    },
+
+    "AUTHORITY_OVER": {
+      "type": "composite_first_supported",
+      "order": [
+        { "type": "family_parent_of_primary" },
+        { "type": "family_guardian_of_primary" },
+        { "type": "mentor_of_primary" },
+        { "type": "org_supervisor_of_primary" }
+      ],
+      "note": "Youth 3212: Parent, guardian, or mentor."
+    }
+  },
+
+  "debug": {
+    "unknown_required_relation_policy": "warn_and_fail",
+    "unknown_derived_relation_policy": "warn_and_fail",
+    "warn_on_unsupported": true
+  }
+}
