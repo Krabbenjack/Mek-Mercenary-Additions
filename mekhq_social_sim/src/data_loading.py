@@ -196,6 +196,9 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
         abilities_data = entry.get("abilities", {})
         if isinstance(abilities_data, dict):
             abilities = {k: str(v) for k, v in abilities_data.items()}
+        
+        # Status field from MekHQ (e.g., "ACTIVE", "CAMP_FOLLOWER", etc.)
+        status = entry.get("status")
 
         char = Character(
             id=cid,
@@ -213,6 +216,7 @@ def load_personnel(personnel_path: str | Path) -> Dict[str, Character]:
             attributes=attributes,
             skills=skills,
             abilities=abilities,
+            status=status,
         )
         characters[cid] = char
 

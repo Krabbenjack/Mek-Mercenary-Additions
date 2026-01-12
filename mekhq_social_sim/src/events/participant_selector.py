@@ -5,11 +5,22 @@ This module handles:
 1. Loading injector rules for events
 2. Checking event availability (required roles/counts)
 3. Selecting participants that match the criteria
+
+Integrates with resolver maps for:
+- Abstract role resolution (HR -> ADMINISTRATOR_HR)
+- Filter resolution (present -> status ACTIVE)
+- Age group resolution (EARLY_TEEN -> age 10-13)
 """
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 import json
 import re
+import logging
+
+from events.participant_resolver import get_participant_resolver
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class ParticipantSelector:
@@ -30,6 +41,9 @@ class ParticipantSelector:
         
         self.injector_rules: Dict[int, Dict[str, Any]] = {}
         self._load_injector_rules()
+        
+        # Get the participant resolver for role/filter/age resolution
+        self.resolver = get_participant_resolver()
     
     def _strip_json_comments(self, json_str: str) -> str:
         """Remove C-style comments from JSON string."""
@@ -72,6 +86,8 @@ class ParticipantSelector:
         """
         Check if an event can be executed with the current character roster.
         
+        Uses resolver maps for role, filter, and age group resolution.
+        
         Args:
             event_id: Event ID to check
             characters: Dictionary of Character objects keyed by ID
@@ -91,44 +107,66 @@ class ParticipantSelector:
         required_role = requires.get("role")
         if required_role:
             min_count = requires.get("min_count", 1)
-            # Normalize role name for comparison (handle MEKWARRIOR/MECHWARRIOR for backward compatibility)
-            matching_chars = [
-                char for char in characters.values()
-                if char.profession and self._normalize_role(char.profession) == self._normalize_role(required_role)
-            ]
             
-            if len(matching_chars) < min_count:
-                errors.append(f"Requires {min_count} {required_role}(s), found {len(matching_chars)}")
+            # Use resolver to get matching characters
+            matching_char_ids = self.resolver.filter_characters_by_role(
+                characters, required_role, event_id
+            )
+            
+            if len(matching_char_ids) < min_count:
+                errors.append(
+                    f"Requires {min_count} {required_role}(s), found {len(matching_char_ids)}"
+                )
         
         # Check any_person requirement
-        if requires.get("any_person") and not characters:
-            errors.append("Requires at least one person")
+        # any_person uses the "any_person" person_set which requires "present" filter
+        if requires.get("any_person"):
+            min_count = requires.get("min_count", 1)
+            
+            # Get person_set definition
+            person_set = self.resolver.bundle.get_person_set_definition("any_person")
+            if person_set:
+                filters = person_set.get("filters", [])
+                # Apply filters to get eligible characters
+                matching_char_ids = self.resolver.filter_characters_by_filters(
+                    characters, filters, event_id
+                )
+                
+                if len(matching_char_ids) < min_count:
+                    errors.append(
+                        f"Requires {min_count} person(s), found {len(matching_char_ids)} "
+                        f"matching filters {filters}"
+                    )
+            else:
+                # Fallback: just check if we have any characters
+                if len(characters) < min_count:
+                    errors.append(f"Requires {min_count} person(s), found {len(characters)}")
+        
+        # Check age_group requirements
+        age_group = requires.get("age_group")
+        if age_group:
+            min_count = requires.get("min_count", 1)
+            
+            # Use resolver to filter by age group
+            matching_char_ids = self.resolver.filter_characters_by_age_group(
+                characters, age_group, event_id
+            )
+            
+            if len(matching_char_ids) < min_count:
+                errors.append(
+                    f"Requires {min_count} {age_group}(s), found {len(matching_char_ids)}"
+                )
+        
+        # TODO: Check relationship requirements (relationship_exists, authority_present)
+        # This will be implemented in Phase 3
         
         return len(errors) == 0, errors
-    
-    def _normalize_role(self, role: str) -> str:
-        """
-        Normalize role names for comparison.
-        
-        Handles variations like MEKWARRIOR (current standard) vs MECHWARRIOR (legacy).
-        MekHQ uses MEKWARRIOR as the canonical form, but MECHWARRIOR is still accepted
-        for backward compatibility with older data files and configurations.
-        
-        All role names are normalized to MEKWARRIOR for consistent internal processing.
-        """
-        # Convert to uppercase and handle common variations
-        role = role.upper().strip()
-        
-        # MECHWARRIOR and MEKWARRIOR are the same, normalize to MEKWARRIOR (MekHQ standard)
-        # Keep MECHWARRIOR support for backward compatibility with old data
-        if role in ("MECHWARRIOR", "MEKWARRIOR", "MW"):
-            return "MEKWARRIOR"
-        
-        return role
     
     def select_participants(self, event_id: int, characters: Dict[str, Any]) -> List[str]:
         """
         Select participants for an event based on injector rules.
+        
+        Uses resolver maps for role, filter, and age group resolution.
         
         Args:
             event_id: Event ID to select participants for
@@ -139,6 +177,7 @@ class ParticipantSelector:
         """
         rule = self.get_injector_rule(event_id)
         if not rule:
+            logger.warning(f"[PARTICIPANT_SELECTOR] No injector rule for event {event_id}")
             return []
         
         primary_selection = rule.get("primary_selection", {})
@@ -147,27 +186,69 @@ class ParticipantSelector:
         if selection_type == "none":
             return []
         
-        required_role = primary_selection.get("role")
-        if not required_role:
-            return []
+        # Start with all characters as candidates
+        candidate_ids = list(characters.keys())
         
-        # Get all characters matching the required role
-        matching_chars = [
-            char_id for char_id, char in characters.items()
-            if char.profession and self._normalize_role(char.profession) == self._normalize_role(required_role)
-        ]
+        # Apply role filter if specified
+        required_role = primary_selection.get("role")
+        if required_role:
+            candidate_ids = self.resolver.filter_characters_by_role(
+                characters, required_role, event_id
+            )
+        
+        # Apply exclude_roles filter if specified
+        exclude_roles = primary_selection.get("exclude_roles", [])
+        if exclude_roles:
+            for exclude_role in exclude_roles:
+                excluded_ids = set(self.resolver.filter_characters_by_role(
+                    characters, exclude_role, event_id
+                ))
+                candidate_ids = [cid for cid in candidate_ids if cid not in excluded_ids]
+        
+        # Apply filters if specified (e.g., ["present", "alive"])
+        filters = primary_selection.get("filters", [])
+        if filters:
+            # Filter candidate_ids by applying all filters
+            filtered_candidates = {cid: characters[cid] for cid in candidate_ids}
+            candidate_ids = self.resolver.filter_characters_by_filters(
+                filtered_candidates, filters, event_id
+            )
+        
+        # Apply age_group filter if specified
+        age_group = primary_selection.get("age_group")
+        if age_group:
+            # Filter candidates by age group
+            filtered_candidates = {cid: characters[cid] for cid in candidate_ids}
+            candidate_ids = self.resolver.filter_characters_by_age_group(
+                filtered_candidates, age_group, event_id
+            )
+        
+        # TODO: Apply relationship_context constraints (required_relation, etc.)
+        # This will be implemented in Phase 3
         
         # Select based on type
         if selection_type == "single_person":
-            return matching_chars[:1] if matching_chars else []
+            return candidate_ids[:1] if candidate_ids else []
         
         elif selection_type == "multiple_persons":
             count = primary_selection.get("count", 1)
             min_count = primary_selection.get("min", count)
             max_count = primary_selection.get("max", count)
             
-            # Return up to count participants
-            return matching_chars[:min(len(matching_chars), max_count)]
+            # Return up to max_count participants
+            return candidate_ids[:min(len(candidate_ids), max_count)]
+        
+        elif selection_type == "pair":
+            # For pair selection, need at least 2 candidates
+            if len(candidate_ids) < 2:
+                logger.warning(
+                    f"[PARTICIPANT_SELECTOR] Event {event_id} requires pair selection "
+                    f"but only {len(candidate_ids)} candidate(s) found"
+                )
+                return []
+            
+            # Return first 2 candidates (can be enhanced later for pair_constraints)
+            return candidate_ids[:2]
         
         return []
 
