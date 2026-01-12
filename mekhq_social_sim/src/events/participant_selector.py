@@ -10,6 +10,7 @@ Integrates with resolver maps for:
 - Abstract role resolution (HR -> ADMINISTRATOR_HR)
 - Filter resolution (present -> status ACTIVE)
 - Age group resolution (EARLY_TEEN -> age 10-13)
+- Relationship resolution (relationship_exists, authority_present, derived participants)
 """
 from typing import Dict, List, Optional, Any
 from pathlib import Path
@@ -18,6 +19,7 @@ import re
 import logging
 
 from events.participant_resolver import get_participant_resolver
+from events.relationship_resolver import get_relationship_resolver
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -44,6 +46,9 @@ class ParticipantSelector:
         
         # Get the participant resolver for role/filter/age resolution
         self.resolver = get_participant_resolver()
+        
+        # Get the relationship resolver for relationship DSL resolution
+        self.relationship_resolver = get_relationship_resolver()
     
     def _strip_json_comments(self, json_str: str) -> str:
         """Remove C-style comments from JSON string."""
@@ -157,8 +162,22 @@ class ParticipantSelector:
                     f"Requires {min_count} {age_group}(s), found {len(matching_char_ids)}"
                 )
         
-        # TODO: Check relationship requirements (relationship_exists, authority_present)
-        # This will be implemented in Phase 3
+        # Check relationship requirements
+        if requires.get("relationship_exists"):
+            # Check if at least one relationship exists in the roster
+            has_rel = self.relationship_resolver.check_relationship_exists(
+                characters, event_id
+            )
+            if not has_rel:
+                errors.append("Requires at least one existing relationship")
+        
+        if requires.get("authority_present"):
+            # Check if any authority relationship exists
+            has_authority = self.relationship_resolver.check_authority_present(
+                characters, event_id
+            )
+            if not has_authority:
+                errors.append("Requires at least one authority relationship (parent/guardian/mentor)")
         
         return len(errors) == 0, errors
     
@@ -223,8 +242,30 @@ class ParticipantSelector:
                 filtered_candidates, age_group, event_id
             )
         
-        # TODO: Apply relationship_context constraints (required_relation, etc.)
-        # This will be implemented in Phase 3
+        # Apply relationship_context constraints for pair selection
+        relationship_context = primary_selection.get("relationship_context", {})
+        if relationship_context and selection_type == "pair":
+            required_relation = relationship_context.get("required_relation")
+            
+            if required_relation:
+                # Filter pairs by the required relation predicate
+                valid_pairs = []
+                for i, char_a_id in enumerate(candidate_ids):
+                    for char_b_id in candidate_ids[i+1:]:
+                        if self.relationship_resolver.evaluate_pair_predicate(
+                            char_a_id, char_b_id, required_relation, event_id
+                        ):
+                            valid_pairs.append((char_a_id, char_b_id))
+                
+                if valid_pairs:
+                    # Return the first valid pair
+                    candidate_ids = list(valid_pairs[0])
+                else:
+                    logger.info(
+                        f"[PARTICIPANT_SELECTOR] Event {event_id} found no pairs "
+                        f"matching required_relation '{required_relation}'"
+                    )
+                    candidate_ids = []
         
         # Select based on type
         if selection_type == "single_person":
@@ -247,10 +288,54 @@ class ParticipantSelector:
                 )
                 return []
             
-            # Return first 2 candidates (can be enhanced later for pair_constraints)
+            # Return the pair (already filtered by relationship_context if applicable)
             return candidate_ids[:2]
         
         return []
+    
+    def get_derived_participants(
+        self, 
+        event_id: int, 
+        primary_participants: List[str],
+        characters: Dict[str, Any]
+    ) -> List[str]:
+        """
+        Get derived participants for an event.
+        
+        Args:
+            event_id: Event ID
+            primary_participants: List of primary participant IDs
+            characters: Dictionary of Character objects keyed by ID
+            
+        Returns:
+            List of derived participant IDs
+        """
+        rule = self.get_injector_rule(event_id)
+        if not rule:
+            return []
+        
+        derived_defs = rule.get("derived_participants", [])
+        if not derived_defs:
+            return []
+        
+        all_derived = []
+        
+        for derived_def in derived_defs:
+            # Determine the primary character for context
+            source = derived_def.get("source", "primary")
+            primary_char_id = None
+            
+            if source == "primary" and primary_participants:
+                primary_char_id = primary_participants[0]
+            
+            # Resolve the derived participant
+            derived_ids = self.relationship_resolver.resolve_derived_participant(
+                derived_def, primary_char_id, characters, event_id
+            )
+            
+            all_derived.extend(derived_ids)
+        
+        return all_derived
 
 
 # Global singleton instance
