@@ -63,6 +63,9 @@ class Character:
     # Special Abilities / SPAs (name -> description)
     abilities: Dict[str, str] = field(default_factory=dict)
     
+    # Status field from MekHQ (e.g., "ACTIVE", "CAMP_FOLLOWER", etc.)
+    status: Optional[str] = None
+    
     # Event-driven character state (Phase 3)
     # These values are modified by event outcomes and displayed read-only in UI
     xp: int = 0  # Experience points (numeric, no upper limit)

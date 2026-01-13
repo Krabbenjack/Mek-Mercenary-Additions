@@ -130,6 +130,23 @@ class RelationshipStateQuery:
             return False
         return rel.has_role(role_name)
     
+    def relationship_exists(self, char_a_id: str, char_b_id: str) -> bool:
+        """
+        Check if any relationship record exists between two characters.
+        
+        This is used by event availability checks to ensure relationships exist
+        before triggering relationship-dependent events.
+        
+        Args:
+            char_a_id: ID of first character
+            char_b_id: ID of second character
+            
+        Returns:
+            True if a relationship record exists, False otherwise
+        """
+        rel = self.engine.get_relationship_state(char_a_id, char_b_id)
+        return rel is not None
+    
     # -------------------------------------------------------------------------
     # Interaction Gating Queries
     # -------------------------------------------------------------------------
