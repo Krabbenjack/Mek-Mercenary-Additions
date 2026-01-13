@@ -17,6 +17,7 @@ from pathlib import Path
 import json
 import re
 import logging
+import random
 
 from events.participant_resolver import get_participant_resolver
 from events.relationship_resolver import get_relationship_resolver
@@ -181,18 +182,21 @@ class ParticipantSelector:
         
         return len(errors) == 0, errors
     
-    def select_participants(self, event_id: int, characters: Dict[str, Any]) -> List[str]:
+    def get_eligible_candidates(self, event_id: int, characters: Dict[str, Any],
+                                campaign_date: Optional[Any] = None) -> List[str]:
         """
-        Select participants for an event based on injector rules.
+        Get eligible candidates for an event based on injector rules.
         
-        Uses resolver maps for role, filter, and age group resolution.
+        This returns the full candidate pool after applying role/filter/age checks,
+        but before min/max/count selection.
         
         Args:
-            event_id: Event ID to select participants for
+            event_id: Event ID to get candidates for
             characters: Dictionary of Character objects keyed by ID
+            campaign_date: Optional campaign date for seed (datetime.date or similar)
             
         Returns:
-            List of character IDs selected as participants
+            List of character IDs eligible as candidates
         """
         rule = self.get_injector_rule(event_id)
         if not rule:
@@ -258,8 +262,13 @@ class ParticipantSelector:
                             valid_pairs.append((char_a_id, char_b_id))
                 
                 if valid_pairs:
-                    # Return the first valid pair
-                    candidate_ids = list(valid_pairs[0])
+                    # For get_eligible_candidates, return all characters that can form pairs
+                    # (flattened list of all unique characters in valid pairs)
+                    all_pair_chars = set()
+                    for char_a, char_b in valid_pairs:
+                        all_pair_chars.add(char_a)
+                        all_pair_chars.add(char_b)
+                    candidate_ids = list(all_pair_chars)
                 else:
                     logger.info(
                         f"[PARTICIPANT_SELECTOR] Event {event_id} found no pairs "
@@ -267,9 +276,64 @@ class ParticipantSelector:
                     )
                     candidate_ids = []
         
+        return candidate_ids
+    
+    def select_participants(self, event_id: int, characters: Dict[str, Any],
+                          campaign_date: Optional[Any] = None) -> List[str]:
+        """
+        Select participants for an event based on injector rules.
+        
+        Uses deterministic shuffling based on campaign_date and event_id seed.
+        Uses resolver maps for role, filter, and age group resolution.
+        
+        Args:
+            event_id: Event ID to select participants for
+            characters: Dictionary of Character objects keyed by ID
+            campaign_date: Optional campaign date for deterministic seed (datetime.date or similar)
+            
+        Returns:
+            List of character IDs selected as participants
+        """
+        rule = self.get_injector_rule(event_id)
+        if not rule:
+            logger.warning(f"[PARTICIPANT_SELECTOR] No injector rule for event {event_id}")
+            return []
+        
+        primary_selection = rule.get("primary_selection", {})
+        selection_type = primary_selection.get("type")
+        
+        if selection_type == "none":
+            return []
+        
+        # Get eligible candidates using the shared logic
+        candidate_ids = self.get_eligible_candidates(event_id, characters, campaign_date)
+        
+        # Log candidate pool size
+        logger.info(
+            f"[PARTICIPANT_SELECTOR] Event {event_id}: candidate_count={len(candidate_ids)}"
+        )
+        
+        # Apply deterministic shuffling if campaign_date is provided
+        if campaign_date and candidate_ids:
+            # Create seed from campaign_date and event_id
+            if hasattr(campaign_date, 'toordinal'):
+                date_value = campaign_date.toordinal()
+            else:
+                # Fallback: try to convert to string and hash
+                date_value = hash(str(campaign_date))
+            
+            seed = (date_value, event_id)
+            
+            # Create local RNG instance and shuffle
+            rng = random.Random(seed)
+            candidate_ids = candidate_ids.copy()  # Don't modify the original list
+            rng.shuffle(candidate_ids)
+        
         # Select based on type
+        selected_ids = []
+        
         if selection_type == "single_person":
-            return candidate_ids[:1] if candidate_ids else []
+            selected_ids = candidate_ids[:1] if candidate_ids else []
         
         elif selection_type == "multiple_persons":
             count = primary_selection.get("count", 1)
@@ -277,7 +341,7 @@ class ParticipantSelector:
             max_count = primary_selection.get("max", count)
             
             # Return up to max_count participants
-            return candidate_ids[:min(len(candidate_ids), max_count)]
+            selected_ids = candidate_ids[:min(len(candidate_ids), max_count)]
         
         elif selection_type == "pair":
             # For pair selection, need at least 2 candidates
@@ -286,12 +350,37 @@ class ParticipantSelector:
                     f"[PARTICIPANT_SELECTOR] Event {event_id} requires pair selection "
                     f"but only {len(candidate_ids)} candidate(s) found"
                 )
-                return []
-            
-            # Return the pair (already filtered by relationship_context if applicable)
-            return candidate_ids[:2]
+                selected_ids = []
+            else:
+                # Check if we need to validate relationship_context
+                relationship_context = primary_selection.get("relationship_context", {})
+                if relationship_context:
+                    required_relation = relationship_context.get("required_relation")
+                    if required_relation:
+                        # Find first valid pair from shuffled candidates
+                        for i, char_a_id in enumerate(candidate_ids):
+                            for char_b_id in candidate_ids[i+1:]:
+                                if self.relationship_resolver.evaluate_pair_predicate(
+                                    char_a_id, char_b_id, required_relation, event_id
+                                ):
+                                    selected_ids = [char_a_id, char_b_id]
+                                    break
+                            if selected_ids:
+                                break
+                    else:
+                        # No required relation, just take first 2
+                        selected_ids = candidate_ids[:2]
+                else:
+                    # No relationship context, just take first 2
+                    selected_ids = candidate_ids[:2]
         
-        return []
+        # Log selected participants
+        logger.info(
+            f"[PARTICIPANT_SELECTOR] Event {event_id}: selected_count={len(selected_ids)}, "
+            f"selected_ids={selected_ids}"
+        )
+        
+        return selected_ids
     
     def get_derived_participants(
         self, 

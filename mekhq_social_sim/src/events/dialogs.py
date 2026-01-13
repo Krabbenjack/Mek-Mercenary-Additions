@@ -255,14 +255,28 @@ class EventExecutionWindow:
         selector = get_participant_selector()
         self.selector = selector
         
-        # Check availability and get participants
+        # Check availability
         self.is_available, self.errors = selector.check_availability(event.event_id, characters)
-        self.selected_participants = selector.select_participants(event.event_id, characters) if self.is_available else []
+        
+        # Get eligible candidates and auto-selected participants
+        if self.is_available:
+            self.eligible_candidates = selector.get_eligible_candidates(
+                event.event_id, characters, execution_date
+            )
+            self.auto_selected = selector.select_participants(
+                event.event_id, characters, execution_date
+            )
+            # Start with auto-selected as current selection
+            self.selected_participants = self.auto_selected.copy()
+        else:
+            self.eligible_candidates = []
+            self.auto_selected = []
+            self.selected_participants = []
         
         # Create window
         self.window = tk.Toplevel(parent)
         self.window.title(f"Event Execution - {self.event_name}")
-        self.window.geometry("600x500")
+        self.window.geometry("800x600")
         self.window.grab_set()
         
         self._build_ui()
@@ -323,43 +337,78 @@ class EventExecutionWindow:
                     fg="#c0392b"
                 ).pack(anchor=tk.W, padx=(10, 0))
         
-        # Participants section
-        participants_label = tk.Label(
-            content_frame,
-            text="Selected Participants:",
-            font=("Arial", 11, "bold")
-        )
-        participants_label.pack(anchor=tk.W, pady=(10, 5))
-        
-        # Participants listbox
-        list_frame = tk.Frame(content_frame)
-        list_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
-        
-        scrollbar = tk.Scrollbar(list_frame)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self.participants_listbox = tk.Listbox(
-            list_frame,
-            yscrollcommand=scrollbar.set,
-            font=("Arial", 10),
-            height=10
-        )
-        self.participants_listbox.pack(fill=tk.BOTH, expand=True)
-        scrollbar.config(command=self.participants_listbox.yview)
-        
-        # Populate participants
-        if self.selected_participants:
-            for char_id in self.selected_participants:
-                char = self.characters.get(char_id)
-                if char:
-                    display_text = f"{char.name}"
-                    if char.callsign:
-                        display_text += f" ({char.callsign})"
-                    if char.profession:
-                        display_text += f" - {char.profession}"
-                    self.participants_listbox.insert(tk.END, display_text)
-        else:
-            self.participants_listbox.insert(tk.END, "No participants selected")
+        if self.is_available:
+            # Two-list interface for participant selection
+            participants_frame = tk.Frame(content_frame)
+            participants_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+            
+            # Left side: Eligible Candidates
+            left_frame = tk.Frame(participants_frame)
+            left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
+            
+            tk.Label(
+                left_frame,
+                text="Eligible Candidates:",
+                font=("Arial", 11, "bold")
+            ).pack(anchor=tk.W, pady=(0, 5))
+            
+            left_list_frame = tk.Frame(left_frame)
+            left_list_frame.pack(fill=tk.BOTH, expand=True)
+            
+            left_scrollbar = tk.Scrollbar(left_list_frame)
+            left_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            
+            self.candidates_listbox = tk.Listbox(
+                left_list_frame,
+                yscrollcommand=left_scrollbar.set,
+                font=("Arial", 10),
+                selectmode=tk.SINGLE
+            )
+            self.candidates_listbox.pack(fill=tk.BOTH, expand=True)
+            left_scrollbar.config(command=self.candidates_listbox.yview)
+            
+            # Bind click event to add to selected
+            self.candidates_listbox.bind('<Double-Button-1>', self._on_candidate_double_click)
+            
+            # Right side: Selected Participants
+            right_frame = tk.Frame(participants_frame)
+            right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
+            
+            tk.Label(
+                right_frame,
+                text="Selected Participants:",
+                font=("Arial", 11, "bold")
+            ).pack(anchor=tk.W, pady=(0, 5))
+            
+            right_list_frame = tk.Frame(right_frame)
+            right_list_frame.pack(fill=tk.BOTH, expand=True)
+            
+            right_scrollbar = tk.Scrollbar(right_list_frame)
+            right_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            
+            self.selected_listbox = tk.Listbox(
+                right_list_frame,
+                yscrollcommand=right_scrollbar.set,
+                font=("Arial", 10),
+                selectmode=tk.SINGLE
+            )
+            self.selected_listbox.pack(fill=tk.BOTH, expand=True)
+            right_scrollbar.config(command=self.selected_listbox.yview)
+            
+            # Bind click event to remove from selected
+            self.selected_listbox.bind('<Double-Button-1>', self._on_selected_double_click)
+            
+            # Populate the lists
+            self._refresh_lists()
+            
+            # Add instruction label
+            instruction_label = tk.Label(
+                content_frame,
+                text="Double-click to add/remove participants",
+                font=("Arial", 9, "italic"),
+                fg="#7f8c8d"
+            )
+            instruction_label.pack(pady=(0, 10))
         
         # Button frame
         button_frame = tk.Frame(self.window, padx=15, pady=15)
@@ -384,9 +433,89 @@ class EventExecutionWindow:
             font=("Arial", 10)
         ).pack(side=tk.RIGHT, padx=5)
     
+    def _get_character_display_text(self, char_id: str) -> str:
+        """Get display text for a character."""
+        char = self.characters.get(char_id)
+        if not char:
+            return f"Unknown ({char_id})"
+        
+        display_text = f"{char.name}"
+        if char.callsign:
+            display_text += f" ({char.callsign})"
+        if char.profession:
+            display_text += f" - {char.profession}"
+        return display_text
+    
+    def _refresh_lists(self):
+        """Refresh both listboxes based on current state."""
+        # Clear both lists
+        self.candidates_listbox.delete(0, tk.END)
+        self.selected_listbox.delete(0, tk.END)
+        
+        # Populate candidates (those not in selected)
+        for char_id in self.eligible_candidates:
+            if char_id not in self.selected_participants:
+                display_text = self._get_character_display_text(char_id)
+                self.candidates_listbox.insert(tk.END, display_text)
+        
+        # Populate selected
+        for char_id in self.selected_participants:
+            display_text = self._get_character_display_text(char_id)
+            self.selected_listbox.insert(tk.END, display_text)
+        
+        # If no candidates left, show message
+        if self.candidates_listbox.size() == 0:
+            self.candidates_listbox.insert(tk.END, "(All eligible candidates selected)")
+    
+    def _on_candidate_double_click(self, event):
+        """Handle double-click on candidate to add to selected."""
+        selection = self.candidates_listbox.curselection()
+        if not selection:
+            return
+        
+        # Get the index in candidates list
+        idx = selection[0]
+        
+        # Find the corresponding character ID
+        available_candidates = [
+            cid for cid in self.eligible_candidates 
+            if cid not in self.selected_participants
+        ]
+        
+        if idx < len(available_candidates):
+            char_id = available_candidates[idx]
+            # Add to selected
+            if char_id not in self.selected_participants:
+                self.selected_participants.append(char_id)
+                self._refresh_lists()
+    
+    def _on_selected_double_click(self, event):
+        """Handle double-click on selected to remove from selected."""
+        selection = self.selected_listbox.curselection()
+        if not selection:
+            return
+        
+        # Get the index in selected list
+        idx = selection[0]
+        
+        if idx < len(self.selected_participants):
+            char_id = self.selected_participants[idx]
+            # Remove from selected
+            self.selected_participants.remove(char_id)
+            self._refresh_lists()
+    
     def _execute_event(self):
         """Execute the event and close the window."""
         try:
+            # Log final participant IDs (including manual overrides)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(
+                f"[EVENT_EXECUTION] Event {self.event.event_id}: "
+                f"Starting execution with {len(self.selected_participants)} participants: "
+                f"{self.selected_participants}"
+            )
+            
             # Execute via injector
             injector = get_event_injector()
             log = injector.execute_event(self.event.event_id, self.execution_date, self.characters)
