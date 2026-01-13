@@ -322,7 +322,8 @@ class ParticipantSelector:
                 # Fallback: try to convert to string and hash
                 date_value = hash(str(campaign_date))
             
-            seed = (date_value, event_id)
+            # Combine date_value and event_id into a single integer seed
+            seed = (date_value * 10000) + event_id
             
             # Create local RNG instance and shuffle
             rng = random.Random(seed)

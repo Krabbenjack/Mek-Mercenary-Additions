@@ -210,6 +210,7 @@ __marimo__/
 test_synergy.py
 test_gui_display.py
 test_interaction.py
+test_participant_fixes.py
 
 # Exported campaign data (user-specific)
 mekhq_social_sim/exports/
