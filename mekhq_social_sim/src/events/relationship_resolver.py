@@ -279,6 +279,74 @@ class RelationshipResolver:
             )
             return []
         
+        # DIRECT IMPLEMENTATION: Handle UNIT_OF and ALL_PRESENT_PERSONS first
+        # These are not in resolver maps but implemented directly based on character data
+        
+        if relation_name == "UNIT_OF":
+            # Get all members of the primary character's unit
+            if not primary_char_id:
+                logger.warning(
+                    f"[RELATIONSHIP_RESOLVER] UNIT_OF requires primary character but none provided"
+                )
+                return []
+            
+            primary_char = characters.get(primary_char_id)
+            if not primary_char:
+                logger.warning(
+                    f"[RELATIONSHIP_RESOLVER] Primary character {primary_char_id} not found"
+                )
+                return []
+            
+            # Check if character has a unit assignment
+            if not hasattr(primary_char, 'unit') or primary_char.unit is None:
+                logger.info(
+                    f"[RELATIONSHIP_RESOLVER] Character {primary_char_id} has no unit assignment"
+                )
+                return []
+            
+            # Get the unit name from primary character
+            primary_unit_name = primary_char.unit.unit_name
+            
+            # Check what should be included
+            include = derived_def.get("include", "ALL_MEMBERS")
+            
+            if include == "ALL_MEMBERS":
+                # Find all characters in the same unit
+                unit_members = []
+                for char_id, char in characters.items():
+                    if hasattr(char, 'unit') and char.unit is not None:
+                        if char.unit.unit_name == primary_unit_name:
+                            # Don't include the primary character again
+                            if char_id != primary_char_id:
+                                unit_members.append(char_id)
+                
+                logger.info(
+                    f"[RELATIONSHIP_RESOLVER] UNIT_OF for {primary_char_id}: "
+                    f"found {len(unit_members)} unit members in '{primary_unit_name}'"
+                )
+                return unit_members
+            else:
+                logger.warning(
+                    f"[RELATIONSHIP_RESOLVER] UNIT_OF include type '{include}' not supported"
+                )
+                return []
+        
+        elif relation_name == "ALL_PRESENT_PERSONS":
+            # Get all characters with "present" status (ACTIVE)
+            from events.participant_resolver import get_participant_resolver
+            resolver = get_participant_resolver()
+            
+            # Use the "present" filter from participant resolver
+            present_chars = resolver.filter_characters_by_filters(
+                characters, ["present"], event_id
+            )
+            
+            logger.info(
+                f"[RELATIONSHIP_RESOLVER] ALL_PRESENT_PERSONS: found {len(present_chars)} present characters"
+            )
+            return present_chars
+        
+        # Now check resolver bundle for other relation types
         relation_def = self.bundle.get_derived_relation(relation_name)
         
         if relation_def is None:
