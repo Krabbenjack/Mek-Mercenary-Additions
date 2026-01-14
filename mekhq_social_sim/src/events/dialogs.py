@@ -19,10 +19,7 @@ from .participant_selector import get_participant_selector
 from .injector import get_event_injector
 
 # Import theme colors for resolve window
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from ui_theme import RESOLVE_THEME
+from ..ui_theme import RESOLVE_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -517,12 +514,12 @@ class EventExecutionWindow:
     def _execute_event(self):
         """Open Event Resolve Window with selected participants."""
         try:
-            # Log final participant IDs (including manual overrides)
+            # Log final participant count (IDs excluded for privacy)
             logger.info(
                 f"[EVENT_EXECUTION] Event {self.event.event_id}: "
-                f"Opening Resolve Window with {len(self.selected_participants)} participants: "
-                f"{self.selected_participants}"
+                f"Opening Resolve Window with {len(self.selected_participants)} participants"
             )
+            logger.debug(f"[EVENT_EXECUTION] Participant IDs: {self.selected_participants}")
             
             # Get environment and tone (placeholder values for now)
             # TODO: Load from event metadata when available
@@ -609,9 +606,9 @@ class EventResolveWindow:
         self.window.grab_set()
         
         # Console logging
-        logger.info(f"[RESOLVE_WINDOW] Opening for event {event.event_id}: {self.event_name}")
-        logger.info(f"[RESOLVE_WINDOW] Event ID: {event.event_id}, Date: {execution_date}")
-        logger.info(f"[RESOLVE_WINDOW] Participants: {len(participants)}")
+        logger.info(f"[RESOLVE_WINDOW] Opening event resolve window")
+        logger.debug(f"[RESOLVE_WINDOW] Event: {event.event_id} - {self.event_name}")
+        logger.debug(f"[RESOLVE_WINDOW] Date: {execution_date}, Participants: {len(participants)}")
         
         self._build_ui()
         
@@ -947,7 +944,7 @@ class EventResolveWindow:
         close_lbl.pack()
         
         def on_close_click(e):
-            logger.info(f"[RESOLVE_WINDOW] Close button clicked for event {self.event.event_id}")
+            logger.info(f"[RESOLVE_WINDOW] Close button clicked")
             self.window.destroy()
         
         def on_close_enter(e):
@@ -985,7 +982,7 @@ class EventResolveWindow:
         resolve_lbl.pack()
         
         def on_resolve_click(e):
-            logger.info(f"[RESOLVE_WINDOW] Resolve Event button clicked for event {self.event.event_id}")
+            logger.info(f"[RESOLVE_WINDOW] Resolve Event button clicked")
             # Placeholder action
             messagebox.showinfo(
                 "Resolve Event",
