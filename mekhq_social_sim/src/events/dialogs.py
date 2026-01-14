@@ -596,7 +596,7 @@ class EventResolveWindow:
         # Count participant types (for now, just total)
         self.primary_count = len(participants)  # Placeholder
         self.derived_count = 0  # Placeholder
-        self.total_count = len(participants)
+        self.total_count = self.primary_count + self.derived_count
         
         # Create window
         self.window = tk.Toplevel(parent)
@@ -843,17 +843,8 @@ class EventResolveWindow:
         name_lbl.bind("<Leave>", on_leave)
         
         # Role + Rank (secondary text)
-        role_text = ""
-        if char.profession:
-            role_text = char.profession
-        if char.rank_name:
-            if role_text:
-                role_text += f" • {char.rank_name}"
-            else:
-                role_text = char.rank_name
-        
-        if not role_text:
-            role_text = "Unknown Role"
+        role_parts = [char.profession, char.rank_name]
+        role_text = " • ".join(filter(None, role_parts)) or "Unknown Role"
         
         role_lbl = tk.Label(
             text_container,
