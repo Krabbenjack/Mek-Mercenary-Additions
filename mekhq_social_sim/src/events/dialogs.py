@@ -792,20 +792,6 @@ class EventResolveWindow:
         )
         row.pack(fill=tk.X, padx=4, pady=3)
         
-        # Hover effect
-        def on_enter(e):
-            row.configure(bg=RESOLVE_THEME["card_hover"])
-            name_lbl.configure(bg=RESOLVE_THEME["card_hover"])
-            role_lbl.configure(bg=RESOLVE_THEME["card_hover"])
-        
-        def on_leave(e):
-            row.configure(bg=RESOLVE_THEME["card_bg"])
-            name_lbl.configure(bg=RESOLVE_THEME["card_bg"])
-            role_lbl.configure(bg=RESOLVE_THEME["card_bg"])
-        
-        row.bind("<Enter>", on_enter)
-        row.bind("<Leave>", on_leave)
-        
         # Portrait placeholder (left side, 40x40)
         portrait_frame = tk.Frame(
             row,
@@ -839,8 +825,6 @@ class EventResolveWindow:
             anchor=tk.W
         )
         name_lbl.pack(anchor=tk.W)
-        name_lbl.bind("<Enter>", on_enter)
-        name_lbl.bind("<Leave>", on_leave)
         
         # Role + Rank (secondary text)
         role_parts = [char.profession, char.rank_name]
@@ -855,6 +839,22 @@ class EventResolveWindow:
             anchor=tk.W
         )
         role_lbl.pack(anchor=tk.W, pady=(2, 0))
+        
+        # Hover effect (defined after labels are created)
+        def on_enter(e):
+            row.configure(bg=RESOLVE_THEME["card_hover"])
+            name_lbl.configure(bg=RESOLVE_THEME["card_hover"])
+            role_lbl.configure(bg=RESOLVE_THEME["card_hover"])
+        
+        def on_leave(e):
+            row.configure(bg=RESOLVE_THEME["card_bg"])
+            name_lbl.configure(bg=RESOLVE_THEME["card_bg"])
+            role_lbl.configure(bg=RESOLVE_THEME["card_bg"])
+        
+        row.bind("<Enter>", on_enter)
+        row.bind("<Leave>", on_leave)
+        name_lbl.bind("<Enter>", on_enter)
+        name_lbl.bind("<Leave>", on_leave)
         role_lbl.bind("<Enter>", on_enter)
         role_lbl.bind("<Leave>", on_leave)
     
