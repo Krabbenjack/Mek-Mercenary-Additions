@@ -803,13 +803,14 @@ class EventResolveWindow:
         portrait_frame.pack_propagate(False)
         
         # Portrait label (could load actual image later)
-        tk.Label(
+        portrait_lbl = tk.Label(
             portrait_frame,
             text="?",
             font=("Segoe UI", 16, "bold"),
             bg=RESOLVE_THEME["border"],
             fg=RESOLVE_THEME["text_muted"]
-        ).pack(expand=True)
+        )
+        portrait_lbl.pack(expand=True)
         
         # Text container (right side)
         text_container = tk.Frame(row, bg=RESOLVE_THEME["card_bg"])
@@ -843,11 +844,13 @@ class EventResolveWindow:
         # Hover effect (defined after labels are created)
         def on_enter(e):
             row.configure(bg=RESOLVE_THEME["card_hover"])
+            text_container.configure(bg=RESOLVE_THEME["card_hover"])
             name_lbl.configure(bg=RESOLVE_THEME["card_hover"])
             role_lbl.configure(bg=RESOLVE_THEME["card_hover"])
         
         def on_leave(e):
             row.configure(bg=RESOLVE_THEME["card_bg"])
+            text_container.configure(bg=RESOLVE_THEME["card_bg"])
             name_lbl.configure(bg=RESOLVE_THEME["card_bg"])
             role_lbl.configure(bg=RESOLVE_THEME["card_bg"])
         
