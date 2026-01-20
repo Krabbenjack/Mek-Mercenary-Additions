@@ -841,18 +841,20 @@ class EventResolveWindow:
         )
         role_lbl.pack(anchor=tk.W, pady=(2, 0))
         
-        # Hover effect (defined after labels are created)
+        # Hover effect (defined after all UI elements are created)
         def on_enter(e):
             row.configure(bg=RESOLVE_THEME["card_hover"])
             text_container.configure(bg=RESOLVE_THEME["card_hover"])
             name_lbl.configure(bg=RESOLVE_THEME["card_hover"])
             role_lbl.configure(bg=RESOLVE_THEME["card_hover"])
+            portrait_lbl.configure(bg=RESOLVE_THEME["card_hover"])
         
         def on_leave(e):
             row.configure(bg=RESOLVE_THEME["card_bg"])
             text_container.configure(bg=RESOLVE_THEME["card_bg"])
             name_lbl.configure(bg=RESOLVE_THEME["card_bg"])
             role_lbl.configure(bg=RESOLVE_THEME["card_bg"])
+            portrait_lbl.configure(bg=RESOLVE_THEME["border"])
         
         row.bind("<Enter>", on_enter)
         row.bind("<Leave>", on_leave)
