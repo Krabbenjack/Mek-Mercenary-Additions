@@ -336,9 +336,9 @@ class CharacterDetailDialog:
 
         # --- Identity Block ---
         identity_frame = tk.Frame(parent, bg="#FFFFFF")
-        identity_frame.pack(fill=tk.X, pady=(0, 12))
+        identity_frame.pack(fill=tk.X, pady=(0, 16))  # Increased bottom spacing for breathing room
 
-        # Compact identity labels
+        # Identity labels - Paper sheet style: labels light/small, values prominent
         identity_data = [
             ("Name:", char.name),
             ("Callsign:", char.callsign or "—"),
@@ -351,23 +351,25 @@ class CharacterDetailDialog:
 
         for label_text, value_text in identity_data:
             row = tk.Frame(identity_frame, bg="#FFFFFF")
-            row.pack(fill=tk.X, pady=1)
+            row.pack(fill=tk.X, pady=3)  # Increased row spacing for paper sheet rhythm
             
-            lbl = tk.Label(row, text=label_text, bg="#FFFFFF", fg="#1E1E1E",
-                          font=("TkDefaultFont", 9, "bold"), anchor="w", width=10)
-            lbl.pack(side=tk.LEFT, padx=(0, 5))
+            # Labels: smaller, lighter color (supporting information)
+            lbl = tk.Label(row, text=label_text, bg="#FFFFFF", fg="#666666",
+                          font=("TkDefaultFont", 8), anchor="w", width=11)
+            lbl.pack(side=tk.LEFT, padx=(0, 8))
             
+            # Values: normal size, darker (primary information)
             val = tk.Label(row, text=value_text, bg="#FFFFFF", fg="#1E1E1E",
-                          font=("TkDefaultFont", 9), anchor="w")
+                          font=("TkDefaultFont", 10), anchor="w")
             val.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # --- Quick Chips Strip ---
         chips_frame = tk.Frame(parent, bg="#FFFFFF")
-        chips_frame.pack(fill=tk.X, pady=(12, 0))
+        chips_frame.pack(fill=tk.X, pady=(16, 0))  # Increased spacing for section separation
 
-        chips_title = tk.Label(chips_frame, text="Quick Info", bg="#FFFFFF", fg="#1E1E1E",
-                              font=("TkDefaultFont", 10, "bold"))
-        chips_title.pack(anchor="w", pady=(0, 5))
+        chips_title = tk.Label(chips_frame, text="Quick Info", bg="#FFFFFF", fg="#444444",
+                              font=("TkDefaultFont", 9, "bold"))  # Slightly smaller, lighter
+        chips_title.pack(anchor="w", pady=(0, 8))  # More breathing room below title
 
         # Gunnery/Piloting chips
         if char.skills:
@@ -446,14 +448,14 @@ class CharacterDetailDialog:
 
         char = self.character
 
-        # Two-column mini-layout
+        # Two-column mini-layout with generous spacing
         left_col = tk.Frame(body, bg=self.COLORS["overview"])
-        left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+        left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(8, 16))  # Increased padding
 
         right_col = tk.Frame(body, bg=self.COLORS["overview"])
-        right_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        right_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 8))
 
-        # Left: Summary fields
+        # Left: Summary fields - Paper sheet style
         summary_data = [
             ("Rank:", char.rank_name or char.rank or "—"),
             ("Age:", f"{char.age} ({char.age_group})"),
@@ -469,60 +471,62 @@ class CharacterDetailDialog:
 
         for label_text, value_text in summary_data:
             row = tk.Frame(left_col, bg=self.COLORS["overview"])
-            row.pack(fill=tk.X, pady=2)
+            row.pack(fill=tk.X, pady=3)  # Increased row spacing
             
-            lbl = tk.Label(row, text=label_text, bg=self.COLORS["overview"], fg="#1E1E1E",
-                          font=("TkDefaultFont", 9, "bold"), anchor="w", width=14)
-            lbl.pack(side=tk.LEFT)
+            # Labels: lighter color, smaller (supporting)
+            lbl = tk.Label(row, text=label_text, bg=self.COLORS["overview"], fg="#666666",
+                          font=("TkDefaultFont", 8), anchor="w", width=14)
+            lbl.pack(side=tk.LEFT, padx=(0, 8))
             
+            # Values: darker, normal size (primary)
             val = tk.Label(row, text=value_text, bg=self.COLORS["overview"], fg="#1E1E1E",
                           font=("TkDefaultFont", 9), anchor="w")
             val.pack(side=tk.LEFT)
 
-        # Right: Highlights
+        # Right: Highlights - section header lighter
         highlights_title = tk.Label(right_col, text="Highlights", bg=self.COLORS["overview"],
-                                    fg="#1E1E1E", font=("TkDefaultFont", 10, "bold"))
-        highlights_title.pack(anchor="w", pady=(0, 5))
+                                    fg="#444444", font=("TkDefaultFont", 9, "bold"))
+        highlights_title.pack(anchor="w", pady=(0, 8))  # More breathing room
 
         # Top skills (top 5 by level)
         if char.skills:
             sorted_skills = sorted(char.skills.items(), key=lambda x: -x[1])[:5]
             skills_label = tk.Label(right_col, text="Top Skills:", bg=self.COLORS["overview"],
-                                   fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"))
-            skills_label.pack(anchor="w", pady=(5, 2))
+                                   fg="#666666", font=("TkDefaultFont", 8, "bold"))  # Lighter subsection header
+            skills_label.pack(anchor="w", pady=(6, 3))
             
             for skill_name, level in sorted_skills:
                 skill_line = tk.Label(right_col, text=f"• {skill_name}: {level}",
                                      bg=self.COLORS["overview"], fg="#1E1E1E",
                                      font=("TkDefaultFont", 9))
-                skill_line.pack(anchor="w", padx=(10, 0))
+                skill_line.pack(anchor="w", padx=(10, 0), pady=1)
 
         # SPAs preview
         if char.abilities:
             spa_label = tk.Label(right_col, text=f"Special Abilities ({len(char.abilities)}):",
-                                bg=self.COLORS["overview"], fg="#1E1E1E",
-                                font=("TkDefaultFont", 9, "bold"))
-            spa_label.pack(anchor="w", pady=(5, 2))
+                                bg=self.COLORS["overview"], fg="#666666",
+                                font=("TkDefaultFont", 8, "bold"))  # Lighter subsection header
+            spa_label.pack(anchor="w", pady=(6, 3))
             
             for spa_name in list(char.abilities.keys())[:3]:
                 spa_line = tk.Label(right_col, text=f"• {spa_name}",
                                    bg=self.COLORS["overview"], fg="#1E1E1E",
                                    font=("TkDefaultFont", 9))
-                spa_line.pack(anchor="w", padx=(10, 0))
+                spa_line.pack(anchor="w", padx=(10, 0), pady=1)
 
         # Quirks preview
         if char.quirks:
             quirk_label = tk.Label(right_col, text=f"Quirks ({len(char.quirks)}):",
-                                  bg=self.COLORS["overview"], fg="#1E1E1E",
-                                  font=("TkDefaultFont", 9, "bold"))
-            quirk_label.pack(anchor="w", pady=(5, 2))
+                                  bg=self.COLORS["overview"], fg="#666666",
+                                  font=("TkDefaultFont", 8, "bold"))  # Lighter subsection header
+            quirk_label.pack(anchor="w", pady=(6, 3))
             
             for quirk in char.quirks[:3]:
                 quirk_display = quirk.replace("_", " ").title()
                 quirk_line = tk.Label(right_col, text=f"• {quirk_display}",
                                      bg=self.COLORS["overview"], fg="#1E1E1E",
                                      font=("TkDefaultFont", 9))
-                quirk_line.pack(anchor="w", padx=(10, 0))
+                quirk_line.pack(anchor="w", padx=(10, 0), pady=1)
 
     def _build_progress_section(self, accordion: AccordionContainer) -> None:
         """
@@ -541,43 +545,49 @@ class CharacterDetailDialog:
         section = accordion.add_section("Progress", progress_color, is_open=False)
         body = section.get_body()
         
+        # Add padding to section body for breathing room
+        content_frame = tk.Frame(body, bg=progress_color)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+        
         char = self.character
         
-        # Title
-        title_label = tk.Label(body, text="Event-Driven Progress",
-                              bg=progress_color, fg="#1E1E1E",
-                              font=("TkDefaultFont", 10, "bold"))
-        title_label.pack(anchor="w", pady=(0, 8))
+        # Title - lighter, smaller (section header style)
+        title_label = tk.Label(content_frame, text="Event-Driven Progress",
+                              bg=progress_color, fg="#444444",
+                              font=("TkDefaultFont", 9, "bold"))
+        title_label.pack(anchor="w", pady=(0, 12))
         
-        # XP (numeric only, no bar)
-        xp_frame = tk.Frame(body, bg=progress_color)
-        xp_frame.pack(fill=tk.X, pady=4)
+        # XP stat block - value as visual anchor
+        xp_frame = tk.Frame(content_frame, bg=progress_color)
+        xp_frame.pack(fill=tk.X, pady=6)
         
-        xp_label = tk.Label(xp_frame, text="XP:", bg=progress_color, fg="#1E1E1E",
-                           font=("TkDefaultFont", 9, "bold"), anchor="w", width=16)
-        xp_label.pack(side=tk.LEFT)
+        # Label: small, light (supporting)
+        xp_label = tk.Label(xp_frame, text="XP:", bg=progress_color, fg="#666666",
+                           font=("TkDefaultFont", 8), anchor="w", width=18)
+        xp_label.pack(side=tk.LEFT, padx=(0, 8))
         
+        # Value: larger, bold, centered (primary stat anchor)
         xp_value = tk.Label(xp_frame, text=str(char.xp), bg=progress_color, fg="#1E1E1E",
-                           font=("TkDefaultFont", 9), anchor="w")
+                           font=("TkDefaultFont", 12, "bold"), anchor="center", width=8)
         xp_value.pack(side=tk.LEFT)
         
-        # Helper function to create progress bars
+        # Helper function to create progress bars with stat-block styling
         def create_progress_bar(parent, label_text: str, value: int, max_value: int, color: str):
-            """Create a labeled progress bar."""
+            """Create a labeled progress bar with stat values as visual anchors."""
             frame = tk.Frame(parent, bg=progress_color)
-            frame.pack(fill=tk.X, pady=4)
+            frame.pack(fill=tk.X, pady=6)  # More vertical spacing
             
-            # Label
-            label = tk.Label(frame, text=label_text, bg=progress_color, fg="#1E1E1E",
-                           font=("TkDefaultFont", 9, "bold"), anchor="w", width=16)
-            label.pack(side=tk.LEFT)
+            # Label: smaller, lighter (supporting information)
+            label = tk.Label(frame, text=label_text, bg=progress_color, fg="#666666",
+                           font=("TkDefaultFont", 8), anchor="w", width=18)
+            label.pack(side=tk.LEFT, padx=(0, 8))
             
             # Bar container
             bar_container = tk.Frame(frame, bg=progress_color)
-            bar_container.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+            bar_container.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 12))
             
-            # Progress bar (canvas-based)
-            canvas = tk.Canvas(bar_container, height=16, bg="#E0E0E0", 
+            # Progress bar (canvas-based) - slightly taller for better visibility
+            canvas = tk.Canvas(bar_container, height=20, bg="#E0E0E0", 
                              highlightthickness=0, relief=tk.FLAT)
             canvas.pack(fill=tk.X)
             
@@ -585,31 +595,35 @@ class CharacterDetailDialog:
             canvas_width = 200  # Fixed width for consistency
             filled_width = int((value / max_value) * canvas_width)
             canvas.config(width=canvas_width)
-            canvas.create_rectangle(0, 0, filled_width, 16, fill=color, outline="")
+            canvas.create_rectangle(0, 0, filled_width, 20, fill=color, outline="")
             
-            # Value text
+            # Value text: bold, centered (stat anchor)
             value_text = tk.Label(frame, text=f"{value}/{max_value}", bg=progress_color,
-                                fg="#1E1E1E", font=("TkDefaultFont", 8), width=8)
+                                fg="#1E1E1E", font=("TkDefaultFont", 10, "bold"),
+                                anchor="center", width=10)
             value_text.pack(side=tk.LEFT)
         
         # Confidence bar (Amber/Gold #FFB300)
-        create_progress_bar(body, "Confidence:", char.confidence, 100, "#FFB300")
+        create_progress_bar(content_frame, "Confidence:", char.confidence, 100, "#FFB300")
         
         # Fatigue bar (Orange #FB8C00)
-        create_progress_bar(body, "Fatigue:", char.fatigue, 100, "#FB8C00")
+        create_progress_bar(content_frame, "Fatigue:", char.fatigue, 100, "#FB8C00")
         
         # Reputation Pool bar (Violet #8E24AA)
-        create_progress_bar(body, "Reputation Pool:", char.reputation_pool, 100, "#8E24AA")
+        create_progress_bar(content_frame, "Reputation Pool:", char.reputation_pool, 100, "#8E24AA")
         
         # Info note
-        info_label = tk.Label(body, 
+        info_label = tk.Label(content_frame, 
                              text="ℹ️ These values are modified by event outcomes only.",
                              bg=progress_color, fg="#666666",
                              font=("TkDefaultFont", 8, "italic"), anchor="w")
         info_label.pack(anchor="w", pady=(8, 0))
 
     def _build_attributes_section(self, accordion: AccordionContainer) -> None:
-        """Attributes section (numeric values only) with multi-column layout."""
+        """Attributes section (numeric values only) with multi-column layout.
+        
+        Stat blocks are visual anchors: values large/bold/centered, labels small/light.
+        """
         section = accordion.add_section("Attributes", self.COLORS["attributes"], is_open=False)
         body = section.get_body()
 
@@ -621,7 +635,7 @@ class CharacterDetailDialog:
             no_data.pack(pady=10)
             return
 
-        # Multi-column grid layout for attributes
+        # Multi-column grid layout for attributes with generous padding
         # Use 2 columns for 4+ attributes, 1 column for fewer
         sorted_attrs = sorted(char.attributes.items())
         num_attrs = len(sorted_attrs)
@@ -629,64 +643,72 @@ class CharacterDetailDialog:
         # Determine column count based on threshold
         num_columns = 2 if num_attrs >= self.MULTI_COLUMN_THRESHOLD else 1
         
-        # Create a grid container
+        # Create a grid container with generous padding for breathing room
         grid_frame = tk.Frame(body, bg=self.COLORS["attributes"])
-        grid_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        grid_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=10)
         
         # Configure columns to expand evenly
         for col in range(num_columns):
             grid_frame.grid_columnconfigure(col, weight=1, uniform="attr_col")
         
-        # Place attributes in grid
+        # Place attributes in grid - stat block style
         for idx, (attr_name, attr_value) in enumerate(sorted_attrs):
             row = idx // num_columns
             col = idx % num_columns
             
-            # Create frame for this attribute
-            attr_frame = tk.Frame(grid_frame, bg=self.COLORS["attributes"])
-            attr_frame.grid(row=row, column=col, sticky="ew", padx=5, pady=2)
+            # Create frame for this attribute stat block with padding
+            attr_frame = tk.Frame(grid_frame, bg=self.COLORS["attributes"], relief=tk.FLAT)
+            attr_frame.grid(row=row, column=col, sticky="ew", padx=8, pady=5)
             
-            # Attribute label
+            # Attribute label: smaller, lighter (supporting)
             lbl = tk.Label(attr_frame, text=f"{attr_name}:", bg=self.COLORS["attributes"],
-                          fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), width=12, anchor="w")
-            lbl.pack(side=tk.LEFT, padx=(0, 10))
+                          fg="#666666", font=("TkDefaultFont", 8), width=14, anchor="w")
+            lbl.pack(side=tk.LEFT, padx=(0, 12))
             
-            # Attribute value
+            # Attribute value: larger, bold, centered (primary stat anchor)
             val = tk.Label(attr_frame, text=str(attr_value), bg=self.COLORS["attributes"],
-                          fg="#1E1E1E", font=("TkDefaultFont", 9), anchor="w")
+                          fg="#1E1E1E", font=("TkDefaultFont", 12, "bold"),
+                          anchor="center", width=6)
             val.pack(side=tk.LEFT)
 
     def _build_skills_section(self, accordion: AccordionContainer) -> None:
-        """Skills section with search and attribute support hints."""
+        """Skills section with search and attribute support hints.
+        
+        Ledger-like presentation: clean rows, consistent spacing, readable at a glance.
+        """
         section = accordion.add_section("Skills", self.COLORS["skills"], is_open=False)
         body = section.get_body()
+
+        # Add padding to section body
+        content_frame = tk.Frame(body, bg=self.COLORS["skills"])
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
 
         char = self.character
 
         if not char.skills:
-            no_data = tk.Label(body, text="No skill data available.",
+            no_data = tk.Label(content_frame, text="No skill data available.",
                               bg=self.COLORS["skills"], fg="#1E1E1E")
             no_data.pack(pady=10)
             return
 
-        # Search box
-        search_frame = tk.Frame(body, bg=self.COLORS["skills"])
-        search_frame.pack(fill=tk.X, pady=(0, 10))
+        # Search box with better spacing
+        search_frame = tk.Frame(content_frame, bg=self.COLORS["skills"])
+        search_frame.pack(fill=tk.X, pady=(0, 12))
 
         search_label = tk.Label(search_frame, text="Search:", bg=self.COLORS["skills"],
-                               fg="#1E1E1E", font=("TkDefaultFont", 9))
-        search_label.pack(side=tk.LEFT, padx=(0, 5))
+                               fg="#666666", font=("TkDefaultFont", 8))
+        search_label.pack(side=tk.LEFT, padx=(0, 8))
 
         search_var = tk.StringVar()
         search_entry = tk.Entry(search_frame, textvariable=search_var, width=30)
         search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Skills container (will be filtered by search)
-        skills_container = tk.Frame(body, bg=self.COLORS["skills"])
+        skills_container = tk.Frame(content_frame, bg=self.COLORS["skills"])
         skills_container.pack(fill=tk.BOTH, expand=True)
 
         def update_skills_display(*args):
-            """Update skills display based on search."""
+            """Update skills display based on search - ledger style."""
             # Clear container
             for widget in skills_container.winfo_children():
                 widget.destroy()
@@ -701,22 +723,39 @@ class CharacterDetailDialog:
                 if search_text and search_text not in skill_name.lower():
                     continue
 
+                # More row height for ledger readability
                 skill_row = tk.Frame(skills_container, bg=self.COLORS["skills"])
-                skill_row.pack(fill=tk.X, pady=3)
+                skill_row.pack(fill=tk.X, pady=4)
 
-                # Skill name and level
-                skill_label = tk.Label(skill_row, text=f"{skill_name} — {skill_level}",
+                # Skill info frame for left alignment
+                info_frame = tk.Frame(skill_row, bg=self.COLORS["skills"])
+                info_frame.pack(anchor="w", padx=(4, 0))
+
+                # Skill name: normal weight
+                name_label = tk.Label(info_frame, text=skill_name,
+                                     bg=self.COLORS["skills"], fg="#1E1E1E",
+                                     font=("TkDefaultFont", 10), anchor="w")
+                name_label.pack(side=tk.LEFT)
+
+                # Separator
+                sep_label = tk.Label(info_frame, text=" — ",
+                                    bg=self.COLORS["skills"], fg="#AAAAAA",
+                                    font=("TkDefaultFont", 10))
+                sep_label.pack(side=tk.LEFT)
+
+                # Skill level: bold (stat anchor)
+                level_label = tk.Label(info_frame, text=str(skill_level),
                                       bg=self.COLORS["skills"], fg="#1E1E1E",
-                                      font=("TkDefaultFont", 9, "bold"), anchor="w")
-                skill_label.pack(anchor="w")
+                                      font=("TkDefaultFont", 11, "bold"))
+                level_label.pack(side=tk.LEFT)
 
-                # Attribute support hint (italic, smaller)
+                # Attribute support hint (italic, smaller, indented)
                 support_text = format_skill_support(skill_name)
                 if support_text:
                     support_label = tk.Label(skill_row, text=support_text,
-                                           bg=self.COLORS["skills"], fg="#555555",
+                                           bg=self.COLORS["skills"], fg="#888888",
                                            font=("TkDefaultFont", 8, "italic"), anchor="w")
-                    support_label.pack(anchor="w", padx=(15, 0))
+                    support_label.pack(anchor="w", padx=(20, 0))
 
         # Bind search
         search_var.trace("w", update_skills_display)
@@ -725,21 +764,28 @@ class CharacterDetailDialog:
         update_skills_display()
 
     def _build_personality_section(self, accordion: AccordionContainer) -> None:
-        """Personality section with subsections: Traits / Quirks / SPAs."""
+        """Personality section with subsections: Traits / Quirks / SPAs.
+        
+        Clean presentation with consistent spacing and hierarchy.
+        """
         section = accordion.add_section("Personality", self.COLORS["personality"], is_open=False)
         body = section.get_body()
 
         char = self.character
 
-        # Create sub-notebook for Traits / Quirks / SPAs
+        # Create sub-notebook for Traits / Quirks / SPAs with padding
         sub_notebook = ttk.Notebook(body)
-        sub_notebook.pack(fill=tk.BOTH, expand=True)
+        sub_notebook.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
 
         # --- Traits Tab ---
         traits_tab = tk.Frame(sub_notebook, bg=self.COLORS["personality"])
         sub_notebook.add(traits_tab, text="Traits")
 
         if char.traits:
+            # Add padding container
+            traits_content = tk.Frame(traits_tab, bg=self.COLORS["personality"])
+            traits_content.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+
             trait_enums = get_character_traits_as_enums(char)
             for category, enum_str in sorted(trait_enums.items()):
                 if ":" in enum_str:
@@ -747,15 +793,17 @@ class CharacterDetailDialog:
                 else:
                     trait_key = enum_str
 
-                row = tk.Frame(traits_tab, bg=self.COLORS["personality"])
-                row.pack(fill=tk.X, pady=3, padx=10)
+                row = tk.Frame(traits_content, bg=self.COLORS["personality"])
+                row.pack(fill=tk.X, pady=4)  # Increased spacing
 
+                # Label: lighter, smaller
                 lbl = tk.Label(row, text=f"{category}:", bg=self.COLORS["personality"],
-                              fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), width=12, anchor="w")
-                lbl.pack(side=tk.LEFT)
+                              fg="#666666", font=("TkDefaultFont", 8), width=14, anchor="w")
+                lbl.pack(side=tk.LEFT, padx=(0, 10))
 
+                # Value: normal size, darker
                 val = tk.Label(row, text=trait_key, bg=self.COLORS["personality"],
-                              fg="#1E1E1E", font=("TkDefaultFont", 9), anchor="w")
+                              fg="#1E1E1E", font=("TkDefaultFont", 10), anchor="w")
                 val.pack(side=tk.LEFT)
         else:
             no_traits = tk.Label(traits_tab, text="No personality traits available.",
@@ -768,17 +816,17 @@ class CharacterDetailDialog:
 
         if char.quirks:
             quirk_container = tk.Frame(quirks_tab, bg=self.COLORS["personality"])
-            quirk_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            quirk_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
 
             for quirk in sorted(char.quirks):
                 quirk_display = quirk.replace("_", " ").title()
                 
                 # Create chip-style badge
                 chip_frame = tk.Frame(quirk_container, bg=self.COLORS["personality"])
-                chip_frame.pack(fill=tk.X, pady=2)
+                chip_frame.pack(fill=tk.X, pady=3)  # Increased spacing
 
                 chip = tk.Label(chip_frame, text=quirk_display, bg="#FADBD8", fg="#1E1E1E",
-                               font=("TkDefaultFont", 9), padx=8, pady=4, relief=tk.RAISED)
+                               font=("TkDefaultFont", 9), padx=10, pady=5, relief=tk.FLAT)  # More padding, flat relief
                 chip.pack(side=tk.LEFT)
         else:
             no_quirks = tk.Label(quirks_tab, text="No quirks available.",
@@ -791,23 +839,23 @@ class CharacterDetailDialog:
 
         if char.abilities:
             spa_container = tk.Frame(spa_tab, bg=self.COLORS["personality"])
-            spa_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            spa_container.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
 
             for spa_name, spa_desc in sorted(char.abilities.items()):
                 spa_frame = tk.Frame(spa_container, bg=self.COLORS["personality"])
-                spa_frame.pack(fill=tk.X, pady=4)
+                spa_frame.pack(fill=tk.X, pady=5)  # Increased spacing
 
-                # SPA name (bold)
+                # SPA name (bold, slightly larger)
                 name_label = tk.Label(spa_frame, text=spa_name, bg=self.COLORS["personality"],
-                                     fg="#1E1E1E", font=("TkDefaultFont", 9, "bold"), anchor="w")
+                                     fg="#1E1E1E", font=("TkDefaultFont", 10, "bold"), anchor="w")
                 name_label.pack(anchor="w")
 
-                # SPA description (smaller, italic)
+                # SPA description (smaller, italic, lighter)
                 if spa_desc:
                     desc_label = tk.Label(spa_frame, text=spa_desc, bg=self.COLORS["personality"],
-                                         fg="#555555", font=("TkDefaultFont", 8, "italic"),
+                                         fg="#666666", font=("TkDefaultFont", 8, "italic"),
                                          anchor="w", wraplength=400, justify=tk.LEFT)
-                    desc_label.pack(anchor="w", padx=(15, 0))
+                    desc_label.pack(anchor="w", padx=(16, 0), pady=(2, 0))
         else:
             no_spa = tk.Label(spa_tab, text="None", bg=self.COLORS["personality"], fg="#1E1E1E")
             no_spa.pack(pady=10)
@@ -842,11 +890,11 @@ class CharacterDetailDialog:
             no_data.pack(pady=20)
             return
 
-        # Relationships container (scrollable if many relationships)
+        # Relationships container with padding for breathing room
         rel_container = tk.Frame(body, bg=self.COLORS["relationships"])
-        rel_container.pack(fill=tk.BOTH, expand=True, pady=5)
+        rel_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
 
-        # Display each relationship as a compact row
+        # Display each relationship as a row
         for rel in relationships:
             self._build_relationship_row(rel_container, rel, adapter)
 
@@ -868,15 +916,15 @@ class CharacterDetailDialog:
         else:
             partner_name = f"ID: {other_id[:12]}..."
 
-        # Row frame
-        row = tk.Frame(parent, bg=self.COLORS["relationships"], relief=tk.FLAT, borderwidth=1)
-        row.pack(fill=tk.X, pady=3, padx=5)
+        # Row frame with more vertical spacing
+        row = tk.Frame(parent, bg=self.COLORS["relationships"], relief=tk.FLAT, borderwidth=0)
+        row.pack(fill=tk.X, pady=4, padx=4)
 
-        # Partner name
+        # Partner name: slightly larger, better spacing
         name_label = tk.Label(row, text=partner_name,
                              bg=self.COLORS["relationships"], fg="#1E1E1E",
-                             font=("TkDefaultFont", 10), width=20, anchor="w")
-        name_label.pack(side=tk.LEFT, padx=(5, 10))
+                             font=("TkDefaultFont", 10), width=22, anchor="w")
+        name_label.pack(side=tk.LEFT, padx=(6, 12))
 
         # Axes indicators (compact)
         axes = relationship.get("axes", {})
