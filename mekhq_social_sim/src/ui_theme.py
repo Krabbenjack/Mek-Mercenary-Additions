@@ -38,6 +38,41 @@ THEME = {
     "accent_debug": "#6B5A8E"    # Debug-Violett
 }
 
+# ------------------------------------------------------------
+# Dark Grey Theme for Event Resolve Window (exact hex values)
+# ------------------------------------------------------------
+
+RESOLVE_THEME = {
+    # Backgrounds
+    "window_bg": "#1E1F22",       # Window background
+    "header_bg": "#26282C",       # Header background
+    "panel_bg": "#232428",        # Panel background
+    "card_bg": "#2A2C31",         # Card background
+    "card_hover": "#32343A",      # Card hover
+    "border": "#3A3D44",          # Border/separator
+    
+    # Text
+    "text_primary": "#E6E6E6",    # Primary text
+    "text_secondary": "#B7BCC5",  # Secondary text
+    "text_muted": "#8D93A1",      # Muted text
+    
+    # Accent
+    "accent": "#6C8CF5",          # Accent (buttons/chips outline)
+    "accent_hover": "#7A98FF",    # Accent hover
+    "success": "#4CAF50",         # Success badge
+    "fail": "#E05D5D",            # Fail badge
+    "warning": "#F0C15C",         # Warning/info
+    
+    # Button backgrounds
+    "btn_primary_bg": "#6C8CF5",
+    "btn_primary_hover": "#7A98FF",
+    "btn_primary_text": "#0E1014",
+    "btn_secondary_bg": "#2A2C31",
+    "btn_secondary_hover": "#32343A",
+    "btn_secondary_border": "#3A3D44",
+    "btn_secondary_text": "#E6E6E6",
+}
+
 
 # ------------------------------------------------------------
 # Style Initialisierung
